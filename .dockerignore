@@ -1,0 +1,15 @@
+.git
+.github
+.gitignore
+CLAUDE.md
+README.md
+docker-compose.yml
+Dockerfile
+.dockerignore
+node_modules
+.next
+out
+build
+dist
+.DS_Store
+*.log

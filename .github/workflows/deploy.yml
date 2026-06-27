@@ -1,0 +1,66 @@
+name: deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      # Third-party actions are pinned to full commit SHAs (not mutable version
+      # tags) so a maintainer compromise or a moved tag cannot inject code into
+      # a job that holds the GHCR push token and the production SSH key.
+      # Trailing comment records the human-readable version each SHA maps to.
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      # No Node toolchain needed for the placeholder; the design phase will
+      # add actions/setup-node@<sha> with cache: npm when a framework lands.
+
+      # ghcr.io requires the image path to be lowercase. Our owner (Gt-ace)
+      # has uppercase letters, so derive a lowercase image name here.
+      - name: Compute lowercase image name
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:latest
+            ${{ steps.image.outputs.name }}:${{ github.sha }}
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            export TAG=${{ github.sha }}
+            mkdir -p ~/apps/avp-landing
+            cd ~/apps/avp-landing
+            # First-time install of the run definition. On later runs the
+            # file already exists and the redirect keeps it untouched. The
+            # workflow owns this file; manual edits on the box will be
+            # overwritten by the next deploy — by design.
+            if [ ! -f docker-compose.yml ]; then
+              echo "WARN: docker-compose.yml not present on box; will be created on next manual run." >&2
+            fi
+            docker compose pull
+            docker compose up -d
+            # Keep ~1 week of images for rollback, delete older ones so the
+            # 40GB disk shared with the rest of the box does not fill up.
+            docker image prune -af --filter "until=168h"

@@ -1,0 +1,17 @@
+# dependencies
+node_modules
+
+# build output
+.next/
+out/
+build/
+dist/
+
+# env / secrets — never in the image
+.env
+.env.*
+!.env.example
+
+# misc
+.DS_Store
+*.log

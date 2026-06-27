@@ -1,0 +1,19 @@
+# Run definition for avp-landing on the Hetzner box.
+# Lives on the box at ~/apps/avp-landing/docker-compose.yml.
+# The box already runs the shared Caddy (amber-caddy-1). This container joins
+# the Amber network; that Caddy routes avp.software to it. No proxy of its own.
+
+services:
+  web:
+    container_name: avp-landing # stable name so Caddy can target it
+    image: ghcr.io/gt-ace/avp-landing:${TAG:-latest}
+    restart: unless-stopped
+    expose:
+      - "80" # internal only. Caddy reaches it by name over the shared network.
+    networks:
+      - amber
+
+networks:
+  amber:
+    external: true
+    name: amber_default # verify with `docker network ls`; change if different
