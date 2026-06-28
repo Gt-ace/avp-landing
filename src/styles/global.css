@@ -33,6 +33,7 @@ body {
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: var(--text-body);
+  font-weight: 500;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -52,6 +53,7 @@ a {
 .label {
   font-family: var(--font-body);
   font-size: var(--text-label);
+  font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-muted);
@@ -67,6 +69,7 @@ a {
 .page-label {
   font-family: var(--font-body);
   font-size: var(--text-label);
+  font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-muted);
