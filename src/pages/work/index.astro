@@ -1,0 +1,170 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { projects } from '../../data/projects'
+---
+<BaseLayout title="Work — AVP Software">
+  <main class="work-page">
+    {projects.map((project) => (
+      <article class="project-row">
+        <a href={`/work/${project.slug}`} class="project-row-inner">
+          <div class="project-text">
+            <div class="project-meta">
+              <span class="label">{project.client}</span>
+              <span class="label">{project.year}</span>
+            </div>
+            <h2
+              class="project-title"
+              transition:name={`title-${project.slug}`}
+            >
+              {project.title}
+            </h2>
+            <p class="project-desc">{project.description}</p>
+            <span class="project-read label">Read more</span>
+          </div>
+          <div class="project-images">
+            {project.images.map((src, i) => (
+              <img
+                src={src}
+                alt={project.title}
+                loading="lazy"
+                transition:name={i === 0 ? `image-${project.slug}` : undefined}
+              />
+            ))}
+          </div>
+        </a>
+      </article>
+    ))}
+  </main>
+</BaseLayout>
+
+<style>
+  .work-page {
+    padding-top: clamp(8rem, 15vh, 12rem);
+  }
+
+  .project-row {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .project-row:last-child {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* Only hide rows for the scroll reveal when JS is present to reveal them */
+  :global(html.js) .project-row {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  :global(html.js) .project-row.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .project-row {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
+  .project-row-inner {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    padding: 4rem 0 4rem clamp(2rem, 5vw, 6rem);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .project-text {
+    padding-right: 3rem;
+  }
+
+  .project-meta {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .project-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    font-weight: 400;
+    color: var(--color-ink);
+    margin-top: 0.5rem;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  .project-desc {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-muted);
+    max-width: 44ch;
+    margin-top: 1rem;
+    line-height: 1.6;
+  }
+
+  .project-read {
+    display: inline-block;
+    color: var(--color-ink);
+    margin-top: 1.5rem;
+  }
+
+  .project-row-inner:hover .project-read {
+    text-decoration: underline;
+  }
+
+  .project-images {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .project-images img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    aspect-ratio: 4 / 3;
+  }
+
+  @media (max-width: 767px) {
+    .project-row-inner {
+      grid-template-columns: 1fr;
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+
+    .project-text {
+      padding-right: 0;
+    }
+
+    .project-images {
+      margin-top: 1.5rem;
+    }
+  }
+</style>
+
+<script>
+  function initObserver() {
+    const rows = document.querySelectorAll('.project-row')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add('visible')
+            observer.unobserve(e.target)
+          }
+        })
+      },
+      { threshold: 0.1 }
+    )
+    rows.forEach((r) => observer.observe(r))
+  }
+
+  // Run on first load and after every View Transition navigation
+  initObserver()
+  document.addEventListener('astro:page-load', initObserver)
+</script>

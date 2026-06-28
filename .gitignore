@@ -15,3 +15,7 @@ dist/
 # misc
 .DS_Store
 *.log
+.astro
+
+# local opencode tooling cache (large)
+.opencode/

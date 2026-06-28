@@ -1,0 +1,37 @@
+---
+import NavPill from '../components/NavPill'
+import '../styles/global.css'
+import { ViewTransitions } from 'astro:transitions'
+
+export interface Props {
+  title?: string
+}
+const { title = 'AVP Software' } = Astro.props
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="AVP Software — creative software studio" />
+    <title>{title}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Geist:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Mark JS as available so scroll-reveal styles only hide content when JS can reveal it -->
+    <script is:inline>
+      document.documentElement.classList.add('js')
+    </script>
+
+    <ViewTransitions />
+  </head>
+  <body>
+    <NavPill client:load />
+    <slot />
+  </body>
+</html>

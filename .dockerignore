@@ -1,6 +1,7 @@
 .git
 .github
 .gitignore
+.opencode
 CLAUDE.md
 README.md
 docker-compose.yml
@@ -13,3 +14,4 @@ build
 dist
 .DS_Store
 *.log
+.astro

@@ -1,0 +1,200 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { projects } from '../../data/projects'
+
+export function getStaticPaths() {
+  return projects.map((p) => ({ params: { slug: p.slug } }))
+}
+
+const { slug } = Astro.params
+const project = projects.find((p) => p.slug === slug)
+
+if (!project) {
+  return Astro.redirect('/work')
+}
+
+// Repeat the single image 3 times for visual richness
+// (placeholder until real screenshots are added to project.images)
+const displayImages = Array.from(
+  { length: 3 },
+  (_, i) => project.images[i % project.images.length]
+)
+---
+<BaseLayout title={`${project.title} — AVP Software`}>
+  <div class="detail-layout">
+    <aside class="detail-left">
+      <span class="label">{project.client}</span>
+
+      <h1
+        class="detail-title"
+        transition:name={`title-${project.slug}`}
+      >
+        {project.title}
+      </h1>
+
+      <p class="detail-desc">{project.description}</p>
+
+      <div class="detail-tech">
+        <span class="label">Built with</span>
+        <span class="detail-tech-list">{project.tech.join(', ')}</span>
+      </div>
+
+      <a
+        href={project.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="detail-visit label"
+      >
+        Visit project &#8599;
+      </a>
+
+      <div class="detail-credits">
+        <span class="label">Credits</span>
+        <dl class="credits-list">
+          {Object.entries(project.credits).map(([role, name]) => (
+            <>
+              <dt>{role}</dt>
+              <dd>{name}</dd>
+            </>
+          ))}
+        </dl>
+      </div>
+    </aside>
+
+    <div class="detail-right">
+      {displayImages.map((src, i) => (
+        <img
+          src={src}
+          alt={project.title}
+          loading={i === 0 ? 'eager' : 'lazy'}
+          transition:name={i === 0 ? `image-${project.slug}` : undefined}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .detail-layout {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    min-height: 100dvh;
+  }
+
+  .detail-left {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    overflow-y: auto;
+    padding: clamp(8rem, 15vh, 12rem) clamp(2rem, 5vw, 5rem) 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .detail-title {
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: 400;
+    color: var(--color-ink);
+    line-height: 1.1;
+    text-wrap: balance;
+    margin-top: 0.5rem;
+  }
+
+  .detail-desc {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-muted);
+    max-width: 44ch;
+    margin-top: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .detail-tech {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .detail-tech-list {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-ink);
+  }
+
+  .detail-visit {
+    display: inline-block;
+    color: var(--color-ink);
+    margin-top: 2rem;
+    transition: opacity 200ms;
+  }
+
+  .detail-visit:hover {
+    opacity: 0.6;
+  }
+
+  .detail-credits {
+    margin-top: auto;
+    padding-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .credits-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.25rem 1rem;
+    list-style: none;
+    margin-top: 0.5rem;
+  }
+
+  .credits-list dt {
+    font-family: var(--font-body);
+    font-size: var(--text-label);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .credits-list dd {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-ink);
+  }
+
+  .detail-right {
+    /* scrolls naturally with the page */
+  }
+
+  .detail-right img {
+    width: 100%;
+    display: block;
+  }
+
+  .detail-right img:nth-child(odd) {
+    aspect-ratio: 16 / 9;
+  }
+
+  .detail-right img:nth-child(even) {
+    aspect-ratio: 4 / 3;
+  }
+
+  @media (max-width: 767px) {
+    .detail-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-left {
+      position: static;
+      height: auto;
+      padding: 8rem 1.25rem 3rem;
+    }
+
+    .detail-credits {
+      margin-top: 3rem;
+    }
+  }
+</style>
