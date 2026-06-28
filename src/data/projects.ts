@@ -7,6 +7,19 @@ export interface Project {
   url: string
   tech: string[]
   images: string[]
+  /**
+   * Optional showcase video. Renders above the screenshots on the detail page.
+   * Each source is optional so we can add a webm only once it's actually
+   * smaller than its mp4 sibling (webm-first ordering means the browser eats
+   * the first match — a bloated webm would defeat the purpose).
+   */
+  video?: {
+    desktopWebm?: string
+    desktopMp4: string
+    mobileWebm?: string
+    mobileMp4: string
+    poster: string
+  }
   credits: Record<string, string>
 }
 
@@ -21,6 +34,13 @@ export const projects: Project[] = [
     url: 'https://volunteer.startglobal.org',
     tech: ['Next.js 16', 'TypeScript', 'Supabase', 'Cloudflare Containers'],
     images: ['/images/volunteer-platform.avif'],
+    video: {
+      desktopWebm: '/volunteer-platform-desktop.webm',
+      desktopMp4: '/volunteer-platform-desktop.mp4',
+      // mobileWebm: add once a re-encode lands under 3.1M (mp4 size)
+      mobileMp4: '/volunteer-platform-mobile.mp4',
+      poster: '/images/volunteer-platform.avif',
+    },
     credits: { Studio: 'AVP Software' },
   },
   {

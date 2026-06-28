@@ -14,11 +14,15 @@ if (!project) {
 }
 
 // Repeat the single image 3 times for visual richness
-// (placeholder until real screenshots are added to project.images)
-const displayImages = Array.from(
-  { length: 3 },
-  (_, i) => project.images[i % project.images.length]
-)
+// (placeholder until real screenshots are added to project.images).
+// Projects with a showcase video lead with it, so they only need their
+// real screenshots once underneath.
+const displayImages = project.video
+  ? project.images
+  : Array.from(
+      { length: 3 },
+      (_, i) => project.images[i % project.images.length]
+    )
 ---
 <BaseLayout title={`${project.title} — AVP Software`}>
   <div class="detail-layout">
@@ -62,12 +66,33 @@ const displayImages = Array.from(
     </aside>
 
     <div class="detail-right">
+      {project.video && (
+        <video
+          class="detail-video"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster={project.video.poster}
+          transition:name={`image-${project.slug}`}
+        >
+          {project.video.desktopWebm && (
+            <source src={project.video.desktopWebm} type="video/webm" media="(min-width: 768px)" />
+          )}
+          <source src={project.video.desktopMp4} type="video/mp4" media="(min-width: 768px)" />
+          {project.video.mobileWebm && (
+            <source src={project.video.mobileWebm} type="video/webm" />
+          )}
+          <source src={project.video.mobileMp4} type="video/mp4" />
+        </video>
+      )}
       {displayImages.map((src, i) => (
         <img
           src={src}
           alt={project.title}
           loading={i === 0 ? 'eager' : 'lazy'}
-          transition:name={i === 0 ? `image-${project.slug}` : undefined}
+          transition:name={i === 0 && !project.video ? `image-${project.slug}` : undefined}
         />
       ))}
     </div>
@@ -169,9 +194,16 @@ const displayImages = Array.from(
     /* scrolls naturally with the page */
   }
 
-  .detail-right img {
+  .detail-right img,
+  .detail-right .detail-video {
     width: 100%;
     display: block;
+  }
+
+  .detail-video {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background: var(--color-ink);
   }
 
   .detail-right img:nth-child(odd) {
