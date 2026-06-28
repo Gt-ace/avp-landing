@@ -11,7 +11,35 @@ const NAV_LINKS = [
 
 const EASE_OUT_QUART = [0.16, 1, 0.3, 1] as const
 
-function Logo() {
+// The three letterforms share a serif family but differ in how much of their
+// own frame the ink fills: the A (logo-mark) fills ~92% of its frame height,
+// while the V and P fill only ~50%. To make the cap heights match optically,
+// the A is rendered shorter than the V/P frames. All three are vertically
+// centred within their frames, so centring the frames centres the caps.
+const A_HEIGHT = 15
+const VP_HEIGHT = 28
+
+function Letter({
+  src,
+  height,
+  link,
+}: {
+  src: string
+  height: number
+  link?: boolean
+}) {
+  const img = (
+    <img
+      src={src}
+      alt=""
+      style={{ display: 'block', height, width: 'auto' }}
+    />
+  )
+
+  if (!link) {
+    return <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{img}</span>
+  }
+
   return (
     <a
       href="/"
@@ -20,19 +48,12 @@ function Logo() {
         display: 'flex',
         alignItems: 'center',
         flexShrink: 0,
-        height: '100%',
         transition: 'opacity 200ms',
       }}
       onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.6')}
       onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
     >
-      <img
-        src="/logo-mark.svg"
-        alt=""
-        width={18}
-        height={18}
-        style={{ display: 'block', height: 18, width: 'auto' }}
-      />
+      {img}
     </a>
   )
 }
@@ -53,7 +74,7 @@ export default function NavPill() {
     <motion.div
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
-      animate={{ width: isOpen ? 480 : 116 }}
+      animate={{ width: isOpen ? 480 : 100 }}
       transition={{
         type: 'spring',
         stiffness: 280,
@@ -79,56 +100,85 @@ export default function NavPill() {
         whiteSpace: 'nowrap',
       }}
     >
-      <Logo />
+      {/* A — pinned left, slides outward as the pill expands */}
+      <Letter src="/logo-mark.svg" height={A_HEIGHT} link />
 
+      {/* Middle slot — absolutely centred so swapping its contents never
+          nudges the A or P. Shows V when closed, nav links when open. */}
       <div
         style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <AnimatePresence>
-          {isOpen &&
-            NAV_LINKS.map(({ label, href }, i) => {
-              const isActive =
-                href === '/'
-                  ? pathname === '/'
-                  : pathname.startsWith(href)
+        <AnimatePresence mode="wait">
+          {isOpen ? (
+            <motion.div
+              key="links"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              style={{ display: 'flex', alignItems: 'center' }}
+            >
+              {NAV_LINKS.map(({ label, href }, i) => {
+                const isActive =
+                  href === '/'
+                    ? pathname === '/'
+                    : pathname.startsWith(href)
 
-              return (
-                <motion.a
-                  key={label}
-                  href={href}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 4 }}
-                  transition={{
-                    duration: 0.2,
-                    delay: i * 0.05,
-                    ease: EASE_OUT_QUART,
-                  }}
-                  style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '0.6875rem',
-                    letterSpacing: '0.15em',
-                    textTransform: 'uppercase',
-                    color: isActive
-                      ? 'var(--color-ink)'
-                      : 'var(--color-muted)',
-                    textDecoration: 'none',
-                    padding: '0 1rem',
-                    display: 'block',
-                  }}
-                >
-                  {label}
-                </motion.a>
-              )
-            })}
+                return (
+                  <motion.a
+                    key={label}
+                    href={href}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 4 }}
+                    transition={{
+                      duration: 0.2,
+                      delay: 0.05 + i * 0.05,
+                      ease: EASE_OUT_QUART,
+                    }}
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.6875rem',
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase',
+                      color: isActive
+                        ? 'var(--color-ink)'
+                        : 'var(--color-muted)',
+                      textDecoration: 'none',
+                      padding: '0 1rem',
+                      display: 'block',
+                    }}
+                  >
+                    {label}
+                  </motion.a>
+                )
+              })}
+            </motion.div>
+          ) : (
+            <motion.span
+              key="v"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              style={{ display: 'flex', alignItems: 'center' }}
+            >
+              <Letter src="/v.svg" height={VP_HEIGHT} />
+            </motion.span>
+          )}
         </AnimatePresence>
       </div>
 
-      <Logo />
+      {/* P — pinned right, slides outward as the pill expands */}
+      <Letter src="/p.svg" height={VP_HEIGHT} link />
     </motion.div>
   )
 }
