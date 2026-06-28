@@ -80,7 +80,8 @@ a {
 .page-heading {
   font-family: var(--font-display);
   font-size: clamp(2rem, 4vw, 3.5rem);
-  font-weight: 500;
+  font-weight: 600;
+  font-optical-sizing: none;
   color: var(--color-ink);
   line-height: 1.05;
   text-wrap: balance;
