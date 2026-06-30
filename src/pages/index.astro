@@ -1,5 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
+import { projects } from '../data/projects'
+
+const selected = projects.slice(0, 3)
 ---
 <BaseLayout title="AVP Software">
   <section class="hero">
@@ -7,7 +10,45 @@ import BaseLayout from '../layouts/BaseLayout.astro'
       <source src="/hero1.webm" type="video/webm" />
     </video>
     <div class="hero-overlay" aria-hidden="true"></div>
-    <h1 class="hero-title">AVP Software</h1>
+
+    <div class="hero-content">
+      <h1 class="hero-title">AVP Software</h1>
+      <p class="hero-tagline">
+        A small studio that designs and builds software end to end — interface,
+        product, and the infrastructure underneath.
+      </p>
+    </div>
+
+    <a class="hero-scroll" href="#work" aria-label="Scroll to selected work">
+      <span class="label">Selected work</span>
+      <span class="hero-scroll-arrow" aria-hidden="true">&#8595;</span>
+    </a>
+  </section>
+
+  <section class="selected" id="work">
+    <header class="selected-head">
+      <span class="page-label">Selected work</span>
+      <h2 class="selected-heading">
+        A few of the things we've shipped.
+      </h2>
+    </header>
+
+    <ul class="selected-list">
+      {selected.map((project) => (
+        <li class="selected-item">
+          <a href={`/work/${project.slug}`} class="selected-link">
+            <span class="selected-index label">{project.year}</span>
+            <span class="selected-title">{project.title}</span>
+            <span class="selected-client label">{project.client}</span>
+            <span class="selected-arrow" aria-hidden="true">&#8599;</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <a href="/work" class="selected-all label">
+      View all work <span aria-hidden="true">&#8594;</span>
+    </a>
   </section>
 </BaseLayout>
 
@@ -32,10 +73,15 @@ import BaseLayout from '../layouts/BaseLayout.astro'
     background: var(--color-overlay);
   }
 
-  .hero-title {
+  .hero-content {
     position: absolute;
-    bottom: 12vh;
+    bottom: 14vh;
     left: 10vw;
+    right: 10vw;
+    max-width: 38rem;
+  }
+
+  .hero-title {
     font-family: var(--font-display);
     font-size: var(--text-hero);
     font-weight: 600;
@@ -45,6 +91,47 @@ import BaseLayout from '../layouts/BaseLayout.astro'
     line-height: 1;
     margin: 0;
     animation: hero-in 0.9s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .hero-tagline {
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    font-weight: 500;
+    color: oklch(100% 0 0 / 88%);
+    line-height: 1.5;
+    margin-top: 1.5rem;
+    max-width: 32rem;
+    animation: hero-in 0.9s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 3vh;
+    right: 10vw;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: oklch(100% 0 0 / 80%);
+    animation: hero-in 0.9s 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: color 200ms;
+  }
+
+  .hero-scroll .label {
+    color: inherit;
+  }
+
+  .hero-scroll:hover {
+    color: white;
+  }
+
+  .hero-scroll-arrow {
+    display: inline-block;
+    animation: scroll-bob 2s ease-in-out infinite;
+  }
+
+  @keyframes scroll-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
   }
 
   @keyframes hero-in {
@@ -58,8 +145,129 @@ import BaseLayout from '../layouts/BaseLayout.astro'
     }
   }
 
+  /* ---- Selected work ---- */
+  .selected {
+    padding: clamp(5rem, 12vh, 9rem) clamp(1.5rem, 10vw, 10rem);
+    background: var(--color-bg);
+  }
+
+  .selected-head {
+    max-width: 40rem;
+    margin-bottom: clamp(2.5rem, 6vh, 4rem);
+  }
+
+  .selected-heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-weight: 600;
+    font-optical-sizing: none;
+    color: var(--color-ink);
+    line-height: 1.1;
+    text-wrap: balance;
+    margin-top: 1rem;
+  }
+
+  .selected-list {
+    list-style: none;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .selected-item {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .selected-link {
+    display: grid;
+    grid-template-columns: 5rem 1fr auto 1.5rem;
+    align-items: baseline;
+    gap: 1.5rem;
+    padding: 1.75rem 0;
+    color: var(--color-ink);
+    transition: padding-left 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .selected-link:hover {
+    padding-left: 1rem;
+  }
+
+  .selected-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2.5vw, 1.875rem);
+    font-weight: 600;
+    font-optical-sizing: none;
+    line-height: 1.15;
+  }
+
+  .selected-client {
+    color: var(--color-muted);
+    align-self: center;
+  }
+
+  .selected-arrow {
+    align-self: center;
+    color: var(--color-muted);
+    opacity: 0;
+    transform: translate(-4px, 4px);
+    transition:
+      opacity 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .selected-link:hover .selected-arrow {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+
+  .selected-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-ink);
+    margin-top: clamp(2.5rem, 6vh, 4rem);
+    transition: gap 200ms;
+  }
+
+  .selected-all:hover {
+    gap: 0.85rem;
+  }
+
+  @media (max-width: 767px) {
+    .hero-scroll {
+      display: none;
+    }
+
+    .selected-link {
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem 1rem;
+      padding: 1.5rem 0;
+    }
+
+    .selected-index {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .selected-title {
+      grid-row: 2;
+      grid-column: 1 / -1;
+    }
+
+    .selected-client {
+      grid-row: 1;
+      grid-column: 2;
+      align-self: start;
+    }
+
+    .selected-arrow {
+      display: none;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .hero-title {
+    .hero-title,
+    .hero-tagline,
+    .hero-scroll,
+    .hero-scroll-arrow {
       animation: none;
     }
   }

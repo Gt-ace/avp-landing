@@ -192,7 +192,9 @@ const displayImages = project.video
   }
 
   .detail-right {
-    /* scrolls naturally with the page */
+    /* Clear the fixed nav pill (top: 20px + 40px tall) so the leading
+       image/video doesn't slide underneath it. */
+    padding-top: clamp(5rem, 10vh, 7rem);
   }
 
   .detail-right img,
@@ -224,6 +226,11 @@ const displayImages = project.video
       position: static;
       height: auto;
       padding: 8rem 1.25rem 3rem;
+    }
+
+    .detail-right {
+      /* Left column already clears the nav and sits above us on mobile. */
+      padding-top: 0;
     }
 
     .detail-credits {
