@@ -1,0 +1,98 @@
+---
+interface Logo {
+  src: string
+  alt: string
+}
+
+const logos: Logo[] = [
+  { src: '/logos/claude-code.svg', alt: 'Claude Code' },
+  { src: '/logos/ts-logo-512.svg', alt: 'TypeScript' },
+  { src: '/logos/Svelte_Logo.svg', alt: 'Svelte' },
+  { src: '/logos/docker-svgrepo-com.svg', alt: 'Docker' },
+  { src: '/logos/cloudflare-icon.svg', alt: 'Cloudflare' },
+  { src: '/logos/hetzner-h.svg', alt: 'Hetzner' },
+  { src: '/logos/drizzle-mono.svg', alt: 'Drizzle' },
+  { src: '/logos/opencode-wordmark-dark.svg', alt: 'opencode' },
+]
+---
+<div class="logo-marquee">
+  <div class="logo-track">
+    {[0, 1].map((setIndex) => (
+      <div class="logo-set" aria-hidden={setIndex === 1 ? 'true' : undefined}>
+        {logos.map((logo) => (
+          <span class="logo-item">
+            <img src={logo.src} alt={logo.alt} loading="lazy" decoding="async" />
+          </span>
+        ))}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+  .logo-marquee {
+    overflow: hidden;
+    margin-top: 3rem;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  .logo-track {
+    display: flex;
+    width: max-content;
+    animation: logo-scroll 32s linear infinite;
+  }
+
+  .logo-marquee:hover .logo-track,
+  .logo-marquee:focus-within .logo-track {
+    animation-play-state: paused;
+  }
+
+  .logo-set {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .logo-item {
+    flex: 0 0 auto;
+    width: 132px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+  }
+
+  .logo-item img {
+    max-width: 68%;
+    max-height: 46%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  @keyframes logo-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .logo-track {
+      animation: none;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .logo-set[aria-hidden='true'] {
+      display: none;
+    }
+  }
+</style>

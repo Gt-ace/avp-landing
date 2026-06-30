@@ -33,7 +33,11 @@ export const projects: Project[] = [
       'Web platform managing 600+ volunteers for START Summit x Hack 2027. Handles registration, role and shift assignment, team management, and event-day check-in. Built mobile-first for the 95% of volunteers on phones.',
     url: 'https://volunteer.startglobal.org',
     tech: ['Next.js 16', 'TypeScript', 'Supabase', 'Cloudflare Containers'],
-    images: ['/images/volunteer-platform.avif'],
+    images: [
+      '/images/volunteer-platform.avif',
+      '/images/benefits-section.avif',
+      '/images/volunteer-platform-mobile.avif',
+    ],
     video: {
       desktopWebm: '/volunteer-platform-desktop.webm',
       desktopMp4: '/volunteer-platform-desktop.mp4',
