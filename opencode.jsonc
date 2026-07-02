@@ -39,7 +39,7 @@
             "humanizer": "ask",
             "customize-opencode": "ask",
             "graphify": "deny",
-            "*": "ask",
+            "*": "allow",
         },
     },
 }
