@@ -15,14 +15,13 @@ if (!project) {
 
 // Repeat the single image 3 times for visual richness
 // (placeholder until real screenshots are added to project.images).
-// Projects with a showcase video lead with it, so they only need their
-// real screenshots once underneath.
-const displayImages = project.video
-  ? project.images
-  : Array.from(
-      { length: 3 },
-      (_, i) => project.images[i % project.images.length]
-    )
+const displayImages =
+  project.video || project.images.length > 1
+    ? project.images
+    : Array.from(
+        { length: 3 },
+        (_, i) => project.images[i % project.images.length]
+      )
 ---
 <BaseLayout title={`${project.title} — AVP Software`}>
   <div class="detail-layout">
@@ -92,6 +91,7 @@ const displayImages = project.video
           src={src}
           alt={project.title}
           loading={i === 0 ? 'eager' : 'lazy'}
+          class={src.includes('-mobile') ? 'detail-image-mobile' : undefined}
           transition:name={i === 0 && !project.video ? `image-${project.slug}` : undefined}
         />
       ))}
@@ -207,6 +207,11 @@ const displayImages = project.video
     aspect-ratio: 16 / 9;
     object-fit: cover;
     background: var(--color-ink);
+  }
+
+  .detail-image-mobile {
+    width: min(280px, 50%);
+    margin: 3rem auto;
   }
 
   @media (max-width: 767px) {
