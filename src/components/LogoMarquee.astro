@@ -13,6 +13,8 @@ const logos: Logo[] = [
   { src: '/logos/hetzner-h.svg', alt: 'Hetzner' },
   { src: '/logos/drizzle-mono.svg', alt: 'Drizzle' },
   { src: '/logos/opencode-wordmark-dark.svg', alt: 'opencode' },
+  { src: '/logos/n8n.svg', alt: 'n8n' },
+  { src: '/logos/better-auth.svg', alt: 'Better Auth' },
 ]
 ---
 <div class="logo-marquee">
@@ -41,11 +43,6 @@ const logos: Logo[] = [
     display: flex;
     width: max-content;
     animation: logo-scroll 32s linear infinite;
-  }
-
-  .logo-marquee:hover .logo-track,
-  .logo-marquee:focus-within .logo-track {
-    animation-play-state: paused;
   }
 
   .logo-set {
