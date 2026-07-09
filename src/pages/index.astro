@@ -6,7 +6,10 @@ const selected = projects.slice(0, 3)
 ---
 <BaseLayout title="AVP Software">
   <section class="hero">
-    <video autoplay muted loop playsinline preload="auto">
+    <video class="hero-video is-active" autoplay muted playsinline preload="auto" aria-hidden="true">
+      <source src="/hero1.webm" type="video/webm" />
+    </video>
+    <video class="hero-video" muted playsinline preload="auto" aria-hidden="true">
       <source src="/hero1.webm" type="video/webm" />
     </video>
     <div class="hero-overlay" aria-hidden="true"></div>
@@ -52,6 +55,42 @@ const selected = projects.slice(0, 3)
   </section>
 </BaseLayout>
 
+<script>
+  const CROSSFADE = 1
+
+  const videos = Array.from(document.querySelectorAll<HTMLVideoElement>('.hero-video'))
+  if (videos.length === 2) {
+    const [a, b] = videos
+    let active = a
+    let switching = false
+
+    const armLoop = (video: HTMLVideoElement, next: HTMLVideoElement) => {
+      video.addEventListener('timeupdate', () => {
+        if (switching || video !== active) return
+        if (!isFinite(video.duration)) return
+        if (video.currentTime < video.duration - CROSSFADE) return
+
+        switching = true
+        next.currentTime = 0
+        next.play()
+        active.classList.remove('is-active')
+        next.classList.add('is-active')
+        const prev = active
+        active = next
+
+        setTimeout(() => {
+          prev.pause()
+          prev.currentTime = 0
+          switching = false
+        }, CROSSFADE * 1000)
+      })
+    }
+
+    armLoop(a, b)
+    armLoop(b, a)
+  }
+</script>
+
 <style>
   .hero {
     position: relative;
@@ -59,12 +98,18 @@ const selected = projects.slice(0, 3)
     overflow: hidden;
   }
 
-  .hero video {
+  .hero-video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s linear;
+  }
+
+  .hero-video.is-active {
+    opacity: 1;
   }
 
   .hero-overlay {
