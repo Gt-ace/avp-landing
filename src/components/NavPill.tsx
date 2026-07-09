@@ -87,6 +87,7 @@ export default function NavPill() {
         transform: 'translateX(-50%)',
         zIndex: 50,
         height: 40,
+        maxWidth: 'calc(100vw - 32px)',
         borderRadius: 9999,
         background: 'oklch(98% 0.003 260 / 85%)',
         backdropFilter: 'blur(12px)',
