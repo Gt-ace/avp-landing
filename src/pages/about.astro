@@ -18,6 +18,36 @@ import LogoMarquee from '../components/LogoMarquee.astro'
         people who use it.
       </p>
     </div>
+
+      <ul class="about-focus">
+        <li><span class="label">Focus</span>Web platforms</li>
+        <li><span class="label">Focus</span>Self-hosted tools</li>
+        <li><span class="label">Focus</span>AI-assisted products</li>
+      </ul>
   </main>
   <LogoMarquee />
 </BaseLayout>
+
+<style>
+  .about-focus {
+    list-style: none;
+    margin-top: 2.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .about-focus li {
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--color-border);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-ink);
+  }
+
+  .about-focus .label {
+    width: 4rem;
+    flex-shrink: 0;
+  }
+</style>
