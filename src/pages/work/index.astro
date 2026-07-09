@@ -9,8 +9,8 @@ const rows = projects.map((project) => ({
 ---
 <BaseLayout title="Work | AVP Software">
   <main class="work-page">
-    {rows.map(({ project, previewImages }) => (
-      <article class="project-row">
+    {rows.map(({ project, previewImages }, i) => (
+      <article class="project-row" style={`--row-index:${i}`}>
         <a href={`/work/${project.slug}`} class="project-row-inner">
           <div class="project-text">
             <div class="project-meta">
@@ -76,25 +76,22 @@ const rows = projects.map((project) => ({
     border-bottom: 1px solid var(--color-border);
   }
 
-  /* Only hide rows for the scroll reveal when JS is present to reveal them */
+  /* Content is visible by default. When JS is present, animate each row in once
+     on load with a small stagger. Never hold content at opacity:0 as a resting
+     state, so a non-scrolling render (crawlers, full-page screenshots) is never blank. */
   :global(html.js) .project-row {
-    opacity: 0;
-    transform: translateY(20px);
-    transition:
-      opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: row-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--row-index, 0) * 90ms);
   }
 
-  :global(html.js) .project-row.visible {
-    opacity: 1;
-    transform: translateY(0);
+  @keyframes row-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   @media (prefers-reduced-motion: reduce) {
     :global(html.js) .project-row {
-      opacity: 1;
-      transform: none;
-      transition: none;
+      animation: none;
     }
   }
 
@@ -175,24 +172,4 @@ const rows = projects.map((project) => ({
   }
 </style>
 
-<script>
-  function initObserver() {
-    const rows = document.querySelectorAll('.project-row')
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add('visible')
-            observer.unobserve(e.target)
-          }
-        })
-      },
-      { threshold: 0.1 }
-    )
-    rows.forEach((r) => observer.observe(r))
-  }
 
-  // Run on first load and after every View Transition navigation
-  initObserver()
-  document.addEventListener('astro:page-load', initObserver)
-</script>
