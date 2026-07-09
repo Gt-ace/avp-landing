@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro'
+---
+<BaseLayout title="Not found | AVP Software">
+  <main class="page-container">
+    <span class="page-label">404</span>
+    <h1 class="page-heading">This page went missing.</h1>
+    <div class="page-body">
+      <p>The link is broken or the page has moved. Nothing here to see.</p>
+    </div>
+    <a href="/" class="back-home label">Back to home &#8594;</a>
+  </main>
+</BaseLayout>
+
+<style>
+  .back-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-ink);
+    margin-top: 1rem;
+    transition: gap 200ms;
+  }
+
+  .back-home:hover {
+    gap: 0.85rem;
+  }
+</style>
