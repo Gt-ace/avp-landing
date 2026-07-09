@@ -17,7 +17,7 @@ export interface Project {
    * Optional showcase video. Renders above the screenshots on the detail page.
    * Each source is optional so we can add a webm only once it's actually
    * smaller than its mp4 sibling (webm-first ordering means the browser eats
-   * the first match — a bloated webm would defeat the purpose).
+   * the first match, so a bloated webm would defeat the purpose).
    */
   video?: {
     desktopWebm?: string

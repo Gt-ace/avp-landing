@@ -55,7 +55,7 @@ jobs:
             # First-time install of the run definition. On later runs the
             # file already exists and the redirect keeps it untouched. The
             # workflow owns this file; manual edits on the box will be
-            # overwritten by the next deploy — by design.
+            # overwritten by the next deploy, by design.
             if [ ! -f docker-compose.yml ]; then
               echo "WARN: docker-compose.yml not present on box; will be created on next manual run." >&2
             fi

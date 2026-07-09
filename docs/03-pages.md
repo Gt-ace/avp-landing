@@ -142,7 +142,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import { projects } from '../../data/projects'
 ---
-<BaseLayout title="Work — AVP Software">
+<BaseLayout title="Work | AVP Software">
   <main class="work-page">
     {projects.map((project) => (
       <article class="project-row">
@@ -333,7 +333,7 @@ const displayImages = Array.from(
   (_, i) => project.images[i % project.images.length]
 )
 ---
-<BaseLayout title={`${project.title} — AVP Software`}>
+<BaseLayout title={`${project.title} | AVP Software`}>
   <div class="detail-layout">
     <aside class="detail-left">
       <span class="label">{project.client}</span>
@@ -521,7 +521,7 @@ const displayImages = Array.from(
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
 ---
-<BaseLayout title="About — AVP Software">
+<BaseLayout title="About | AVP Software">
   <main class="page-container">
     <span class="page-label">About</span>
     <h1 class="page-heading">Arthur Van Petegem</h1>
@@ -570,7 +570,7 @@ const contacts = [
   },
 ]
 ---
-<BaseLayout title="Contact — AVP Software">
+<BaseLayout title="Contact | AVP Software">
   <main class="page-container">
     <span class="page-label">Contact</span>
     <h1 class="page-heading">Get in touch</h1>
@@ -667,15 +667,15 @@ const contacts = [
 
 ## Final verification checklist
 
-- [ ] `npm run build` — no errors, `dist/` populated
-- [ ] `/` — hero video plays full-bleed, title bottom-left, fades up on load
-- [ ] `/work` — three project rows, images visible, rows animate in on scroll
-- [ ] `/work/volunteer-platform`, `/work/crux`, `/work/amber` — detail pages render
+- [ ] `npm run build`: no errors, `dist/` populated
+- [ ] `/`: hero video plays full-bleed, title bottom-left, fades up on load
+- [ ] `/work`: three project rows, images visible, rows animate in on scroll
+- [ ] `/work/volunteer-platform`, `/work/crux`, `/work/amber`: detail pages render
 - [ ] Detail page: left panel sticky, right panel scrolls, "Visit project" links open correctly
-- [ ] `/about` — heading and two body paragraphs render in correct fonts
-- [ ] `/contact` — three rows, hover shifts row right 4px
+- [ ] `/about`: heading and two body paragraphs render in correct fonts
+- [ ] `/contact`: three rows, hover shifts row right 4px
 - [ ] Nav pill: centered top, expands on hover, active link highlighted
 - [ ] View Transitions: title morphs between work list and detail page
 - [ ] Mobile 375px: all pages single-column, no horizontal overflow
 - [ ] `prefers-reduced-motion`: all animations instant/disabled
-- [ ] `docker build -t avp-landing .` — succeeds
+- [ ] `docker build -t avp-landing .`: succeeds

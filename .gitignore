@@ -7,7 +7,7 @@ out/
 build/
 dist/
 
-# env / secrets — never in the image
+# env / secrets: never in the image
 .env
 .env.*
 !.env.example

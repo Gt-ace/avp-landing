@@ -69,7 +69,7 @@ module.exports = {
 }
 ```
 
-## 5. .gitignore (update — add these lines if not present)
+## 5. .gitignore (update: add these lines if not present)
 
 ```
 node_modules
@@ -78,11 +78,11 @@ dist
 *.log
 ```
 
-## 6. .dockerignore (update — add `.astro` if not present)
+## 6. .dockerignore (update: add `.astro` if not present)
 
 The existing `.dockerignore` already excludes `node_modules` and `dist`. Add `.astro` to it.
 
-## 7. Dockerfile — update builder stage only
+## 7. Dockerfile: update builder stage only
 
 Replace only the `builder` stage. The `runner` stage (nginx:alpine) is unchanged. The final Dockerfile must look exactly like this:
 
@@ -112,7 +112,7 @@ src/
     work/         (empty)
   styles/         (empty)
 public/
-  fonts/          (empty — font files added manually)
+  fonts/          (empty: font files added manually)
   images/         (empty)
 ```
 
@@ -140,7 +140,7 @@ npm install
 
 ## Verification
 
-- `npm run dev` starts without errors (will show blank page — pages come in later tasks)
+- `npm run dev` starts without errors (will show blank page: pages come in later tasks)
 - `public/images/` contains the three `.avif` files
 - `public/hero2.webm` exists
 - `node_modules/` contains `astro`, `framer-motion`, `react`

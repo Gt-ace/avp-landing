@@ -2,7 +2,7 @@
 
 Depends on: Task 01 complete.
 
-Create `src/components/NavPill.tsx`. This is a React island (`client:load`) — the only interactive navigation element. It floats fixed at the top center of every page and expands on hover to reveal nav links.
+Create `src/components/NavPill.tsx`. This is a React island (`client:load`): the only interactive navigation element. It floats fixed at the top center of every page and expands on hover to reveal nav links.
 
 ---
 
@@ -112,7 +112,7 @@ export default function NavPill() {
 ## Notes
 
 - The `motion.div` spring (`stiffness: 280, damping: 28`) gives a quick, weighted expansion with no bounce.
-- `transform: translateX(-50%)` on the `style` prop rather than in `animate` — Framer Motion must not own the centering transform or it will interfere with the width animation.
+- `transform: translateX(-50%)` on the `style` prop rather than in `animate`: Framer Motion must not own the centering transform or it will interfere with the width animation.
 - `overflow: hidden` clips the text items during the width transition so nothing bleeds outside the pill.
 - The `astro:page-load` event listener keeps the active link state accurate after View Transitions navigation.
 - `@media (prefers-reduced-motion: reduce)`: Framer Motion respects this automatically and disables spring transitions. No additional code needed.
@@ -126,4 +126,4 @@ export default function NavPill() {
 - On hover: expands to 480px, three links appear with stagger
 - Active page link is `--color-ink`; others are `--color-muted`
 - Navigating between pages keeps the pill visible without re-mounting (Astro View Transitions persists fixed elements)
-- On mobile (375px): pill still centered, usable via tap (no hover — pill stays expanded on touch devices; this is acceptable)
+- On mobile (375px): pill still centered, usable via tap (no hover: pill stays expanded on touch devices; this is acceptable)

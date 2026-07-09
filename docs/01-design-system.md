@@ -141,7 +141,7 @@ const { title = 'AVP Software' } = Astro.props
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="AVP Software — creative software studio" />
+    <meta name="description" content="AVP Software: creative software studio" />
     <title>{title}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -167,4 +167,4 @@ const { title = 'AVP Software' } = Astro.props
 - `global.css` present at `src/styles/global.css`
 - `BaseLayout.astro` present at `src/layouts/BaseLayout.astro`
 - All CSS custom properties defined on `:root`
-- Font-face blocks declared (PP Neue Montreal woff2 will 404 until font files are added manually — expected)
+- Font-face blocks declared (PP Neue Montreal woff2 will 404 until font files are added manually: expected)

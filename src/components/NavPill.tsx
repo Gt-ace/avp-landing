@@ -43,7 +43,7 @@ function Letter({
   return (
     <a
       href="/"
-      aria-label="AVP Software — home"
+      aria-label="AVP Software home"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -100,10 +100,10 @@ export default function NavPill() {
         whiteSpace: 'nowrap',
       }}
     >
-      {/* A — pinned left, slides outward as the pill expands */}
+      {/* A: pinned left, slides outward as the pill expands */}
       <Letter src="/logo-mark.svg" height={A_HEIGHT} link />
 
-      {/* Middle slot — absolutely centred so swapping its contents never
+      {/* Middle slot: absolutely centred so swapping its contents never
           nudges the A or P. Shows V when closed, nav links when open. */}
       <div
         style={{
@@ -177,7 +177,7 @@ export default function NavPill() {
         </AnimatePresence>
       </div>
 
-      {/* P — pinned right, slides outward as the pill expands */}
+      {/* P: pinned right, slides outward as the pill expands */}
       <Letter src="/p.svg" height={VP_HEIGHT} link />
     </motion.div>
   )
