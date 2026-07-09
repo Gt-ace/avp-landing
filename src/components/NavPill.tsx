@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const NAV_LINKS = [
@@ -61,6 +61,17 @@ function Letter({
 export default function NavPill() {
   const [isOpen, setIsOpen] = useState(false)
   const [pathname, setPathname] = useState('/')
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Touch has no hover: close the pill when the user taps outside it.
+  useEffect(() => {
+    if (!isOpen) return
+    const onDocPointer = (e: PointerEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setIsOpen(false)
+    }
+    document.addEventListener('pointerdown', onDocPointer)
+    return () => document.removeEventListener('pointerdown', onDocPointer)
+  }, [isOpen])
 
   useEffect(() => {
     setPathname(window.location.pathname)
@@ -72,8 +83,10 @@ export default function NavPill() {
 
   return (
     <motion.div
+      ref={containerRef}
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
+      onClick={() => setIsOpen(true)}
       animate={{ width: isOpen ? 480 : 100 }}
       transition={{
         type: 'spring',
