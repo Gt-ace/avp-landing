@@ -116,7 +116,15 @@ const selected = projects.slice(0, 3)
   .hero-overlay {
     position: absolute;
     inset: 0;
-    background: var(--color-overlay);
+    /* Bottom-weighted scrim: keeps the scenery clear up top while guaranteeing
+       contrast for the title and tagline anchored at the bottom-left. */
+    background: linear-gradient(
+      to top,
+      oklch(0% 0 0 / 58%) 0%,
+      oklch(0% 0 0 / 32%) 32%,
+      oklch(0% 0 0 / 12%) 60%,
+      transparent 88%
+    );
   }
 
   .hero-content {
