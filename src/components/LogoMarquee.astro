@@ -1,7 +1,14 @@
 ---
+interface Props {
+  label?: string
+}
+const { label = 'Built with' } = Astro.props
+
 interface Logo {
   src: string
   alt: string
+  /** Optional box width override in px for wide wordmarks. Defaults to 132. */
+  w?: number
 }
 
 const logos: Logo[] = [
@@ -12,31 +19,49 @@ const logos: Logo[] = [
   { src: '/logos/cloudflare-icon.svg', alt: 'Cloudflare' },
   { src: '/logos/hetzner-h.svg', alt: 'Hetzner' },
   { src: '/logos/drizzle-mono.svg', alt: 'Drizzle' },
-  { src: '/logos/opencode-wordmark-dark.svg', alt: 'opencode' },
-  { src: '/logos/n8n.svg', alt: 'n8n' },
-  { src: '/logos/better-auth.svg', alt: 'Better Auth' },
+  { src: '/logos/opencode-wordmark-dark.svg', alt: 'opencode', w: 168 },
+  { src: '/logos/n8n.svg', alt: 'n8n', w: 168 },
+  { src: '/logos/better-auth.svg', alt: 'Better Auth', w: 168 },
   { src: '/logos/git.svg', alt: 'Git' },
   { src: '/logos/github.svg', alt: 'GitHub' },
 ]
 ---
-<div class="logo-marquee">
-  <div class="logo-track">
-    {[0, 1].map((setIndex) => (
-      <div class="logo-set" aria-hidden={setIndex === 1 ? 'true' : undefined}>
-        {logos.map((logo) => (
-          <span class="logo-item">
-            <img src={logo.src} alt={logo.alt} loading="lazy" decoding="async" />
-          </span>
-        ))}
-      </div>
-    ))}
+<section class="logo-marquee-wrap" aria-label={label}>
+  <span class="logo-marquee-label">{label}</span>
+  <div class="logo-marquee">
+    <div class="logo-track">
+      {[0, 1].map((setIndex) => (
+        <div class="logo-set" aria-hidden={setIndex === 1 ? 'true' : undefined}>
+          {logos.map((logo) => (
+            <span class="logo-item" style={logo.w ? `width:${logo.w}px` : undefined}>
+              <img src={logo.src} alt={logo.alt} loading="eager" decoding="async" />
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
   </div>
-</div>
+</section>
 
 <style>
+  .logo-marquee-wrap {
+    margin-top: 3rem;
+  }
+
+  .logo-marquee-label {
+    display: block;
+    font-family: var(--font-body);
+    font-size: var(--text-label);
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
   .logo-marquee {
     overflow: hidden;
-    margin-top: 3rem;
     -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
     mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
   }
