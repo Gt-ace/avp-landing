@@ -54,6 +54,14 @@ const faqs = [
     a: 'Send a message through the <a href="/contact">contact page</a> and describe the workflow that annoys you most. If I can help, I will tell you how. If I cannot, I will say so.',
   },
 ]
+
+const summaryQuery = encodeURIComponent('Summarize https://avp.software')
+const aiProviders = [
+  { name: 'Google AI Mode', href: `https://www.google.com/search?udm=50&aep=11&q=${summaryQuery}` },
+  { name: 'ChatGPT', href: `https://chatgpt.com/?q=${summaryQuery}` },
+  { name: 'Claude', href: `https://claude.ai/new?q=${summaryQuery}` },
+  { name: 'Perplexity', href: `https://www.perplexity.ai/search?q=${summaryQuery}` },
+]
 ---
 <BaseLayout title="AVP Software">
   <section class="hero">
@@ -143,6 +151,17 @@ const faqs = [
         </details>
       ))}
     </div>
+  </section>
+
+  <section class="ai-strip" data-reveal>
+    <span class="label">Request an AI summary</span>
+    <nav class="ai-links" aria-label="AI summary providers">
+      {aiProviders.map((p) => (
+        <a class="ai-link label" href={p.href} target="_blank" rel="noopener">
+          {p.name} <span aria-hidden="true">&#8599;</span>
+        </a>
+      ))}
+    </nav>
   </section>
 </BaseLayout>
 
@@ -365,6 +384,33 @@ const faqs = [
 
   .selected-all:hover {
     gap: 0.85rem;
+  }
+
+  /* ---- AI summary strip ---- */
+  .ai-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding: 2.5rem clamp(1.5rem, 10vw, 10rem) 3rem;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg);
+  }
+
+  .ai-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .ai-link {
+    color: var(--color-muted);
+    transition: color 200ms;
+  }
+
+  .ai-link:hover {
+    color: var(--color-ink);
   }
 
   /* ---- FAQ ---- */
