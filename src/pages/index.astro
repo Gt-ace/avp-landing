@@ -1,18 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
+import HeroAscii from '../components/HeroAscii.astro'
 import { projects } from '../data/projects'
 
 const selected = projects.slice(0, 3)
 ---
 <BaseLayout title="AVP Software">
   <section class="hero">
-    <video class="hero-video is-active" autoplay muted playsinline preload="auto" aria-hidden="true">
-      <source src="/hero1.webm" type="video/webm" />
-    </video>
-    <video class="hero-video" muted playsinline preload="auto" aria-hidden="true">
-      <source src="/hero1.webm" type="video/webm" />
-    </video>
-    <div class="hero-overlay" aria-hidden="true"></div>
+    <HeroAscii />
 
     <div class="hero-content">
       <h1 class="hero-title">AVP Software</h1>
@@ -56,42 +51,6 @@ const selected = projects.slice(0, 3)
 </BaseLayout>
 
 <script>
-  const CROSSFADE = 1
-
-  const videos = Array.from(document.querySelectorAll<HTMLVideoElement>('.hero-video'))
-  if (videos.length === 2) {
-    const [a, b] = videos
-    let active = a
-    let switching = false
-
-    const armLoop = (video: HTMLVideoElement, next: HTMLVideoElement) => {
-      video.addEventListener('timeupdate', () => {
-        if (switching || video !== active) return
-        if (!isFinite(video.duration)) return
-        if (video.currentTime < video.duration - CROSSFADE) return
-
-        switching = true
-        next.currentTime = 0
-        next.play()
-        active.classList.remove('is-active')
-        next.classList.add('is-active')
-        const prev = active
-        active = next
-
-        setTimeout(() => {
-          prev.pause()
-          prev.currentTime = 0
-          switching = false
-        }, CROSSFADE * 1000)
-      })
-    }
-
-    armLoop(a, b)
-    armLoop(b, a)
-  }
-</script>
-
-<script>
   function armReveals() {
     const els = document.querySelectorAll('[data-reveal]:not(.in-view)')
     if (!els.length) return
@@ -117,35 +76,7 @@ const selected = projects.slice(0, 3)
     position: relative;
     min-height: 100dvh;
     overflow: hidden;
-    background: #000;
-  }
-
-  .hero-video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity 1s linear;
-  }
-
-  .hero-video.is-active {
-    opacity: 1;
-  }
-
-  .hero-overlay {
-    position: absolute;
-    inset: 0;
-    /* Bottom-weighted scrim: keeps the scenery clear up top while guaranteeing
-       contrast for the title and tagline anchored at the bottom-left. */
-    background: linear-gradient(
-      to top,
-      oklch(0% 0 0 / 58%) 0%,
-      oklch(0% 0 0 / 32%) 32%,
-      oklch(0% 0 0 / 12%) 60%,
-      transparent 88%
-    );
+    background: var(--color-bg);
   }
 
   .hero-content {
@@ -161,7 +92,7 @@ const selected = projects.slice(0, 3)
     font-size: var(--text-hero);
     font-weight: 600;
     font-optical-sizing: none;
-    color: white;
+    color: var(--color-ink);
     text-wrap: balance;
     line-height: 1;
     margin: 0;
@@ -172,7 +103,7 @@ const selected = projects.slice(0, 3)
     font-family: var(--font-body);
     font-size: clamp(1rem, 1.6vw, 1.25rem);
     font-weight: 500;
-    color: oklch(100% 0 0 / 88%);
+    color: var(--color-muted);
     line-height: 1.5;
     margin-top: 1.5rem;
     max-width: 32rem;
@@ -186,7 +117,7 @@ const selected = projects.slice(0, 3)
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    color: oklch(100% 0 0 / 80%);
+    color: var(--color-muted);
     animation: hero-in 0.9s 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
     transition: color 200ms;
   }
@@ -196,7 +127,7 @@ const selected = projects.slice(0, 3)
   }
 
   .hero-scroll:hover {
-    color: white;
+    color: var(--color-ink);
   }
 
   .hero-scroll-arrow {
