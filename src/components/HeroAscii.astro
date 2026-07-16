@@ -19,7 +19,8 @@
 <script>
   const GLYPHS = ' .·:;=+*#%@'
   const INK = 'oklch(10% 0.005 260)'
-  const RADIUS = 150
+  const RADIUS = 170
+  const LOGO_RATIO = 1114 / 1042 // from the mark's viewBox, used when naturalWidth is 0
 
   type Cell = { x: number; y: number; base: number; phase: number }
 
@@ -68,16 +69,21 @@
       const cols = Math.ceil(width / cell)
       const rows = Math.ceil(height / cell)
 
-      // Rasterise the logo into a grid-sized alpha map.
+      // Rasterise the logo into a grid-sized alpha map. The mark's SVG
+      // ships with a viewBox but no width/height, so naturalWidth can be 0
+      // (WebKit, some Chromium states) — never trust it for the ratio, and
+      // draw with explicit destination dims so drawImage scales the viewBox.
       let sample = (_cx: number, _cy: number) => 0
-      if (logo.complete && logo.naturalWidth > 0) {
+      if (logo.complete) {
         const off = document.createElement('canvas')
         off.width = cols
         off.height = rows
         const octx = off.getContext('2d')
         if (octx) {
-          const size = Math.min(cols, rows) * 0.6
-          const ratio = logo.naturalWidth / logo.naturalHeight
+          const size = Math.min(cols, rows) * 0.72
+          const nw = logo.naturalWidth
+          const nh = logo.naturalHeight
+          const ratio = nw > 0 && nh > 0 ? nw / nh : LOGO_RATIO
           const w = ratio >= 1 ? size : size * ratio
           const h = ratio >= 1 ? size / ratio : size
           octx.drawImage(logo, (cols - w) / 2, (rows - h) / 2, w, h)
@@ -97,6 +103,19 @@
           })
         }
       }
+
+      // Safety net: if the mark never rasterised (load error, blocked
+      // getImageData) the field would be blank — fall back to a soft radial
+      // so the hero always has a rendered ground.
+      if (!cells.some((c) => c.base > 0.04)) {
+        const mx = width / 2
+        const my = height / 2
+        const maxd = Math.hypot(mx, my)
+        for (const c of cells) {
+          const d = Math.hypot(c.x - mx, c.y - my)
+          c.base = Math.pow(Math.max(0, 1 - d / maxd), 1.6) * 0.9
+        }
+      }
     }
 
     function draw() {
@@ -108,12 +127,16 @@
       for (const c of cells) {
         const d = Math.hypot(c.x - pointer.x, c.y - pointer.y)
         const near = Math.max(0, 1 - d / RADIUS)
-        const ripple = near > 0 ? near * (0.6 + 0.4 * Math.sin(d / 14 - t * 5)) : 0
-        const shimmer = reduced ? 0.04 : 0.04 * (1 + Math.sin(t * 0.8 + c.phase))
-        const level = Math.min(1, c.base * 0.55 + shimmer + ripple)
-        if (level < 0.05) continue
+        const ripple = near > 0 ? near * (0.65 + 0.35 * Math.sin(d / 14 - t * 5)) : 0
+        // A slow diagonal wave travels the field so it reads as alive before
+        // any interaction — low amplitude so it stays texture, not a pulse.
+        const shimmer = reduced
+          ? 0.05
+          : 0.045 + 0.045 * Math.sin(c.x * 0.012 + c.y * 0.016 - t * 0.7 + c.phase * 0.4)
+        const level = Math.min(1, c.base * 0.78 + shimmer + ripple)
+        if (level < 0.06) continue
         const g = GLYPHS[Math.min(GLYPHS.length - 1, Math.round(level * (GLYPHS.length - 1)))]
-        ctx.globalAlpha = 0.08 + level * 0.55
+        ctx.globalAlpha = 0.12 + level * 0.62
         ctx.fillText(g, c.x, c.y)
       }
       ctx.globalAlpha = 1
