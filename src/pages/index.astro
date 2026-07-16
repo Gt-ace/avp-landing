@@ -29,7 +29,7 @@ const selected = projects.slice(0, 3)
   </section>
 
   <section class="selected" id="work">
-    <header class="selected-head">
+    <header class="selected-head" data-reveal>
       <span class="page-label">Selected work</span>
       <h2 class="selected-heading">
         A few of the things I've shipped.
@@ -37,8 +37,8 @@ const selected = projects.slice(0, 3)
     </header>
 
     <ul class="selected-list">
-      {selected.map((project) => (
-        <li class="selected-item">
+      {selected.map((project, i) => (
+        <li class="selected-item" data-reveal style={`--reveal-delay: ${i * 90}ms`}>
           <a href={`/work/${project.slug}`} class="selected-link">
             <span class="selected-index label">{project.year}</span>
             <span class="selected-title">{project.title}</span>
@@ -49,7 +49,7 @@ const selected = projects.slice(0, 3)
       ))}
     </ul>
 
-    <a href="/work" class="selected-all label">
+    <a href="/work" class="selected-all label" data-reveal>
       View all work <span aria-hidden="true">&#8594;</span>
     </a>
   </section>
@@ -89,6 +89,27 @@ const selected = projects.slice(0, 3)
     armLoop(a, b)
     armLoop(b, a)
   }
+</script>
+
+<script>
+  function armReveals() {
+    const els = document.querySelectorAll('[data-reveal]:not(.in-view)')
+    if (!els.length) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          entry.target.classList.add('in-view')
+          io.unobserve(entry.target)
+        }
+      },
+      { threshold: 0.15 }
+    )
+    els.forEach((el) => io.observe(el))
+  }
+
+  armReveals()
+  document.addEventListener('astro:page-load', armReveals)
 </script>
 
 <style>
