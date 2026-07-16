@@ -4,6 +4,25 @@ import HeroAscii from '../components/HeroAscii.astro'
 import { projects } from '../data/projects'
 
 const selected = projects.slice(0, 3)
+
+const steps = [
+  {
+    title: 'Map',
+    body: 'I start inside the workflow: the spreadsheet someone updates by hand, the approval that lives in an inbox. The tool gets designed around how your team already works.',
+  },
+  {
+    title: 'Design',
+    body: 'Internal tools people actually want to open. Status visible at a glance, forms that adapt to the case, and no manual required to use any of it.',
+  },
+  {
+    title: 'Build',
+    body: 'Wired into the systems you already pay for: accounting, e-signing, email, webhooks. Work moves itself forward instead of waiting for someone to forward it.',
+  },
+  {
+    title: 'Run',
+    body: 'I host it, watch it, and keep automating. Every release after launch removes another manual step.',
+  },
+]
 ---
 <BaseLayout title="AVP Software">
   <section class="hero">
@@ -21,6 +40,27 @@ const selected = projects.slice(0, 3)
       <span class="label">Selected work</span>
       <span class="hero-scroll-arrow" aria-hidden="true">&#8595;</span>
     </a>
+  </section>
+
+  <section class="process">
+    <header class="process-head" data-reveal>
+      <span class="page-label">Process</span>
+      <h2 class="process-heading">
+        Most projects start with an idea. Mine start with your team's most
+        annoying Tuesday.
+      </h2>
+    </header>
+    <ol class="process-steps">
+      {steps.map((step, i) => (
+        <li class="process-step" data-reveal style={`--reveal-delay: ${i * 80}ms`}>
+          <span class="process-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          <div class="process-text">
+            <h3 class="process-title label">{step.title}</h3>
+            <p class="process-body">{step.body}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
   </section>
 
   <section class="selected" id="work">
@@ -235,6 +275,77 @@ const selected = projects.slice(0, 3)
 
   .selected-all:hover {
     gap: 0.85rem;
+  }
+
+  /* ---- Process ---- */
+  .process {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: clamp(2rem, 6vw, 6rem);
+    align-items: start;
+    padding: clamp(5rem, 12vh, 9rem) clamp(1.5rem, 10vw, 10rem);
+    background: var(--color-bg);
+  }
+
+  .process-head {
+    position: sticky;
+    top: clamp(5rem, 15vh, 9rem);
+  }
+
+  .process-heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+    font-weight: 600;
+    font-optical-sizing: none;
+    color: var(--color-ink);
+    line-height: 1.15;
+    text-wrap: balance;
+    margin-top: 1rem;
+  }
+
+  .process-steps {
+    list-style: none;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .process-step {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    align-items: start;
+    padding: clamp(2rem, 5vh, 3.5rem) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .process-num {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-weight: 600;
+    font-optical-sizing: none;
+    line-height: 0.9;
+    color: var(--color-ink);
+  }
+
+  .process-title {
+    color: var(--color-ink);
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .process-body {
+    color: var(--color-muted);
+    line-height: 1.7;
+    max-width: 42ch;
+  }
+
+  @media (max-width: 767px) {
+    .process {
+      grid-template-columns: 1fr;
+    }
+
+    .process-head {
+      position: static;
+    }
   }
 
   @media (max-width: 767px) {
