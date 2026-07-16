@@ -88,6 +88,11 @@ const steps = [
       View all work <span aria-hidden="true">&#8594;</span>
     </a>
   </section>
+
+  <section class="bigtype" aria-hidden="true">
+    <div class="bigtype-line" data-speed="-0.35"><span>DESIGN BUILD</span></div>
+    <div class="bigtype-line" data-speed="0.35"><span>AUTOMATE RUN</span></div>
+  </section>
 </BaseLayout>
 
 <script>
@@ -109,6 +114,40 @@ const steps = [
 
   armReveals()
   document.addEventListener('astro:page-load', armReveals)
+</script>
+
+<script>
+  function armBigtype() {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const lines = Array.from(
+      document.querySelectorAll<HTMLElement>('.bigtype-line')
+    )
+    if (!lines.length) return
+
+    let ticking = false
+    const update = () => {
+      ticking = false
+      const vh = innerHeight
+      for (const line of lines) {
+        const rect = line.getBoundingClientRect()
+        const progress = (rect.top + rect.height / 2 - vh / 2) / vh
+        const speed = parseFloat(line.dataset.speed || '0')
+        const span = line.firstElementChild as HTMLElement
+        span.style.setProperty('--shift', `${progress * speed * innerWidth}px`)
+      }
+    }
+    const onScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(update)
+    }
+
+    addEventListener('scroll', onScroll, { passive: true })
+    update()
+  }
+
+  armBigtype()
+  document.addEventListener('astro:page-load', armBigtype)
 </script>
 
 <style>
@@ -275,6 +314,30 @@ const steps = [
 
   .selected-all:hover {
     gap: 0.85rem;
+  }
+
+  /* ---- Big type ---- */
+  .bigtype {
+    overflow: hidden;
+    padding: clamp(4rem, 12vh, 9rem) 0;
+    background: var(--color-bg);
+  }
+
+  .bigtype-line {
+    display: flex;
+    justify-content: center;
+  }
+
+  .bigtype-line span {
+    font-family: var(--font-display);
+    font-size: clamp(4.5rem, 16vw, 15rem);
+    font-weight: 600;
+    font-optical-sizing: none;
+    line-height: 0.95;
+    white-space: nowrap;
+    color: var(--color-ink);
+    transform: translateX(var(--shift, 0px));
+    will-change: transform;
   }
 
   /* ---- Process ---- */
