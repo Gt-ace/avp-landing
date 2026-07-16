@@ -19,3 +19,5 @@ dist/
 
 # local opencode tooling cache (large)
 .opencode/
+
+inspo/
