@@ -1,0 +1,161 @@
+---
+// Decorative interactive dot grid behind the hero. A faint, evenly spaced
+// field of dots at rest; dots near the pointer swell and darken toward ink,
+// easing back as it leaves. The pointer is always tracked directly — after
+// a spell of inactivity (or when it leaves the hero) a slow autonomous focus
+// point drifts so the field still feels alive. Static uniform grid under
+// prefers-reduced-motion.
+---
+<canvas class="hero-dots" aria-hidden="true"></canvas>
+
+<style>
+  .hero-dots {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+
+<script>
+  const INK = 'oklch(10% 0.005 260)'
+  const TAU = Math.PI * 2
+  const RADIUS = 190 // px of pointer influence
+  const BASE_R = 1.1 // dot radius at rest
+  const MAX_R = 3.6 // dot radius under the pointer
+  const BASE_A = 0.1 // dot alpha at rest
+  const MAX_A = 0.85 // dot alpha under the pointer
+  const IDLE = 2500 // ms of no pointer input before the autonomous drift resumes
+
+  type Dot = { x: number; y: number }
+
+  function setup(canvas: HTMLCanvasElement) {
+    if (canvas.dataset.ready) return
+    canvas.dataset.ready = 'true'
+
+    const ctx = canvas.getContext('2d')
+    const host = canvas.parentElement
+    if (!ctx || !host) return
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    let dots: Dot[] = []
+    let width = 0
+    let height = 0
+    let raf = 0
+    let running = false
+    let lastMove = -Infinity
+
+    // The drawn pointer eases toward the real one for an organic trail.
+    const pointer = { x: -9999, y: -9999, tx: -9999, ty: -9999 }
+
+    function rebuild() {
+      const rect = host.getBoundingClientRect()
+      if (!rect.width || !rect.height) return
+      const dpr = Math.min(devicePixelRatio || 1, 2)
+      width = rect.width
+      height = rect.height
+      canvas.width = Math.round(width * dpr)
+      canvas.height = Math.round(height * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
+      const spacing = width < 768 ? 26 : 34
+      const cols = Math.floor(width / spacing)
+      const rows = Math.floor(height / spacing)
+      // Centre the grid so the inset margins match on both axes.
+      const ox = (width - (cols - 1) * spacing) / 2
+      const oy = (height - (rows - 1) * spacing) / 2
+
+      dots = []
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          dots.push({ x: ox + c * spacing, y: oy + r * spacing })
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height)
+      pointer.x += (pointer.tx - pointer.x) * 0.15
+      pointer.y += (pointer.ty - pointer.y) * 0.15
+      ctx.fillStyle = INK
+
+      for (const d of dots) {
+        const dist = Math.hypot(d.x - pointer.x, d.y - pointer.y)
+        const near = Math.max(0, 1 - dist / RADIUS)
+        const n = near * near * (3 - 2 * near) // smoothstep falloff
+        const r = BASE_R + n * (MAX_R - BASE_R)
+        ctx.globalAlpha = BASE_A + n * (MAX_A - BASE_A)
+        ctx.beginPath()
+        ctx.arc(d.x, d.y, r, 0, TAU)
+        ctx.fill()
+      }
+      ctx.globalAlpha = 1
+    }
+
+    function loop(now: number) {
+      // No recent pointer input → a slow focus point wanders the field. This
+      // is also the default on touch, where pointermove never fires.
+      if (now - lastMove > IDLE) {
+        const t = now / 1000
+        pointer.tx = width * (0.5 + 0.32 * Math.sin(t * 0.45))
+        pointer.ty = height * (0.5 + 0.26 * Math.cos(t * 0.33))
+      }
+      draw()
+      if (running) raf = requestAnimationFrame(loop)
+    }
+
+    function start() {
+      if (running || reduced) return
+      running = true
+      raf = requestAnimationFrame(loop)
+    }
+
+    function stop() {
+      running = false
+      cancelAnimationFrame(raf)
+    }
+
+    host.addEventListener('pointermove', (e) => {
+      const rect = canvas.getBoundingClientRect()
+      pointer.tx = e.clientX - rect.left
+      pointer.ty = e.clientY - rect.top
+      lastMove = performance.now()
+    })
+    // Cursor gone → let the autonomous drift take back over immediately.
+    host.addEventListener('pointerleave', () => {
+      lastMove = -Infinity
+    })
+
+    new ResizeObserver(() => {
+      rebuild()
+      if (!running) draw()
+    }).observe(host)
+
+    // Pause the loop while the hero is off-screen.
+    new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) start()
+      else stop()
+    }).observe(canvas)
+
+    rebuild()
+    draw()
+    start()
+  }
+
+  function init() {
+    document
+      .querySelectorAll<HTMLCanvasElement>('canvas.hero-dots')
+      .forEach((c) => {
+        try {
+          setup(c)
+        } catch {
+          // Decorative only: a failure must never break the page.
+        }
+      })
+  }
+
+  init()
+  document.addEventListener('astro:page-load', init)
+</script>
