@@ -1,0 +1,30 @@
+# AVP Software
+
+> A small studio that designs and builds software end to end: interface,
+> product, and the infrastructure underneath. Focused on internal tools
+> and workflow automation for teams.
+
+Run by one person. Projects are quoted at a fixed price for a defined
+scope, then hosted and maintained after launch.
+
+## Services
+
+- Map: study the existing workflow before building anything
+- Design: internal tools with visible status and adaptive forms
+- Build: integrations with accounting, e-signing, email, and webhooks
+- Run: hosting, monitoring, and continued automation after launch
+
+## Selected work
+
+- [START Summit x Hack Volunteer Platform](https://avp.software/work/volunteer-platform):
+  web platform managing 600+ volunteers; registration, role and shift
+  assignment, team management, event-day check-in
+- [Crux](https://avp.software/work/crux): product comparison engine that
+  normalises specifications with an LLM and renders side-by-side
+  comparisons
+- [Amber](https://avp.software/work/amber): self-hostable personal
+  canvas; markdown files on disk, no database lock-in, AGPL-3.0
+
+## Contact
+
+- [Contact page](https://avp.software/contact)

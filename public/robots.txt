@@ -1,0 +1,15 @@
+#
+#   +---------+     +---------+     +---------+
+#   | INTAKE  | --> | APPROVE | --> |  DONE   |
+#   +---------+     +---------+     +---------+
+#   | [ ] [ ] |     |   [x]   |     | [x] [x] |
+#   +---------+     +---------+     +---------+
+#
+#   Another card just moved itself. That is the job.
+#
+#   Humans:   https://avp.software/contact
+#   Machines: https://avp.software/llms.txt
+#
+
+User-agent: *
+Allow: /
