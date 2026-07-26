@@ -158,8 +158,9 @@ const aiProviders = [
 </script>
 
 <script>
+  import { calculateBigtypeShift } from '../scripts/bigtype-motion.mjs'
+
   function armBigtype() {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const lines = Array.from(
       document.querySelectorAll<HTMLElement>('.bigtype-line')
     )
@@ -171,10 +172,11 @@ const aiProviders = [
       const vh = innerHeight
       for (const line of lines) {
         const rect = line.getBoundingClientRect()
-        const progress = (rect.top + rect.height / 2 - vh / 2) / vh
+        const lineCenter = rect.top + rect.height / 2
         const speed = parseFloat(line.dataset.speed || '0')
+        const shift = calculateBigtypeShift(lineCenter, vh, innerWidth, speed)
         const span = line.firstElementChild as HTMLElement
-        span.style.setProperty('--shift', `${progress * speed * innerWidth}px`)
+        span.style.setProperty('--shift', `${shift}px`)
       }
     }
     const onScroll = () => {
