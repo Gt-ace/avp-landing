@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
-import HeroDots from '../components/HeroDots.astro'
+import HeroWorkflow from '../components/HeroWorkflow.astro'
 
 const steps = [
   {
@@ -61,22 +61,24 @@ const aiProviders = [
 ]
 ---
 <BaseLayout title="AVP Software">
-  <section class="hero">
-    <HeroDots />
+  <div class="hero-stage" data-workflow-stage>
+    <section class="hero">
+      <HeroWorkflow />
 
-    <div class="hero-content">
-      <h1 class="hero-title">AVP Software</h1>
-      <p class="hero-tagline">
-        A small studio that designs and builds software end to end: interface,
-        product, and the infrastructure underneath.
-      </p>
-    </div>
+      <div class="hero-content">
+        <h1 class="hero-title">AVP Software</h1>
+        <p class="hero-tagline">
+          A small studio that designs and builds software end to end: interface,
+          product, and the infrastructure underneath.
+        </p>
+      </div>
 
-    <a class="hero-scroll" href="#process" aria-label="Scroll to process">
-      <span class="label">Process</span>
-      <span class="hero-scroll-arrow" aria-hidden="true">&#8595;</span>
-    </a>
-  </section>
+      <a class="hero-scroll" href="#process" aria-label="Scroll to process">
+        <span class="label">Process</span>
+        <span class="hero-scroll-arrow" aria-hidden="true">&#8595;</span>
+      </a>
+    </section>
+  </div>
 
   <section class="process" id="process">
     <header class="process-head" data-reveal>
@@ -192,11 +194,23 @@ const aiProviders = [
 </script>
 
 <style>
-  .hero {
+  .hero-stage {
     position: relative;
+    min-height: 135dvh;
+    background: var(--color-bg);
+  }
+
+  .hero {
+    position: sticky;
+    top: 0;
     min-height: 100dvh;
     overflow: hidden;
     background: var(--color-bg);
+  }
+
+  .hero-content,
+  .hero-scroll {
+    z-index: 2;
   }
 
   .hero-content {
@@ -494,12 +508,24 @@ const aiProviders = [
   }
 
   @media (max-width: 767px) {
+    .hero-stage {
+      min-height: 125dvh;
+    }
+
     .hero-scroll {
       display: none;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .hero-stage {
+      min-height: 100dvh;
+    }
+
+    .hero {
+      position: relative;
+    }
+
     .hero-title,
     .hero-tagline,
     .hero-scroll,

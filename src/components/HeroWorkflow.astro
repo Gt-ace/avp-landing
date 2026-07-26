@@ -1,0 +1,229 @@
+---
+import {
+  connections,
+  fragments,
+} from './hero-workflow/workflow-model'
+
+const resolvedSteps = fragments
+  .filter((fragment) => fragment.resolved.wide.opacity === 1)
+  .sort((a, b) => a.resolved.wide.x - b.resolved.wide.x)
+---
+
+<div class="workflow" data-workflow-root>
+  <ol class="workflow-fallback" aria-label="A clear client workflow">
+    {resolvedSteps.map((fragment) => (
+      <li>{fragment.resolvedLabel}</li>
+    ))}
+  </ol>
+
+  <div class="workflow-scene" data-workflow-scene aria-hidden="true">
+    <svg class="workflow-lines" aria-hidden="true">
+      {connections.map((connection) => (
+        <line
+          data-connection={connection.id}
+          data-connection-state={connection.state}
+        />
+      ))}
+      <line data-process-tail />
+    </svg>
+
+    <ol class="workflow-fragments">
+      {fragments.map((fragment) => (
+        <li
+          class="workflow-fragment"
+          data-fragment={fragment.id}
+          data-state="resolved"
+        >
+          <span class="workflow-label workflow-label--messy">
+            {fragment.messyLabel}
+          </span>
+          <span class="workflow-label workflow-label--resolved">
+            {fragment.resolvedLabel}
+          </span>
+        </li>
+      ))}
+    </ol>
+  </div>
+</div>
+
+<script>
+  import { setupWorkflow } from './hero-workflow/workflow-controller'
+
+  const cleanups = new WeakMap<HTMLElement, () => void>()
+
+  function armWorkflow() {
+    document
+      .querySelectorAll<HTMLElement>('[data-workflow-root]')
+      .forEach((root) => {
+        cleanups.get(root)?.()
+        cleanups.set(root, setupWorkflow(root))
+      })
+  }
+
+  armWorkflow()
+  document.addEventListener('astro:page-load', armWorkflow)
+</script>
+
+<style>
+  .workflow,
+  .workflow-scene {
+    position: absolute;
+    inset: 0;
+  }
+
+  .workflow {
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .workflow-scene {
+    display: none;
+    overflow: hidden;
+    pointer-events: auto;
+    touch-action: pan-y;
+  }
+
+  .workflow[data-enhanced='true'] .workflow-scene {
+    display: block;
+  }
+
+  .workflow-fallback {
+    position: absolute;
+    top: 34%;
+    right: 8vw;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    list-style: none;
+  }
+
+  .workflow-fallback li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: var(--text-label);
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .workflow-fallback li:not(:last-child)::after {
+    content: '→';
+    color: var(--color-muted);
+  }
+
+  .workflow[data-enhanced='true'] .workflow-fallback {
+    display: none;
+  }
+
+  .workflow-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .workflow-lines line {
+    stroke: var(--color-ink);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    opacity: 0;
+  }
+
+  .workflow-lines line[data-connection-state='resolved'] {
+    opacity: 0.42;
+  }
+
+  .workflow-fragments {
+    list-style: none;
+  }
+
+  .workflow-fragment {
+    --resolve-progress: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    min-width: max-content;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid color-mix(in oklch, var(--color-ink) 32%, transparent);
+    border-radius: 0.125rem;
+    background: color-mix(in oklch, var(--color-bg) 94%, transparent);
+    font-family: var(--font-body);
+    font-size: var(--text-label);
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    line-height: 1;
+    text-transform: uppercase;
+    cursor: grab;
+    user-select: none;
+    will-change: transform, opacity;
+  }
+
+  .workflow-fragment[data-dragging='true'] {
+    border-color: var(--color-ink);
+    cursor: grabbing;
+  }
+
+  .workflow-label {
+    grid-area: 1 / 1;
+  }
+
+  .workflow-label--messy {
+    opacity: calc(1 - var(--resolve-progress));
+  }
+
+  .workflow-label--resolved {
+    opacity: var(--resolve-progress);
+  }
+
+  @media (pointer: coarse) {
+    .workflow-fragment {
+      cursor: default;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .workflow-fallback {
+      top: 8%;
+      right: auto;
+      left: 8vw;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .workflow-fallback li {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.35rem;
+    }
+
+    .workflow-fallback li:not(:last-child)::after {
+      content: '↓';
+    }
+
+    .workflow-scene {
+      bottom: 38%;
+    }
+
+    .workflow-fragment {
+      padding: 0.48rem 0.58rem;
+      font-size: 0.625rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .workflow-fragment {
+      will-change: auto;
+    }
+
+    .workflow-scene {
+      display: none !important;
+    }
+
+    .workflow-fallback {
+      display: flex !important;
+    }
+  }
+</style>
