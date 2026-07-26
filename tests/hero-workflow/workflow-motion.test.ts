@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   clamp01,
+  composedProgress,
   interpolatePose,
   proximityProgress,
   scrollProgress,
@@ -46,5 +47,15 @@ describe('workflow motion', () => {
     expect(next.value).toBeLessThan(80)
     expect(next.value).toBeGreaterThan(0)
     expect(next.velocity).toBeLessThan(0)
+  })
+})
+
+describe('composed workflow progress', () => {
+  it('lets global scroll progress remain authoritative', () => {
+    expect(composedProgress(0.7, 0.2)).toBe(0.7)
+  })
+
+  it('lets local interaction temporarily reveal more clarity', () => {
+    expect(composedProgress(0.2, 0.8)).toBe(0.8)
   })
 })

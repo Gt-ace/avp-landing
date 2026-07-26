@@ -68,3 +68,7 @@ export function stepSpring(
     velocity,
   }
 }
+
+export function composedProgress(scroll: number, local: number) {
+  return Math.max(clamp01(scroll), clamp01(local))
+}
