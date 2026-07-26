@@ -36,7 +36,7 @@ export const fragments: FragmentDefinition[] = [
     resolvedLabel: 'Request',
     messy: {
       wide: pose(58, 13, -6),
-      compact: pose(18, 10, -5),
+      compact: pose(17.2, 10, -5),
     },
     resolved: {
       wide: pose(42, 34, 0),
@@ -49,7 +49,7 @@ export const fragments: FragmentDefinition[] = [
     resolvedLabel: 'Check details',
     messy: {
       wide: pose(77, 17, 5),
-      compact: pose(61, 15, 4),
+      compact: pose(65, 22.5, 4),
     },
     resolved: {
       wide: pose(54, 34, 0),
@@ -75,7 +75,7 @@ export const fragments: FragmentDefinition[] = [
     resolvedLabel: 'Copy/paste',
     messy: {
       wide: pose(86, 39, 7),
-      compact: pose(68, 31, 5),
+      compact: pose(68, 33, 5),
     },
     resolved: {
       wide: pose(63, 34, 0, 0),
@@ -87,7 +87,7 @@ export const fragments: FragmentDefinition[] = [
     messyLabel: 'Approval?',
     resolvedLabel: 'Approval',
     messy: {
-      wide: pose(55, 48, 4),
+      wide: pose(56, 48, 4),
       compact: pose(17, 43, 4),
     },
     resolved: {

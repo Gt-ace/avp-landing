@@ -41,7 +41,6 @@ export function pointerInteraction(pointerType: string, finePointer: boolean) {
 
 export function setupWorkflow(root: HTMLElement) {
   if (root.dataset.ready === 'true') return () => {}
-  root.dataset.ready = 'true'
 
   const stage = root.closest<HTMLElement>('[data-workflow-stage]')
   const scene = root.querySelector<HTMLElement>('[data-workflow-scene]')
@@ -49,6 +48,7 @@ export function setupWorkflow(root: HTMLElement) {
   const fineQuery = matchMedia('(pointer: fine)')
   if (!stage || !scene) return () => {}
   if (reducedQuery.matches) {
+    root.dataset.ready = 'true'
     root.dataset.reducedMotion = 'true'
     return () => {
       delete root.dataset.ready
@@ -120,14 +120,25 @@ export function setupWorkflow(root: HTMLElement) {
     const progressById = new Map<string, number>()
     let springActive = false
 
+    if (tapUntil && now >= tapUntil) {
+      tapUntil = 0
+      pointer.x = -10_000
+      pointer.y = -10_000
+    }
+
     for (const definition of fragments) {
       const item = runtime.get(definition.id)
       if (!item) continue
 
+      const localProgress = proximityProgress(
+        item.center,
+        pointer,
+        POINTER_RADIUS,
+      )
       const localTarget =
         now < tapUntil
-          ? 0.82
-          : proximityProgress(item.center, pointer, POINTER_RADIUS)
+          ? localProgress * 0.82
+          : localProgress
       item.resolve = stepSpring(item.resolve, localTarget, delta, SPRING)
       const progress = composedProgress(scrollValue, item.resolve.value)
       const pose = interpolatePose(
@@ -268,7 +279,7 @@ export function setupWorkflow(root: HTMLElement) {
   }
 
   const onPointerLeave = () => {
-    if (dragId) return
+    if (dragId || performance.now() < tapUntil) return
     pointer.x = -10_000
     pointer.y = -10_000
     requestFrame()
@@ -303,6 +314,7 @@ export function setupWorkflow(root: HTMLElement) {
   scene.addEventListener('pointerleave', onPointerLeave)
   reducedQuery.addEventListener('change', onReducedChange)
 
+  root.dataset.ready = 'true'
   root.dataset.enhanced = 'true'
   measure()
   updateScroll()
