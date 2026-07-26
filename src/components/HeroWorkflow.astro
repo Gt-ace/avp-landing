@@ -49,18 +49,29 @@ const resolvedSteps = fragments
 <script>
   import { setupWorkflow } from './hero-workflow/workflow-controller'
 
-  const cleanups = new WeakMap<HTMLElement, () => void>()
+  const cleanups = new Map<HTMLElement, () => void>()
+
+  function cleanupWorkflow(root: HTMLElement) {
+    cleanups.get(root)?.()
+    cleanups.delete(root)
+  }
+
+  function cleanupWorkflows() {
+    cleanups.forEach((cleanup) => cleanup())
+    cleanups.clear()
+  }
 
   function armWorkflow() {
     document
       .querySelectorAll<HTMLElement>('[data-workflow-root]')
       .forEach((root) => {
-        cleanups.get(root)?.()
+        cleanupWorkflow(root)
         cleanups.set(root, setupWorkflow(root))
       })
   }
 
   armWorkflow()
+  document.addEventListener('astro:before-swap', cleanupWorkflows)
   document.addEventListener('astro:page-load', armWorkflow)
 </script>
 
