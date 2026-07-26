@@ -15,6 +15,8 @@ import {
 
 type RuntimeFragment = {
   element: HTMLElement
+  messyLabel: HTMLElement | null
+  resolvedLabel: HTMLElement | null
   center: Point
   resolve: SpringState
   offsetX: SpringState
@@ -24,6 +26,18 @@ type RuntimeFragment = {
 const SPRING = { stiffness: 180, damping: 24 }
 const POINTER_RADIUS = 220
 const TAP_HOLD_MS = 650
+
+export function pauseWorkflowFrame(
+  frame: number,
+  cancelFrame: (frameId: number) => void,
+) {
+  cancelFrame(frame)
+  return 0
+}
+
+export function pointerInteraction(pointerType: string, finePointer: boolean) {
+  return pointerType === 'touch' || !finePointer ? 'tap' : 'drag'
+}
 
 export function setupWorkflow(root: HTMLElement) {
   if (root.dataset.ready === 'true') return () => {}
@@ -50,6 +64,12 @@ export function setupWorkflow(root: HTMLElement) {
     if (!element) continue
     runtime.set(definition.id, {
       element,
+      messyLabel: element.querySelector<HTMLElement>(
+        '.workflow-label--messy',
+      ),
+      resolvedLabel: element.querySelector<HTMLElement>(
+        '.workflow-label--resolved',
+      ),
       center: { x: 0, y: 0 },
       resolve: { value: 0, velocity: 0 },
       offsetX: { value: 0, velocity: 0 },
@@ -135,8 +155,12 @@ export function setupWorkflow(root: HTMLElement) {
         `translate3d(${x}px, ${y}px, 0) ` +
         `translate(-50%, -50%) rotate(${pose.rotation}deg)`
       item.element.style.opacity = String(pose.opacity)
-      item.element.style.setProperty('--resolve-progress', String(progress))
-      item.element.dataset.state = progress > 0.55 ? 'resolved' : 'messy'
+      if (item.messyLabel) {
+        item.messyLabel.style.opacity = String(1 - progress)
+      }
+      if (item.resolvedLabel) {
+        item.resolvedLabel.style.opacity = String(progress)
+      }
     }
 
     for (const connection of connections) {
@@ -201,15 +225,19 @@ export function setupWorkflow(root: HTMLElement) {
     const target = (event.target as HTMLElement).closest<HTMLElement>(
       '[data-fragment]',
     )
+    const interaction = pointerInteraction(
+      event.pointerType,
+      fineQuery.matches,
+    )
     if (!target) {
-      if (!fineQuery.matches) {
+      if (interaction === 'tap') {
         tapUntil = performance.now() + TAP_HOLD_MS
         requestFrame()
       }
       return
     }
 
-    if (!fineQuery.matches) {
+    if (interaction === 'tap') {
       tapUntil = performance.now() + TAP_HOLD_MS
       requestFrame()
       return
@@ -255,13 +283,15 @@ export function setupWorkflow(root: HTMLElement) {
   const intersectionObserver = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting
     if (visible) requestFrame()
-    else cancelAnimationFrame(frame)
+    else frame = pauseWorkflowFrame(frame, cancelAnimationFrame)
   })
   intersectionObserver.observe(stage)
 
   const onReducedChange = () => {
     root.dataset.reducedMotion = String(reducedQuery.matches)
-    if (reducedQuery.matches) cancelAnimationFrame(frame)
+    if (reducedQuery.matches) {
+      frame = pauseWorkflowFrame(frame, cancelAnimationFrame)
+    }
     else requestFrame()
   }
 
@@ -279,7 +309,7 @@ export function setupWorkflow(root: HTMLElement) {
   onReducedChange()
 
   return () => {
-    cancelAnimationFrame(frame)
+    frame = pauseWorkflowFrame(frame, cancelAnimationFrame)
     resizeObserver.disconnect()
     intersectionObserver.disconnect()
     removeEventListener('scroll', updateScroll)
