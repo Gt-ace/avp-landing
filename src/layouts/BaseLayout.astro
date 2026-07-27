@@ -14,6 +14,12 @@ const {
 
 const canonical = new URL(Astro.url.pathname, Astro.site)
 const ogImage = new URL('/og-image.png', Astro.site)
+const staticNavLinks = [
+  { label: 'Home', href: '/' },
+  { label: 'Work', href: '/work' },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+]
 ---
 <!doctype html>
 <html lang="en">
@@ -58,7 +64,62 @@ const ogImage = new URL('/og-image.png', Astro.site)
     <ViewTransitions />
   </head>
   <body>
-    <NavPill client:load />
+    <div class="enhanced-nav">
+      <NavPill client:load />
+    </div>
+    <nav class="static-primary-nav" aria-label="Primary navigation">
+      {staticNavLinks.map((link) => (
+        <a href={link.href}>{link.label}</a>
+      ))}
+    </nav>
     <slot />
   </body>
 </html>
+
+<style is:global>
+  .static-primary-nav {
+    position: fixed;
+    z-index: 50;
+    top: 1.25rem;
+    left: 50%;
+    display: flex;
+    width: min(22rem, calc(100vw - 2rem));
+    height: 2.5rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    transform: translateX(-50%);
+    border: 1px solid oklch(85% 0.003 260 / 60%);
+    border-radius: 9999px;
+    background: oklch(98% 0.003 260 / 85%);
+    backdrop-filter: blur(12px);
+    font-family: var(--font-body);
+    font-size: var(--text-label);
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .static-primary-nav a {
+    color: var(--color-muted);
+  }
+
+  .static-primary-nav a:hover,
+  .static-primary-nav a:focus-visible {
+    color: var(--color-ink);
+  }
+
+  .static-primary-nav a:focus-visible {
+    outline: 1px solid var(--color-ink);
+    outline-offset: 0.25rem;
+  }
+
+  html.js .static-primary-nav {
+    display: none;
+  }
+
+  html:not(.js) .enhanced-nav {
+    display: none;
+  }
+</style>
