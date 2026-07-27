@@ -59,17 +59,8 @@ export function setupWorkflow(root: HTMLElement) {
 
   const stage = root.closest<HTMLElement>('[data-workflow-stage]')
   const scene = root.querySelector<HTMLElement>('[data-workflow-scene]')
-  const reducedQuery = matchMedia('(prefers-reduced-motion: reduce)')
   const fineQuery = matchMedia('(pointer: fine)')
   if (!stage || !scene) return () => {}
-  if (reducedQuery.matches) {
-    root.dataset.ready = 'true'
-    root.dataset.reducedMotion = 'true'
-    return () => {
-      delete root.dataset.ready
-      delete root.dataset.reducedMotion
-    }
-  }
 
   const runtime = new Map<string, RuntimeFragment>()
   for (const definition of fragments) {
@@ -126,7 +117,7 @@ export function setupWorkflow(root: HTMLElement) {
 
   const render = (now: number) => {
     frame = 0
-    if (!visible || reducedQuery.matches) return
+    if (!visible) return
 
     const { width, height } = sceneSize
     const mode = layoutModeForWidth(width)
@@ -229,7 +220,7 @@ export function setupWorkflow(root: HTMLElement) {
   }
 
   const requestFrame = () => {
-    if (!frame && visible && !reducedQuery.matches) {
+    if (!frame && visible) {
       frame = requestAnimationFrame(render)
     }
   }
@@ -332,28 +323,16 @@ export function setupWorkflow(root: HTMLElement) {
   })
   intersectionObserver.observe(stage)
 
-  const onReducedChange = () => {
-    root.dataset.reducedMotion = String(reducedQuery.matches)
-    if (reducedQuery.matches) {
-      frame = pauseWorkflowFrame(frame, cancelAnimationFrame)
-    }
-    else requestFrame()
-  }
-
   addEventListener('scroll', updateScroll, { passive: true })
   scene.addEventListener('pointermove', onPointerMove)
   scene.addEventListener('pointerdown', onPointerDown)
   scene.addEventListener('pointerup', endDrag)
   scene.addEventListener('pointercancel', endDrag)
   scene.addEventListener('pointerleave', onPointerLeave)
-  reducedQuery.addEventListener('change', onReducedChange)
-
   root.dataset.ready = 'true'
   root.dataset.enhanced = 'true'
   measure()
   updateScroll()
-  onReducedChange()
-
   return () => {
     frame = pauseWorkflowFrame(frame, cancelAnimationFrame)
     resizeObserver.disconnect()
@@ -364,7 +343,6 @@ export function setupWorkflow(root: HTMLElement) {
     scene.removeEventListener('pointerup', endDrag)
     scene.removeEventListener('pointercancel', endDrag)
     scene.removeEventListener('pointerleave', onPointerLeave)
-    reducedQuery.removeEventListener('change', onReducedChange)
     delete root.dataset.ready
   }
 }

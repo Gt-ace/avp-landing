@@ -71,7 +71,6 @@ const resolvedSteps = fragments
         } catch {
           delete root.dataset.ready
           delete root.dataset.enhanced
-          delete root.dataset.reducedMotion
         }
       })
   }
@@ -253,24 +252,4 @@ const resolvedSteps = fragments
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .workflow-fragment {
-      will-change: auto;
-    }
-
-    .workflow-scene {
-      display: none !important;
-    }
-
-    .workflow-fallback {
-      display: flex !important;
-      width: auto !important;
-      height: auto !important;
-      margin: 0 !important;
-      overflow: visible !important;
-      clip: auto !important;
-      clip-path: none !important;
-      white-space: normal !important;
-    }
-  }
 </style>

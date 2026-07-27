@@ -1,10 +1,15 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   localTargetForFragment,
   pauseWorkflowFrame,
   pointerEventsForOpacity,
   pointerInteraction,
+  setupWorkflow,
 } from '../../src/components/hero-workflow/workflow-controller'
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe('workflow frame lifecycle', () => {
   it('clears the scheduler guard when pausing an in-flight frame', () => {
@@ -16,6 +21,77 @@ describe('workflow frame lifecycle', () => {
 
     expect(canceled).toEqual([42])
     expect(frame).toBe(0)
+  })
+
+  it('enhances and schedules the scroll animation with reduced motion enabled', () => {
+    const requestAnimationFrame = vi.fn(() => 1)
+    const windowAddEventListener = vi.fn()
+    const sceneAddEventListener = vi.fn()
+    const reducedQuery = {
+      matches: true,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }
+
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) =>
+        query.includes('prefers-reduced-motion')
+          ? reducedQuery
+          : { ...reducedQuery, matches: false },
+      ),
+    )
+    vi.stubGlobal('requestAnimationFrame', requestAnimationFrame)
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
+    vi.stubGlobal('addEventListener', windowAddEventListener)
+    vi.stubGlobal('removeEventListener', vi.fn())
+    vi.stubGlobal('innerHeight', 900)
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    )
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    )
+
+    const scene = {
+      getBoundingClientRect: () => ({
+        width: 1200,
+        height: 900,
+        top: 0,
+        left: 0,
+      }),
+      addEventListener: sceneAddEventListener,
+      removeEventListener: vi.fn(),
+    }
+    const stage = {
+      getBoundingClientRect: () => ({ top: 0, height: 1125 }),
+    }
+    const root = {
+      dataset: {} as Record<string, string>,
+      closest: () => stage,
+      querySelector: (selector: string) =>
+        selector === '[data-workflow-scene]' ? scene : null,
+    }
+
+    const cleanup = setupWorkflow(root as unknown as HTMLElement)
+
+    expect(root.dataset.enhanced).toBe('true')
+    expect(windowAddEventListener).toHaveBeenCalledWith(
+      'scroll',
+      expect.any(Function),
+      { passive: true },
+    )
+    expect(requestAnimationFrame).toHaveBeenCalledOnce()
+
+    cleanup()
   })
 })
 

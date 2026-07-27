@@ -55,7 +55,8 @@ Done`.
 - Fine-pointer proximity creates local resolution. Drag adds a temporary
   offset whose release settles through a restrained interruptible spring.
 - Touch uses scroll plus a brief tap response; touch drag is disabled.
-- Reduced motion and script failure render the resolved system statically.
+- The scroll-linked workflow remains active under reduced motion; script
+  failure renders the resolved system statically.
 - Animation is framework-free, pauses off-screen, and restricts per-frame work
   to transforms, opacity, and SVG endpoints.
 
