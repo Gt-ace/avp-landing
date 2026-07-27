@@ -39,6 +39,21 @@ export function pointerInteraction(pointerType: string, finePointer: boolean) {
   return pointerType === 'touch' || !finePointer ? 'tap' : 'drag'
 }
 
+export function localTargetForFragment(
+  fragmentId: string,
+  hoverId: string | null,
+  dragId: string | null,
+  localProgress: number,
+  tapActive: boolean,
+) {
+  if (fragmentId === hoverId || fragmentId === dragId) return 0
+  return tapActive ? localProgress * 0.82 : localProgress
+}
+
+export function pointerEventsForOpacity(opacity: number): 'auto' | 'none' {
+  return opacity < 0.05 ? 'none' : 'auto'
+}
+
 export function setupWorkflow(root: HTMLElement) {
   if (root.dataset.ready === 'true') return () => {}
 
@@ -80,6 +95,7 @@ export function setupWorkflow(root: HTMLElement) {
   const pointer: Point = { x: -10_000, y: -10_000 }
   let scrollValue = 1
   let tapUntil = 0
+  let hoverId: string | null = null
   let dragId: string | null = null
   let dragOrigin: Point = { x: 0, y: 0 }
   let sceneSize = { width: 1, height: 1 }
@@ -135,10 +151,13 @@ export function setupWorkflow(root: HTMLElement) {
         pointer,
         POINTER_RADIUS,
       )
-      const localTarget =
-        now < tapUntil
-          ? localProgress * 0.82
-          : localProgress
+      const localTarget = localTargetForFragment(
+        definition.id,
+        hoverId,
+        dragId,
+        localProgress,
+        now < tapUntil,
+      )
       item.resolve = stepSpring(item.resolve, localTarget, delta, SPRING)
       const progress = composedProgress(scrollValue, item.resolve.value)
       const pose = interpolatePose(
@@ -166,6 +185,7 @@ export function setupWorkflow(root: HTMLElement) {
         `translate3d(${x}px, ${y}px, 0) ` +
         `translate(-50%, -50%) rotate(${pose.rotation}deg)`
       item.element.style.opacity = String(pose.opacity)
+      item.element.style.pointerEvents = pointerEventsForOpacity(pose.opacity)
       if (item.messyLabel) {
         item.messyLabel.style.opacity = String(1 - progress)
       }
@@ -218,6 +238,18 @@ export function setupWorkflow(root: HTMLElement) {
     const rect = scene.getBoundingClientRect()
     pointer.x = event.clientX - rect.left
     pointer.y = event.clientY - rect.top
+
+    const interaction = pointerInteraction(
+      event.pointerType,
+      fineQuery.matches,
+    )
+    const hoverTarget = (event.target as HTMLElement).closest<HTMLElement>(
+      '[data-fragment]',
+    )
+    hoverId =
+      interaction === 'drag'
+        ? hoverTarget?.dataset.fragment ?? null
+        : null
 
     if (dragId) {
       const item = runtime.get(dragId)
@@ -274,12 +306,14 @@ export function setupWorkflow(root: HTMLElement) {
     if (item?.element.hasPointerCapture(event.pointerId)) {
       item.element.releasePointerCapture(event.pointerId)
     }
+    hoverId = null
     dragId = null
     requestFrame()
   }
 
   const onPointerLeave = () => {
     if (dragId || performance.now() < tapUntil) return
+    hoverId = null
     pointer.x = -10_000
     pointer.y = -10_000
     requestFrame()

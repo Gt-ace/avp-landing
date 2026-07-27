@@ -191,6 +191,16 @@ const resolvedSteps = fragments
     cursor: grabbing;
   }
 
+  @media (pointer: fine) {
+    .workflow-fragment:hover {
+      border-color: color-mix(
+        in oklch,
+        var(--color-ink) 58%,
+        transparent
+      );
+    }
+  }
+
   .workflow-label {
     grid-area: 1 / 1;
   }
