@@ -21,3 +21,14 @@ dist/
 .opencode/
 
 inspo/
+
+# local agent sessions and worktrees
+.agents/skills/impeccable/
+.claude/settings.local.json
+.claude/worktrees/
+.codex/hooks.json
+.superpowers/
+.worktrees/
+
+# obsolete local execution plan
+docs/superpowers/plans/2026-07-26-bigtype-desktop-scroll.md
