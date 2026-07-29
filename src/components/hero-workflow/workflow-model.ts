@@ -38,6 +38,8 @@ export const artifacts: ArtifactDefinition[] = [
     content: [
       { label: 'From', value: 'Operations' },
       { label: 'Subject', value: 'Latest version?' },
+      { label: 'Time', value: 'Tuesday 09:12' },
+      { label: 'Attachment', value: 'latest-version.pdf' },
       { label: 'Message', value: 'Could you send the latest version?' },
     ],
     poses: {
@@ -99,7 +101,7 @@ export const artifacts: ArtifactDefinition[] = [
     content: [{ label: 'Note', value: 'Follow up again' }],
     poses: {
       recognition: {
-        wide: pose(48, 48, -7), tablet: pose(52, 44, -5), mobile: pose(50, 64, 2),
+        wide: pose(52, 18, -7), tablet: pose(52, 44, -5), mobile: pose(50, 64, 2),
       },
       diagnosis: {
         wide: pose(53, 51, -3), tablet: pose(54, 46, -2), mobile: pose(50, 63, 0),

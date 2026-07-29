@@ -31,6 +31,24 @@ describe('Tuesday Board model', () => {
     ])
   })
 
+  it('keeps the email artifact recognizable as an inbox message', () => {
+    expect(artifacts[0].content).toEqual([
+      { label: 'From', value: 'Operations' },
+      { label: 'Subject', value: 'Latest version?' },
+      { label: 'Time', value: 'Tuesday 09:12' },
+      { label: 'Attachment', value: 'latest-version.pdf' },
+      { label: 'Message', value: 'Could you send the latest version?' },
+    ])
+  })
+
+  it('puts the irritating reminder over the spreadsheet in recognition', () => {
+    const sheet = artifacts.find((item) => item.id === 'sheet')!
+    const reminder = artifacts.find((item) => item.id === 'reminder')!
+
+    expect(reminder.poses.recognition.wide.x).toBeGreaterThan(sheet.poses.recognition.wide.x - 20)
+    expect(reminder.poses.recognition.wide.y).toBeLessThan(sheet.poses.recognition.wide.y + 20)
+  })
+
   it('references valid artifact ids in every connection', () => {
     const ids = new Set(artifacts.map((item) => item.id))
     for (const edge of connections) {
