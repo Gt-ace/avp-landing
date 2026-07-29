@@ -14,6 +14,7 @@
 - Use ChatGPT `https://chatgpt.com/?q=`, Claude `https://claude.ai/new?q=`, Gemini `https://gemini.google.com/app?prompt=`, and Grok `https://grok.com/?q=`.
 - Keep the existing `Request an AI summary` label and external links with `target="_blank"` and `rel="noopener"`.
 - Preserve provider names as image `alt` text for accessible link names.
+- Add one focused source-contract regression test for the provider set, logo paths, and accessible image markup.
 - Modify only `src/pages/index.astro` and the four requested SVGs, plus this plan/spec documentation.
 - Do not add dependencies, client-side state, or unrelated landing-page changes.
 
@@ -66,11 +67,44 @@
 ### Task 2: Render the four logos in the landing-page summary strip
 
 **Files:**
+- Test: `tests/ai-provider-logos.test.mjs`
 - Modify: `src/pages/index.astro` provider data near lines 54–63
 - Modify: `src/pages/index.astro` AI links near lines 143–151
 - Modify: `src/pages/index.astro` AI strip styles near lines 340–365
 
 **Interfaces:** Consumes the four SVG paths from Task 1 and produces a static `aiProviders` array with `{ name, logo, href }` entries.
+
+- [ ] **Step 0: Write and verify the failing source-contract test**
+
+  Create `tests/ai-provider-logos.test.mjs` with this test:
+
+  ```js
+  import assert from "node:assert/strict"
+  import { readFile } from "node:fs/promises"
+  import test from "node:test"
+
+  const page = await readFile(new URL("../src/pages/index.astro", import.meta.url), "utf8")
+
+  test("landing page exposes four prefilled AI provider logo links", () => {
+    assert.match(page, /encodeURIComponent\("Summarize https:\/\/thesoftware\.company"\)/)
+
+    for (const [name, logo, host] of [
+      ["ChatGPT", "/logos/chatgpt.svg", "https:\/\/chatgpt\\.com\/\\?q="],
+      ["Claude", "/logos/claude.svg", "https:\/\/claude\\.ai\/new\\?q="],
+      ["Gemini", "/logos/gemini.svg", "https:\/\/gemini\\.google\\.com\/app\\?prompt="],
+      ["Grok", "/logos/grok.svg", "https:\/\/grok\\.com\/\\?q="],
+    ]) {
+      assert.match(page, new RegExp(`name: "${name}"`))
+      assert.match(page, new RegExp(`logo: "${logo.replaceAll(".", "\\.")}"`))
+      assert.match(page, new RegExp(host))
+    }
+
+    assert.match(page, /<img src=\{p\.logo\} alt=\{p\.name\} width="128" height="128"/)
+  })
+  ```
+
+  Run `node --test tests/ai-provider-logos.test.mjs`.
+  Expected: FAIL because the current page has the old provider set and text links.
 
 - [ ] **Step 1: Replace the provider data**
 
@@ -161,14 +195,14 @@
 
 **Interfaces:** Consumes the committed asset and page changes and produces verified static output ready to integrate into `main`.
 
-- [ ] **Step 1: Run the direct motion test**
+- [ ] **Step 1: Run the source-contract and direct motion tests**
 
-  Run `node --test tests/bigtype-motion.test.mjs`.
-  Expected: 1 test passes and 0 failures.
+  Run `node --test tests/ai-provider-logos.test.mjs tests/bigtype-motion.test.mjs`.
+  Expected: 2 tests pass and 0 failures.
 
-- [ ] **Step 2: Run Vitest without the Node test file**
+- [ ] **Step 2: Run Vitest without the Node test files**
 
-  Run `npx vitest run --exclude='**/bigtype-motion.test.mjs'`.
+  Run `npx vitest run --exclude='**/bigtype-motion.test.mjs' --exclude='**/ai-provider-logos.test.mjs'`.
   Expected: 3 test files pass and 20 tests pass.
 
 - [ ] **Step 3: Build the static site**
