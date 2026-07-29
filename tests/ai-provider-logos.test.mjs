@@ -7,7 +7,7 @@ const page = await readFile(new URL("../src/pages/index.astro", import.meta.url)
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 test("landing page exposes four prefilled AI provider logo links", () => {
-  assert.match(page, /encodeURIComponent\("Summarize https:\/\/thesoftware\.company"\)/)
+  assert.match(page, /encodeURIComponent\("Summarize https:\/\/avp\.software"\)/)
 
   for (const [name, logo, host] of [
     ["ChatGPT", "/logos/chatgpt.svg", "https://chatgpt.com/?q="],
