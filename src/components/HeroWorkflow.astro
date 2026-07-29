@@ -1,45 +1,111 @@
 ---
 import {
+  artifacts,
   connections,
-  fragments,
 } from './hero-workflow/workflow-model'
 
-const resolvedSteps = fragments
-  .filter((fragment) => fragment.resolved.wide.opacity === 1)
-  .sort((a, b) => a.resolved.wide.x - b.resolved.wide.x)
+const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
 ---
 
 <div class="workflow" data-workflow-root>
-  <ol class="workflow-fallback" aria-label="A clear client workflow">
-    {resolvedSteps.map((fragment) => (
-      <li>{fragment.resolvedLabel}</li>
+  <span class="workflow-example-label">Example workflow</span>
+
+  <ol class="workflow-fallback" aria-label="Resolved workflow">
+    {resolvedSteps.map((step) => (
+      <li><span>{step}</span></li>
     ))}
   </ol>
 
   <div class="workflow-scene" data-workflow-scene aria-hidden="true">
-    <svg class="workflow-lines" aria-hidden="true">
+    <svg
+      class="workflow-lines"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
       {connections.map((connection) => (
         <line
           data-connection={connection.id}
-          data-connection-state={connection.state}
+          data-connection-phase={connection.phase}
         />
       ))}
       <line data-process-tail />
     </svg>
 
-    <ol class="workflow-fragments">
-      {fragments.map((fragment) => (
+    <ol class="workflow-artifacts">
+      {artifacts.map((artifact) => (
         <li
-          class="workflow-fragment"
-          data-fragment={fragment.id}
-          data-state="resolved"
+          class="workflow-artifact"
+          data-artifact={artifact.id}
+          data-role={artifact.role}
         >
-          <span class="workflow-label workflow-label--messy">
-            {fragment.messyLabel}
-          </span>
-          <span class="workflow-label workflow-label--resolved">
-            {fragment.resolvedLabel}
-          </span>
+          <article class="artifact-surface">
+            <header class="artifact-header">
+              <span class:list={['artifact-icon', `artifact-icon--${artifact.icon}`]}>
+                {artifact.icon === 'mail' && (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 6.5h16v11H4z M4.5 7l7.5 6 7.5-6" />
+                  </svg>
+                )}
+                {artifact.icon === 'sheet' && (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 3.5h14v17H5z M5 9h14 M10 9v11 M15 9v11 M5 14h14" />
+                  </svg>
+                )}
+                {artifact.icon === 'approval' && (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M7 3.5h10v4H7z M5 6h14v14H5z M8 14l2.5 2.5L16 11" />
+                  </svg>
+                )}
+                {artifact.icon === 'reminder' && (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 17h12 M8 17V11a4 4 0 018 0v6 M10 20h4" />
+                  </svg>
+                )}
+                {artifact.icon === 'accounting' && (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 6h16v13H4z M7 10h4 M7 14h2 M14 10h3 M14 14h3" />
+                  </svg>
+                )}
+              </span>
+              <span class="artifact-title">{artifact.title}</span>
+              {artifact.role === 'blocked' && <span class="artifact-status">WAITING</span>}
+            </header>
+
+            {artifact.id === 'sheet' ? (
+              <div class="sheet-grid">
+                {artifact.content.map((field) => (
+                  <div class="sheet-cell">
+                    <span>{field.label}</span>
+                    <strong>{field.value || '\u00a0'}</strong>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <dl class="artifact-content">
+                {artifact.content.map((field) => (
+                  <div class:list={['artifact-row', {
+                    'artifact-row--message': field.label === 'Message',
+                    'artifact-row--attachment': field.label === 'Attachment',
+                    'artifact-row--note': field.label === 'Note',
+                  }]}>
+                    <dt>{field.label}</dt>
+                    <dd>{field.value || '\u00a0'}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+
+            {artifact.id === 'system' && (
+              <ol class="system-sequence" aria-hidden="true">
+                {resolvedSteps.map((step) => <li>{step}</li>)}
+              </ol>
+            )}
+          </article>
+
+          {artifact.annotation && (
+            <span class="workflow-annotation">{artifact.annotation}</span>
+          )}
         </li>
       ))}
     </ol>
@@ -88,47 +154,109 @@ const resolvedSteps = fragments
   }
 
   .workflow {
+    --color-cobalt: #2457F5;
+    --color-coral: #FF5A45;
+    --color-highlight: #E8FF54;
+    --color-paper: #F2EFE8;
+    --color-ink: #111315;
+    --cobalt-progress: 1;
     z-index: 1;
     pointer-events: none;
+    font-family: var(--font-body);
+  }
+
+  .workflow-example-label {
+    position: absolute;
+    top: 8%;
+    right: 5.5%;
+    z-index: 4;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--color-ink);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    text-transform: uppercase;
   }
 
   .workflow-scene {
-    display: none;
+    top: 4%;
+    right: 3.5%;
+    bottom: 5%;
+    left: 43%;
     overflow: hidden;
+    isolation: isolate;
+    border: 1px solid var(--color-ink);
+    background: var(--color-paper);
     pointer-events: auto;
-    touch-action: pan-y;
   }
 
-  .workflow[data-enhanced='true'] .workflow-scene {
-    display: block;
+  .workflow-scene::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--color-cobalt);
+    content: '';
+    opacity: var(--cobalt-progress);
+  }
+
+  .workflow-lines {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .workflow-lines line {
+    stroke: var(--color-ink);
+    stroke-width: 0.45;
+    vector-effect: non-scaling-stroke;
+    opacity: 0;
+  }
+
+  .workflow-lines line[data-connection-phase='resolved'] {
+    stroke: var(--color-paper);
+  }
+
+  .workflow-lines line[data-process-tail] {
+    stroke: var(--color-cobalt);
+    stroke-width: 0.8;
   }
 
   .workflow-fallback {
     position: absolute;
-    top: 34%;
-    right: 8vw;
+    top: 83%;
+    right: 5%;
+    z-index: 5;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     list-style: none;
+    color: var(--color-paper);
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
   }
 
   .workflow-fallback li {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    font-size: var(--text-label);
-    font-weight: 600;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
+    gap: 0.5rem;
   }
 
   .workflow-fallback li:not(:last-child)::after {
+    color: var(--color-highlight);
     content: '→';
-    color: var(--color-muted);
   }
 
   .workflow[data-enhanced='true'] .workflow-fallback {
+    position: absolute;
     width: 1px;
     height: 1px;
     padding: 0;
@@ -140,116 +268,404 @@ const resolvedSteps = fragments
     border: 0;
   }
 
-  .workflow-lines {
+  .workflow-artifacts {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-
-  .workflow-lines line {
-    stroke: var(--color-ink);
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-    opacity: 0;
-  }
-
-  .workflow-lines line[data-connection-state='resolved'] {
-    opacity: 0.42;
-  }
-
-  .workflow-fragments {
+    z-index: 2;
     list-style: none;
   }
 
-  .workflow-fragment {
-    --resolve-progress: 1;
+  .workflow-artifact {
+    --artifact-x: 50%;
+    --artifact-y: 50%;
+    --artifact-rotation: 0deg;
+    --artifact-scale: 1;
+    --artifact-opacity: 1;
+    --annotation-opacity: 0;
     position: absolute;
     top: 0;
     left: 0;
-    display: grid;
-    min-width: max-content;
-    padding: 0.55rem 0.7rem;
-    border: 1px solid color-mix(in oklch, var(--color-ink) 32%, transparent);
-    border-radius: 0.125rem;
-    background: color-mix(in oklch, var(--color-bg) 94%, transparent);
-    font-family: var(--font-body);
-    font-size: var(--text-label);
-    font-weight: 600;
-    letter-spacing: 0.09em;
-    line-height: 1;
-    text-transform: uppercase;
-    cursor: grab;
-    user-select: none;
+    width: min(18rem, 34vw);
+    transform: translate3d(var(--artifact-x), var(--artifact-y), 0) translate(-50%, -50%) rotate(var(--artifact-rotation)) scale(var(--artifact-scale));
+    transform-origin: center;
+    opacity: var(--artifact-opacity);
     will-change: transform, opacity;
   }
 
-  .workflow-fragment[data-dragging='true'] {
-    border-color: var(--color-ink);
-    cursor: grabbing;
+  .workflow-artifact[data-artifact='email'] {
+    --artifact-x: 10%;
+    --artifact-y: 34%;
+    --artifact-scale: 0.78;
   }
 
-  @media (pointer: fine) {
-    .workflow-fragment:hover {
-      border-color: color-mix(
-        in oklch,
-        var(--color-ink) 58%,
-        transparent
-      );
-    }
+  .workflow-artifact[data-artifact='sheet'] {
+    --artifact-x: 30%;
+    --artifact-y: 34%;
+    --artifact-scale: 0.72;
   }
 
-  .workflow-label {
-    grid-area: 1 / 1;
+  .workflow-artifact[data-artifact='approval'] {
+    --artifact-x: 50%;
+    --artifact-y: 34%;
+    --artifact-scale: 0.76;
   }
 
-  .workflow-label--messy {
-    opacity: calc(1 - var(--resolve-progress));
+  .workflow-artifact[data-artifact='reminder'] {
+    --artifact-x: 61%;
+    --artifact-y: 34%;
+    --artifact-scale: 0.55;
+    --artifact-opacity: 0;
+    z-index: 4;
   }
 
-  .workflow-label--resolved {
-    opacity: var(--resolve-progress);
+  .workflow-artifact[data-artifact='system'] {
+    --artifact-x: 76%;
+    --artifact-y: 34%;
+    z-index: 1;
   }
 
-  @media (pointer: coarse) {
-    .workflow-fragment {
-      cursor: default;
-    }
+  .artifact-surface {
+    min-height: 8rem;
+    padding: 0.9rem;
+    border: 1px solid var(--color-ink);
+    border-radius: 0.25rem;
+    background: var(--color-paper);
+    box-shadow: 0.25rem 0.25rem 0 var(--color-ink);
+    color: var(--color-ink);
   }
 
-  @media (max-width: 767px) {
-    .workflow-fallback {
-      top: 5rem;
-      right: auto;
-      left: 8vw;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
-    }
+  .workflow-artifact[data-role='blocked'] {
+    z-index: 3;
+  }
 
-    .workflow-fallback li {
-      gap: 0.5rem;
-    }
+  .workflow-artifact[data-role='blocked'] .artifact-surface {
+    background: var(--color-coral);
+  }
 
-    .workflow-fallback li:not(:last-child)::after {
-      content: '↓';
-    }
+  .workflow-artifact[data-role='attention'] .artifact-surface {
+    background: var(--color-highlight);
+  }
 
+  .workflow-artifact[data-role='system'] .artifact-surface {
+    border-color: var(--color-paper);
+    background: var(--color-cobalt);
+    color: var(--color-paper);
+    box-shadow: 0.25rem 0.25rem 0 var(--color-ink);
+  }
+
+  .workflow-artifact[data-emphasized='true'] .artifact-surface {
+    outline: 2px solid var(--color-paper);
+    outline-offset: 0.25rem;
+  }
+
+  .artifact-header {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  }
+
+  .artifact-icon {
+    display: grid;
+    width: 1.9rem;
+    height: 1.9rem;
+    flex: 0 0 auto;
+    place-items: center;
+    background: var(--color-cobalt);
+    color: var(--color-paper);
+  }
+
+  .artifact-icon--approval {
+    background: var(--color-ink);
+  }
+
+  .artifact-icon--reminder {
+    background: var(--color-coral);
+    color: var(--color-ink);
+  }
+
+  .artifact-icon--accounting {
+    background: var(--color-highlight);
+    color: var(--color-ink);
+  }
+
+  .artifact-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .artifact-title,
+  .artifact-status,
+  .artifact-row dt,
+  .sheet-cell span {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .artifact-status {
+    margin-left: auto;
+    padding: 0.25rem 0.3rem;
+    border: 1px solid var(--color-ink);
+  }
+
+  .artifact-content {
+    display: grid;
+    gap: 0.45rem;
+    padding-top: 0.7rem;
+  }
+
+  .artifact-row {
+    display: grid;
+    grid-template-columns: 4.25rem 1fr;
+    gap: 0.5rem;
+    align-items: baseline;
+  }
+
+  .artifact-row dd {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.7rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .artifact-row--message {
+    display: block;
+    padding-top: 0.35rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  }
+
+  .artifact-row--message dd {
+    padding-top: 0.3rem;
+    white-space: normal;
+  }
+
+  .artifact-row--attachment dd {
+    display: inline-block;
+    padding: 0.2rem 0.35rem;
+    border: 1px solid currentColor;
+    font-size: 0.6rem;
+  }
+
+  .artifact-row--note dd {
+    padding-top: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+
+  .sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 0.7rem;
+    border-top: 1px solid var(--color-ink);
+    border-left: 1px solid var(--color-ink);
+  }
+
+  .sheet-cell {
+    min-width: 0;
+    min-height: 3.1rem;
+    border-right: 1px solid var(--color-ink);
+    border-bottom: 1px solid var(--color-ink);
+  }
+
+  .sheet-cell span,
+  .sheet-cell strong {
+    display: block;
+    padding: 0.35rem;
+  }
+
+  .sheet-cell span {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+  }
+
+  .sheet-cell strong {
+    overflow: hidden;
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .workflow-artifact[data-artifact='approval'] .artifact-content {
+    gap: 0.6rem;
+  }
+
+  .workflow-artifact[data-artifact='approval'] .artifact-row:last-child dd {
+    display: inline-block;
+    padding: 0.2rem 0.35rem;
+    border: 1px solid var(--color-ink);
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .system-sequence {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding-top: 0.8rem;
+    list-style: none;
+  }
+
+  .system-sequence li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .system-sequence li:not(:last-child)::after {
+    color: var(--color-highlight);
+    content: '→';
+  }
+
+  .workflow-annotation {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    left: 50%;
+    padding: 0.35rem 0.5rem;
+    background: var(--color-highlight);
+    color: var(--color-ink);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    opacity: var(--annotation-opacity);
+    text-transform: uppercase;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  .workflow-artifact[data-role='blocked'] .workflow-annotation {
+    background: var(--color-paper);
+  }
+
+  @media (min-width: 480px) and (max-width: 899px) {
     .workflow-scene {
-      bottom: 38%;
+      right: 2.5%;
+      left: 36%;
     }
 
-    .workflow-fragment {
-      padding: 0.48rem 0.58rem;
-      font-size: 0.625rem;
+    .workflow-example-label {
+      top: 7%;
+      right: 4%;
+    }
+
+    .workflow-artifact {
+      width: min(15rem, 40vw);
+    }
+
+    .workflow-artifact[data-artifact='email'] {
+      --artifact-x: 8%;
+      --artifact-y: 38%;
+      --artifact-scale: 0.72;
+    }
+
+    .workflow-artifact[data-artifact='sheet'] {
+      --artifact-x: 27%;
+      --artifact-y: 38%;
+      --artifact-scale: 0.68;
+    }
+
+    .workflow-artifact[data-artifact='approval'] {
+      --artifact-x: 47%;
+      --artifact-y: 38%;
+      --artifact-scale: 0.7;
+    }
+
+    .workflow-artifact[data-artifact='reminder'] {
+      --artifact-x: 61%;
+      --artifact-y: 38%;
+    }
+
+    .workflow-artifact[data-artifact='system'] {
+      --artifact-x: 78%;
+      --artifact-y: 38%;
+      --artifact-scale: 0.92;
     }
   }
 
-  @media (max-width: 360px) {
-    .workflow-fragment {
-      padding-inline: 0.45rem;
+  @media (max-width: 479px) {
+    .workflow-scene {
+      top: 45%;
+      right: 4%;
+      bottom: 3%;
+      left: 4%;
+    }
+
+    .workflow-example-label {
+      top: 42%;
+      right: auto;
+      left: 7%;
+    }
+
+    .workflow-fallback {
+      top: 84%;
+      right: auto;
+      left: 8%;
+      flex-wrap: wrap;
+      max-width: 84%;
+      row-gap: 0.65rem;
+    }
+
+    .workflow-artifact {
+      width: min(18rem, 76vw);
+    }
+
+    .workflow-artifact[data-artifact='email'] {
+      --artifact-x: 50%;
+      --artifact-y: 22%;
+      --artifact-scale: 0.76;
+    }
+
+    .workflow-artifact[data-artifact='sheet'] {
+      --artifact-x: 50%;
+      --artifact-y: 37%;
+      --artifact-scale: 0.7;
+    }
+
+    .workflow-artifact[data-artifact='approval'] {
+      --artifact-x: 50%;
+      --artifact-y: 52%;
+      --artifact-scale: 0.72;
+    }
+
+    .workflow-artifact[data-artifact='reminder'] {
+      --artifact-x: 50%;
+      --artifact-y: 67%;
+    }
+
+    .workflow-artifact[data-artifact='system'] {
+      --artifact-x: 50%;
+      --artifact-y: 79%;
+      --artifact-scale: 0.9;
+    }
+
+    .artifact-surface {
+      padding: 0.75rem;
+    }
+
+    .workflow-annotation {
+      top: calc(100% + 0.4rem);
     }
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .workflow-artifact,
+    .workflow-lines line,
+    .workflow-scene::before {
+      transition: none;
+    }
+  }
 </style>
