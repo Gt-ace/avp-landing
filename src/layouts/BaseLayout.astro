@@ -64,6 +64,7 @@ const staticNavLinks = [
     <ViewTransitions />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="enhanced-nav">
       <NavPill client:load />
     </div>
@@ -72,11 +73,35 @@ const staticNavLinks = [
         <a href={link.href}>{link.label}</a>
       ))}
     </nav>
-    <slot />
+    <main id="main-content">
+      <slot />
+    </main>
   </body>
 </html>
 
 <style is:global>
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 100;
+    padding: 0.65rem 0.85rem;
+    transform: translateY(-200%);
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-body);
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+    outline: 2px solid var(--color-coral);
+    outline-offset: 0.25rem;
+  }
+
   .static-primary-nav {
     position: fixed;
     z-index: 50;

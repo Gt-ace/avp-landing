@@ -1,67 +1,82 @@
 # DESIGN.md: avp.software landing
 
-A summary of the landing page design: the system it runs on, the page
-structure, and the motion decisions behind the hero.
+The landing page uses a precise editorial system: Geist for working text and
+controls, Bodoni Moda for short editorial accents, paper and ink as the base,
+and restrained motion that explains how AVP works.
 
-## Design language
+## Tuesday Board hero
 
-Editorial and monochrome. A serif display face paired with a clean
-sans body, near black ink on an off white ground, generous type scale,
-and restrained motion. The feel target is a small studio that is
-precise and confident, not loud.
+The first viewport makes one operational scene legible: a team’s scattered
+email, spreadsheet, approval, reminder, and system handoff become a single
+working system. The left third carries the statement and contact path; the
+right two-thirds carries a labeled synthetic `Example workflow` board. The
+approved message is:
 
-### Tokens (`src/styles/global.css`)
+> Your team’s most annoying Tuesday, turned into software.
+
+The supporting copy explains AVP’s offer without adding claims or fabricated
+proof. The primary CTA is `Tell me what gets stuck →` and links to `/contact`.
+
+## Functional palette
 
 | Token | Value | Role |
 | --- | --- | --- |
-| `--color-bg` | `oklch(98% 0.003 260)` | Page ground (off white) |
-| `--color-surface` | `oklch(100% 0 0)` | Raised surfaces |
-| `--color-ink` | `oklch(10% 0.005 260)` | Primary text and marks |
-| `--color-muted` | `oklch(42% 0.005 260)` | Secondary text, labels |
-| `--color-border` | `oklch(85% 0.003 260)` | Hairline dividers |
-| `--font-display` | Bodoni Moda, serif | Headings, big type, numerals |
-| `--font-body` | Geist, system sans | Body, labels, nav |
-| `--text-hero` | `clamp(3.5rem, 8vw, 8rem)` | Hero wordmark |
+| `--color-cobalt` | `#2457F5` | Structure, CTA, resolved system, routing |
+| `--color-coral` | `#FF5A45` | Blocked and waiting work |
+| `--color-highlight` | `#E8FF54` | Reminder, annotations, emphasis |
+| `--color-paper` | `#F2EFE8` | Page ground and artifact surfaces |
+| `--color-ink` | `#111315` | Type, outlines, high-contrast controls |
 
-Color lives entirely in oklch so lightness steps read evenly. Type
-sizes are fluid `clamp()` so the scale holds from mobile to wide.
+`--color-bg`, `--color-surface`, `--color-muted`, and `--color-border` remain
+compatibility tokens for the sections below the hero.
 
-## Page structure (`src/pages/index.astro`)
+## Artifact system
 
-1. **Hero** full viewport. Semantic workflow fragments resolve around the `AVP
-   Software` wordmark and tagline, with a scroll cue pointing at the process
-   section.
-2. **Process** two column, sticky heading beside a four step list (Map,
-   Design, Build, Run) with oversized numerals.
-3. **Big type** two oversized display lines (`DESIGN BUILD`,
-   `AUTOMATE RUN`) that drift horizontally on scroll.
-4. **FAQ** two column accordion of the questions clients ask first.
-5. **AI summary strip** links that ask an AI provider to summarize the
-   site.
+The board renders five provider-neutral semantic artifacts as HTML:
 
-Section vertical rhythm is `clamp(3.5rem, 8vh, 6rem)`, tightened from
-the original to reduce dead space between blocks.
+- Email, including sender, subject, time, attachment, and message.
+- Spreadsheet, including inconsistent status cells and one blank cell.
+- Approval, including owner, reviewer, and a visible `WAITING` stamp.
+- Reminder, using highlighter yellow for `Follow up again`.
+- System handoff, with custom accounting pictogram and the resolved sequence.
 
-## Hero interaction (`src/components/HeroWorkflow.astro`)
+Mail, Sheet, Approval, Reminder, and Accounting pictograms are custom inline
+SVGs with one shared view box, stroke weight, and optical treatment. No
+third-party service logo is used.
 
-The hero demonstrates AVP’s core transformation: a scattered manual client
-workflow resolves into `Request → Check details → Approval → Sync systems →
-Done`.
+## Scroll and interaction policy
 
-- Eight semantic HTML fragments sit above an SVG hairline connection layer.
-- Normal scroll progress is the authoritative state inside a 135dvh desktop
-  stage and 125dvh mobile stage; the viewport scene is sticky without
-  capturing or slowing scroll.
-- Fine-pointer proximity creates local resolution. Drag adds a temporary
-  offset whose release settles through a restrained interruptible spring.
-- Touch uses scroll plus a brief tap response; touch drag is disabled.
-- The scroll-linked workflow remains active under reduced motion; script
-  failure renders the resolved system statically.
-- Animation is framework-free, pauses off-screen, and restricts per-frame work
-  to transforms, opacity, and SVG endpoints.
+Normal scrolling is authoritative across four narrative states:
 
-## Related docs
+1. Recognition: artifacts overlap with controlled rotations and incomplete
+   routing.
+2. Diagnosis: four annotations expose missing, duplicated, waiting, and
+   manually copied work.
+3. Transformation: artifacts straighten, coral recedes, and cobalt takes
+   over the board.
+4. Resolved system: `Request → Check → Approve → Sync → Done` is readable and
+   the process tail points toward Map → Design → Build → Run.
 
-- `CLAUDE.md`: repo overview, stack, and locked infra pattern.
-- `docs/00-setup.md` through `docs/03-pages.md`: original design phase
-  task specs.
+There is no drag, pointer-proximity physics, spring, smooth-scroll capture,
+idle movement, or pointer-dependent meaning. Fine-pointer focus/hover may add
+an outline emphasis only; it never changes the canonical scroll story.
+
+## Responsive behavior
+
+Wide screens use the left-copy/right-board composition. Tablet reduces overlap
+and rotation while keeping several artifacts visible. Mobile uses a vertical
+storyboard with manual artifacts, diagnosed handoffs, and the resolved system;
+the headline, copy, CTA, and example label stay readable without horizontal
+scrolling.
+
+## Accessibility and fallback
+
+The page includes a keyboard-visible skip link, semantic main landmark, and a
+server-rendered resolved ordered list. The decorative artifact scene and SVG
+routing layer are `aria-hidden`; the ordered fallback carries the accessible
+workflow meaning. The hero CTA and navigation retain visible focus states.
+
+Reduced motion skips enhancement and keeps the resolved workflow static. If
+JavaScript fails, the same resolved scene and ordered workflow remain in the
+HTML. The controller pauses off-screen, measures only on setup/resize, and
+updates transforms, opacity, CSS variables, and SVG endpoints in one frame.
