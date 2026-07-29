@@ -1,10 +1,14 @@
 /* ---- Design tokens ---- */
 :root {
-  --color-bg:      oklch(98% 0.003 260);
-  --color-surface: oklch(100% 0 0);
-  --color-ink:     oklch(10% 0.005 260);
-  --color-muted:   oklch(42% 0.005 260);
-  --color-border:  oklch(85% 0.003 260);
+  --color-cobalt:  #2457F5;
+  --color-coral:   #FF5A45;
+  --color-highlight: #E8FF54;
+  --color-paper:   #F2EFE8;
+  --color-ink:     #111315;
+  --color-bg:      var(--color-paper);
+  --color-surface: #FFFFFF;
+  --color-muted:   #595751;
+  --color-border:  #C8C4BA;
   --color-overlay: oklch(0% 0 0 / 20%);
 
   --font-display: 'Bodoni Moda', Georgia, serif;

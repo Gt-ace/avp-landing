@@ -66,17 +66,14 @@ const aiProviders = [
       <HeroWorkflow />
 
       <div class="hero-content">
-        <h1 class="hero-title">AVP Software</h1>
+        <h1 class="hero-title">Your team’s most annoying Tuesday, turned into software.</h1>
         <p class="hero-tagline">
-          A small studio that designs and builds software end to end: interface,
-          product, and the infrastructure underneath.
+          AVP maps the handoffs, builds the system around them, and keeps it running.
         </p>
+        <a class="hero-cta" href="/contact">
+          Tell me what gets stuck <span aria-hidden="true">→</span>
+        </a>
       </div>
-
-      <a class="hero-scroll" href="#process" aria-label="Scroll to process">
-        <span class="label">Process</span>
-        <span class="hero-scroll-arrow" aria-hidden="true">&#8595;</span>
-      </a>
     </section>
   </div>
 
@@ -198,7 +195,7 @@ const aiProviders = [
 <style>
   .hero-stage {
     position: relative;
-    min-height: 135dvh;
+    min-height: 160dvh;
     background: var(--color-bg);
   }
 
@@ -211,28 +208,27 @@ const aiProviders = [
   }
 
   .hero-content,
-  .hero-scroll {
+  .hero-cta {
     z-index: 2;
   }
 
   .hero-content {
     position: absolute;
-    bottom: 14vh;
-    left: 10vw;
-    right: 10vw;
-    max-width: 38rem;
+    top: clamp(7rem, 18vh, 12rem);
+    left: clamp(1.5rem, 7vw, 7rem);
+    width: min(32rem, 34vw);
   }
 
   .hero-title {
-    font-family: var(--font-display);
-    font-size: var(--text-hero);
+    max-width: 8ch;
+    font-family: var(--font-body);
+    font-size: clamp(3rem, 5.5vw, 6rem);
     font-weight: 600;
-    font-optical-sizing: none;
     color: var(--color-ink);
     text-wrap: balance;
-    line-height: 1;
+    letter-spacing: -0.04em;
+    line-height: 0.96;
     margin: 0;
-    animation: hero-in 0.9s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .hero-tagline {
@@ -242,49 +238,45 @@ const aiProviders = [
     color: var(--color-muted);
     line-height: 1.5;
     margin-top: 1.5rem;
-    max-width: 32rem;
-    animation: hero-in 0.9s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    max-width: 28rem;
   }
 
-  .hero-scroll {
-    position: absolute;
-    bottom: 3vh;
-    right: 10vw;
+  .hero-cta {
     display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
-    color: var(--color-muted);
-    animation: hero-in 0.9s 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-    transition: color 200ms;
+    gap: 0.8rem;
+    margin-top: 2rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--color-cobalt);
+    background: var(--color-cobalt);
+    color: var(--color-paper);
+    font-family: var(--font-body);
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    text-transform: uppercase;
+    transition: transform 160ms ease-out, background-color 160ms ease-out;
   }
 
-  .hero-scroll .label {
-    color: inherit;
+  .hero-cta:hover {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
   }
 
-  .hero-scroll:hover {
-    color: var(--color-ink);
+  .hero-cta:active {
+    transform: scale(0.97);
   }
 
-  .hero-scroll-arrow {
-    display: inline-block;
-    animation: scroll-bob 2s ease-in-out infinite;
+  .hero-cta:focus-visible {
+    outline: 2px solid var(--color-coral);
+    outline-offset: 0.3rem;
   }
 
-  @keyframes scroll-bob {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(4px); }
-  }
-
-  @keyframes hero-in {
-    from {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .hero-cta span {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1rem;
   }
 
   /* ---- AI summary strip ---- */
@@ -511,16 +503,27 @@ const aiProviders = [
 
   @media (max-width: 767px) {
     .hero-stage {
-      min-height: 125dvh;
+      min-height: 142dvh;
     }
 
     .hero-content {
-      bottom: max(5.5rem, 14vh);
+      top: 7rem;
+      left: 1.5rem;
+      width: min(23rem, calc(100vw - 3rem));
     }
 
-    .hero-scroll {
-      right: 1.5rem;
-      bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    .hero-title {
+      max-width: 10ch;
+      font-size: clamp(2.75rem, 12vw, 4.5rem);
+    }
+
+    .hero-tagline {
+      max-width: 30rem;
+      margin-top: 1rem;
+    }
+
+    .hero-cta {
+      margin-top: 1.25rem;
     }
   }
 
@@ -533,11 +536,8 @@ const aiProviders = [
       position: relative;
     }
 
-    .hero-title,
-    .hero-tagline,
-    .hero-scroll,
-    .hero-scroll-arrow {
-      animation: none;
+    .hero-cta {
+      transition: none;
     }
   }
 </style>
