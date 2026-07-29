@@ -1,50 +1,48 @@
 import { describe, expect, it } from 'vitest'
 import {
+  artifacts,
   connections,
-  fragments,
   layoutModeForWidth,
 } from '../../src/components/hero-workflow/workflow-model'
 
-describe('workflow model', () => {
-  it('contains the approved eight fragments', () => {
-    expect(fragments).toHaveLength(8)
-    expect(fragments.map((item) => item.messyLabel)).toEqual([
-      'Email request',
-      'Missing details',
-      'Spreadsheet',
-      'Copy/paste',
-      'Approval?',
-      'Reminder',
-      'Accounting system',
-      'Done',
+describe('Tuesday Board model', () => {
+  it('contains the five approved provider-neutral artifacts', () => {
+    expect(artifacts.map(({ id, title }) => [id, title])).toEqual([
+      ['email', 'Email'],
+      ['sheet', 'Spreadsheet'],
+      ['approval', 'Approval'],
+      ['reminder', 'Reminder'],
+      ['system', 'System handoff'],
     ])
   })
 
-  it('resolves to the approved five-step client workflow', () => {
-    expect(
-      fragments
-        .filter((item) => item.resolved.wide.opacity === 1)
-        .sort((a, b) => a.resolved.wide.x - b.resolved.wide.x)
-        .map((item) => item.resolvedLabel),
-    ).toEqual([
-      'Request',
-      'Check details',
-      'Approval',
-      'Sync systems',
-      'Done',
+  it('contains the approved diagnosis annotations', () => {
+    expect(artifacts.flatMap((item) => item.annotation ?? [])).toEqual([
+      'Missing information',
+      'Updated in two places',
+      'Waiting for approval',
+      'Copied manually',
     ])
   })
 
-  it('references valid fragment ids in every connection', () => {
-    const ids = new Set(fragments.map((item) => item.id))
-    for (const connection of connections) {
-      expect(ids.has(connection.from)).toBe(true)
-      expect(ids.has(connection.to)).toBe(true)
+  it('uses only custom icon ids', () => {
+    expect(artifacts.map((item) => item.icon)).toEqual([
+      'mail', 'sheet', 'approval', 'reminder', 'accounting',
+    ])
+  })
+
+  it('references valid artifact ids in every connection', () => {
+    const ids = new Set(artifacts.map((item) => item.id))
+    for (const edge of connections) {
+      expect(ids.has(edge.from)).toBe(true)
+      expect(ids.has(edge.to)).toBe(true)
     }
   })
 
-  it('uses the compact layout below 768px', () => {
-    expect(layoutModeForWidth(767)).toBe('compact')
-    expect(layoutModeForWidth(768)).toBe('wide')
+  it('selects mobile, tablet, and wide layouts at fixed boundaries', () => {
+    expect(layoutModeForWidth(479)).toBe('mobile')
+    expect(layoutModeForWidth(480)).toBe('tablet')
+    expect(layoutModeForWidth(899)).toBe('tablet')
+    expect(layoutModeForWidth(900)).toBe('wide')
   })
 })
