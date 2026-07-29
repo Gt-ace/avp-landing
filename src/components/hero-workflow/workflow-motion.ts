@@ -25,6 +25,10 @@ export function segmentProgress(value: number, start: number, end: number) {
   return smoothstep01((value - start) / Math.max(.0001, end - start))
 }
 
+export function heroCopyOpacity(progress: number) {
+  return 1 - segmentProgress(progress, .38, .6)
+}
+
 export function scrollProgress(
   stageTop: number,
   viewportHeight: number,
@@ -49,6 +53,23 @@ export function interpolatePose(
   }
 }
 
+export function applyMotionProfile(
+  pose: StoryPose,
+  resolved: StoryPose,
+  reducedMotion: boolean,
+): StoryPose {
+  if (!reducedMotion) return pose
+
+  const travelScale = 0.35
+  return {
+    x: resolved.x + (pose.x - resolved.x) * travelScale,
+    y: resolved.y + (pose.y - resolved.y) * travelScale,
+    rotation: 0,
+    scale: resolved.scale + (pose.scale - resolved.scale) * travelScale,
+    opacity: pose.opacity,
+  }
+}
+
 export function visualStateForProgress(
   recognition: StoryPose,
   diagnosis: StoryPose,
@@ -56,17 +77,17 @@ export function visualStateForProgress(
   progress: number,
 ): ArtifactVisualState {
   const diagnose = segmentProgress(progress, .12, .42)
-  const resolve = segmentProgress(progress, .42, .88)
-  const pose = progress < .42
+  const resolve = segmentProgress(progress, .36, .72)
+  const pose = progress < .36
     ? interpolatePose(recognition, diagnosis, diagnose)
     : interpolatePose(diagnosis, resolved, resolve)
   const annotationOpacity =
-    segmentProgress(progress, .1, .28) * (1 - segmentProgress(progress, .46, .62))
+    segmentProgress(progress, .1, .28) * (1 - segmentProgress(progress, .4, .56))
   return {
     pose,
     annotationOpacity,
-    messyLineOpacity: 1 - segmentProgress(progress, .3, .66),
-    resolvedLineOpacity: segmentProgress(progress, .58, .9),
-    cobaltProgress: segmentProgress(progress, .45, .9),
+    messyLineOpacity: 1 - segmentProgress(progress, .25, .55),
+    resolvedLineOpacity: segmentProgress(progress, .5, .74),
+    cobaltProgress: segmentProgress(progress, .4, .72),
   }
 }

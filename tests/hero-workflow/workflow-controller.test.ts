@@ -22,25 +22,9 @@ describe('workflow frame lifecycle', () => {
     expect(frame).toBe(0)
   })
 
-  it('does not enhance reduced-motion clients or register scroll work', () => {
+  it('allows scroll enhancement for both motion preferences', () => {
     expect(shouldEnhanceWorkflow(false)).toBe(true)
-    expect(shouldEnhanceWorkflow(true)).toBe(false)
-
-    const windowAddEventListener = vi.fn()
-    const root = {
-      dataset: {} as Record<string, string>,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }
-
-    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })))
-    vi.stubGlobal('addEventListener', windowAddEventListener)
-
-    const cleanup = setupWorkflow(root as unknown as HTMLElement)
-
-    expect(root.dataset.enhanced).toBeUndefined()
-    expect(windowAddEventListener).not.toHaveBeenCalled()
-    expect(() => cleanup()).not.toThrow()
+    expect(shouldEnhanceWorkflow(true)).toBe(true)
   })
 
   it('enhances normal-motion clients with one scroll scheduler and cleanup', () => {
@@ -84,6 +68,8 @@ describe('workflow frame lifecycle', () => {
     }
     const stage = {
       getBoundingClientRect: () => ({ top: 0, height: 1125 }),
+      querySelector: () => null,
+      style: { removeProperty: vi.fn() },
     }
     const root = {
       dataset: {} as Record<string, string>,
@@ -115,7 +101,7 @@ describe('workflow frame lifecycle', () => {
     expect(root.dataset.enhanced).toBeUndefined()
   })
 
-  it('renders responsive artifact, annotation, and route properties', () => {
+  it('renders reduced-motion mobile properties and hides exited copy accessibly', () => {
     const makeStyle = () => {
       const values: Record<string, string> = {}
       return {
@@ -124,6 +110,9 @@ describe('workflow frame lifecycle', () => {
         pointerEvents: '',
         setProperty: (property: string, value: string) => {
           values[property] = value
+        },
+        removeProperty: (property: string) => {
+          delete values[property]
         },
       }
     }
@@ -138,13 +127,18 @@ describe('workflow frame lifecycle', () => {
     }]))
     const processTail = { style: makeStyle(), setAttribute: vi.fn() }
     const rootStyle = makeStyle()
+    const stageStyle = makeStyle()
+    const heroCopy = { style: makeStyle(), inert: false }
     const stage = {
-      getBoundingClientRect: () => ({ top: -67.5, height: 1125 }),
+      getBoundingClientRect: () => ({ top: -180, height: 1125 }),
+      querySelector: (selector: string) =>
+        selector === '.hero-content' ? heroCopy : null,
+      style: stageStyle,
     }
     const scene = {
       getBoundingClientRect: () => ({
-        width: 1200,
-        height: 900,
+        width: 390,
+        height: 844,
         top: 0,
         left: 0,
       }),
@@ -169,7 +163,7 @@ describe('workflow frame lifecycle', () => {
       removeEventListener: vi.fn(),
     }
 
-    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })))
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })))
     vi.stubGlobal('requestAnimationFrame', vi.fn((callback: FrameRequestCallback) => {
       callback(1)
       return 1
@@ -189,8 +183,12 @@ describe('workflow frame lifecycle', () => {
 
     const cleanup = setupWorkflow(root as unknown as HTMLElement)
 
-    expect(Number(rootStyle.values['--annotation-opacity'])).toBeGreaterThan(0)
+    expect(Number(rootStyle.values['--cobalt-progress'])).toBe(1)
+    expect(Number(stageStyle.values['--hero-copy-opacity'])).toBe(0)
+    expect(heroCopy.style.pointerEvents).toBe('none')
+    expect(heroCopy.inert).toBe(true)
     expect(artifactElements.get('email')?.style.values['--artifact-x']).toMatch(/px$/)
+    expect(artifactElements.get('email')?.style.values['--artifact-rotation']).toBe('0deg')
     expect(lineElements.get('resolved-email-sheet')?.setAttribute).toHaveBeenCalledWith(
       'x1',
       expect.any(String),

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  applyMotionProfile,
   clamp01,
   interpolatePose,
+  heroCopyOpacity,
   scrollProgress,
   segmentProgress,
   visualStateForProgress,
@@ -68,6 +70,40 @@ describe('Tuesday Board motion', () => {
       annotationOpacity: 0,
       messyLineOpacity: 0,
       resolvedLineOpacity: 1,
+    })
+  })
+
+  it('makes the resolved system dominant before the final scroll position', () => {
+    const nearlyResolved = visualStateForProgress(
+      recognition,
+      diagnosis,
+      { ...resolved, opacity: 0 },
+      0.72,
+    )
+
+    expect(nearlyResolved.pose.opacity).toBeLessThan(0.1)
+    expect(nearlyResolved.messyLineOpacity).toBe(0)
+    expect(nearlyResolved.cobaltProgress).toBeGreaterThan(0.9)
+  })
+
+  it('keeps mobile copy present initially and clears it for the resolved panel', () => {
+    expect(heroCopyOpacity(0)).toBe(1)
+    expect(heroCopyOpacity(0.5)).toBeGreaterThan(0)
+    expect(heroCopyOpacity(0.5)).toBeLessThan(1)
+    expect(heroCopyOpacity(0.62)).toBe(0)
+  })
+
+  it('keeps the complete pose for standard motion', () => {
+    expect(applyMotionProfile(recognition, resolved, false)).toEqual(recognition)
+  })
+
+  it('keeps reduced motion scroll-linked with shorter travel and no rotation', () => {
+    expect(applyMotionProfile(recognition, resolved, true)).toEqual({
+      x: 36,
+      y: 46,
+      rotation: 0,
+      scale: 0.8049999999999999,
+      opacity: 1,
     })
   })
 })

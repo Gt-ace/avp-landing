@@ -44,13 +44,13 @@ export const artifacts: ArtifactDefinition[] = [
     ],
     poses: {
       recognition: {
-        wide: pose(28, 15, -3), tablet: pose(26, 12, -2), mobile: pose(50, 22, -1, .58),
+        wide: pose(74, 24, -2), tablet: pose(70, 22, -2, .92), mobile: pose(50, 72, -1, .88),
       },
       diagnosis: {
-        wide: pose(24, 13, -1), tablet: pose(22, 10, -1), mobile: pose(50, 22, 0, .56),
+        wide: pose(70, 22, 0, .96), tablet: pose(68, 21, 0, .9), mobile: pose(50, 68, 0, .84, 0),
       },
       resolved: {
-        wide: pose(17, 34, 0, .78), tablet: pose(24, 38, 0, .72), mobile: pose(50, 24, 0, .58),
+        wide: pose(58, 50, 0, .86, 0), tablet: pose(55, 52, 0, .82, 0), mobile: pose(50, 68, 0, .82, 0),
       },
     },
   },
@@ -65,13 +65,13 @@ export const artifacts: ArtifactDefinition[] = [
     ],
     poses: {
       recognition: {
-        wide: pose(55, 9, 2), tablet: pose(48, 8, 1), mobile: pose(50, 42, 1, .52),
+        wide: pose(82, 52, 2, .94), tablet: pose(77, 49, 1, .88), mobile: pose(50, 76, 1, .82, 0),
       },
       diagnosis: {
-        wide: pose(50, 12, 0), tablet: pose(46, 10, 0), mobile: pose(50, 42, 0, .5),
+        wide: pose(77, 46, 0, .92), tablet: pose(73, 44, 0, .86), mobile: pose(50, 73, 0, .8),
       },
       resolved: {
-        wide: pose(30, 34, 0, .72), tablet: pose(27, 38, 0, .68), mobile: pose(50, 42, 0, .52),
+        wide: pose(62, 50, 0, .8, 0), tablet: pose(57, 52, 0, .76, 0), mobile: pose(50, 70, 0, .76, 0),
       },
     },
   },
@@ -85,13 +85,13 @@ export const artifacts: ArtifactDefinition[] = [
     ],
     poses: {
       recognition: {
-        wide: pose(35, 52, 4), tablet: pose(30, 48, 2), mobile: pose(50, 61, -1, .54),
+        wide: pose(58, 67, -3, .82), tablet: pose(54, 67, -2, .78), mobile: pose(50, 84, -1, .76, 0),
       },
       diagnosis: {
-        wide: pose(33, 48, 1), tablet: pose(28, 46, 0), mobile: pose(50, 61, 0, .52),
+        wide: pose(60, 63, 0, .84), tablet: pose(56, 63, 0, .78), mobile: pose(50, 82, 0, .74, 0),
       },
       resolved: {
-        wide: pose(50, 34, 0, .76), tablet: pose(52, 38, 0, .7), mobile: pose(50, 63, 0, .54),
+        wide: pose(66, 50, 0, .76, 0), tablet: pose(60, 52, 0, .7, 0), mobile: pose(50, 72, 0, .7, 0),
       },
     },
   },
@@ -101,13 +101,13 @@ export const artifacts: ArtifactDefinition[] = [
     content: [{ label: 'Note', value: 'Follow up again' }],
     poses: {
       recognition: {
-        wide: pose(52, 18, -7), tablet: pose(52, 44, -5), mobile: pose(50, 76, 2, .46),
+        wide: pose(76, 68, 5, .72), tablet: pose(72, 70, 4, .68), mobile: pose(66, 84, 3, .66, 0),
       },
       diagnosis: {
-        wide: pose(53, 51, -3), tablet: pose(54, 46, -2), mobile: pose(50, 76, 0, .46),
+        wide: pose(70, 66, 0, .7), tablet: pose(68, 67, 0, .66), mobile: pose(61, 84, 0, .64, 0),
       },
       resolved: {
-        wide: pose(61, 34, 0, .55, 0), tablet: pose(61, 38, 0, .5, 0), mobile: pose(50, 76, 0, .42, 0),
+        wide: pose(68, 50, 0, .6, 0), tablet: pose(62, 52, 0, .56, 0), mobile: pose(50, 74, 0, .58, 0),
       },
     },
   },
@@ -118,13 +118,13 @@ export const artifacts: ArtifactDefinition[] = [
     ],
     poses: {
       recognition: {
-        wide: pose(66, 47, 1, .88, .72), tablet: pose(55, 62, 0, .82, .7), mobile: pose(50, 85, 0, .62, .68),
+        wide: pose(79, 78, 0, .72, .18), tablet: pose(72, 78, 0, .68, .18), mobile: pose(50, 88, 0, .72, 0),
       },
       diagnosis: {
-        wide: pose(67, 45, 0, .92, .88), tablet: pose(55, 61, 0, .86, .84), mobile: pose(50, 85, 0, .64, .82),
+        wide: pose(72, 64, 0, .84, .5), tablet: pose(67, 65, 0, .8, .5), mobile: pose(50, 80, 0, .82, .18),
       },
       resolved: {
-        wide: pose(76, 34, 0, 1, 1), tablet: pose(78, 38, 0, .92, 1), mobile: pose(50, 85, 0, .62, 1),
+        wide: pose(72, 52, 0, 1, 1), tablet: pose(62, 54, 0, 1, 1), mobile: pose(50, 79, 0, 1, 1),
       },
     },
   },
@@ -141,6 +141,6 @@ export const connections: ConnectionDefinition[] = [
 ]
 
 export function layoutModeForWidth(width: number): LayoutMode {
-  if (width < 480) return 'mobile'
+  if (width < 768) return 'mobile'
   return width < 900 ? 'tablet' : 'wide'
 }

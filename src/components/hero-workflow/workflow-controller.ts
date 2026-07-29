@@ -5,6 +5,8 @@ import {
   type ArtifactId,
 } from './workflow-model'
 import {
+  applyMotionProfile,
+  heroCopyOpacity,
   scrollProgress,
   visualStateForProgress,
   type ArtifactVisualState,
@@ -14,8 +16,6 @@ type ScenePoint = { x: number; y: number }
 
 type RuntimeArtifact = {
   element: HTMLElement
-  halfWidth: number
-  halfHeight: number
 }
 
 type StyleTarget = HTMLElement & {
@@ -23,7 +23,7 @@ type StyleTarget = HTMLElement & {
 }
 
 export function shouldEnhanceWorkflow(reducedMotion: boolean) {
-  return !reducedMotion
+  return true
 }
 
 export function pauseWorkflowFrame(
@@ -51,6 +51,7 @@ export function setupWorkflow(root: HTMLElement) {
   const stage = root.closest<HTMLElement>('[data-workflow-stage]')
   const scene = root.querySelector<HTMLElement>('[data-workflow-scene]')
   if (!stage || !scene) return () => {}
+  const heroCopy = stage.querySelector<HTMLElement>('.hero-content')
 
   const runtime = new Map<ArtifactId, RuntimeArtifact>()
   for (const definition of artifacts) {
@@ -58,11 +59,7 @@ export function setupWorkflow(root: HTMLElement) {
       `[data-artifact="${definition.id}"]`,
     )
     if (!element) continue
-    runtime.set(definition.id, {
-      element,
-      halfWidth: 0,
-      halfHeight: 0,
-    })
+    runtime.set(definition.id, { element })
   }
 
   const lineElements = new Map<string, SVGLineElement>()
@@ -84,12 +81,6 @@ export function setupWorkflow(root: HTMLElement) {
     sceneSize = {
       width: Math.max(1, sceneRect.width),
       height: Math.max(1, sceneRect.height),
-    }
-
-    for (const item of runtime.values()) {
-      const rect = item.element.getBoundingClientRect()
-      item.halfWidth = rect.width / 2
-      item.halfHeight = rect.height / 2
     }
   }
 
@@ -124,7 +115,11 @@ export function setupWorkflow(root: HTMLElement) {
         definition.poses.resolved[mode],
         storyValue,
       )
-      const { pose } = state
+      const pose = applyMotionProfile(
+        state.pose,
+        definition.poses.resolved[mode],
+        reducedMotion,
+      )
       const position = {
         x: pose.x,
         y: pose.y,
@@ -150,6 +145,14 @@ export function setupWorkflow(root: HTMLElement) {
     setCustomProperty(root, '--story-progress', String(storyValue))
     setCustomProperty(root, '--cobalt-progress', String(cobaltValue))
     setCustomProperty(root, '--annotation-opacity', String(annotationValue))
+    const copyOpacity = mode === 'mobile' ? heroCopyOpacity(storyValue) : 1
+    setCustomProperty(stage, '--hero-copy-opacity', String(copyOpacity))
+    setCustomProperty(root, '--hero-copy-opacity', String(copyOpacity))
+    if (heroCopy) {
+      const copyHidden = copyOpacity < .05
+      heroCopy.style.pointerEvents = copyHidden ? 'none' : 'auto'
+      heroCopy.inert = copyHidden
+    }
 
     for (const connection of connections) {
       const line = lineElements.get(connection.id)
@@ -225,6 +228,11 @@ export function setupWorkflow(root: HTMLElement) {
     root.removeEventListener('focusout', onEmphasisOut)
     root.removeEventListener('pointerover', onEmphasisIn)
     root.removeEventListener('pointerout', onEmphasisOut)
+    stage.style.removeProperty('--hero-copy-opacity')
+    if (heroCopy) {
+      heroCopy.style.pointerEvents = ''
+      heroCopy.inert = false
+    }
     delete root.dataset.ready
     delete root.dataset.enhanced
   }

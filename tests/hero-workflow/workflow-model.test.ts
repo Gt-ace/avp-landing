@@ -31,6 +31,41 @@ describe('Tuesday Board model', () => {
     ])
   })
 
+  it('resolves into one system instead of a row of miniature artifacts', () => {
+    const manualArtifacts = artifacts.filter(({ id }) => id !== 'system')
+    for (const artifact of manualArtifacts) {
+      expect(artifact.poses.resolved.wide.opacity).toBe(0)
+      expect(artifact.poses.resolved.mobile.opacity).toBe(0)
+    }
+
+    const system = artifacts.find(({ id }) => id === 'system')
+    expect(system?.poses.resolved.wide).toMatchObject({
+      scale: 1,
+      opacity: 1,
+    })
+    expect(system?.poses.resolved.mobile).toMatchObject({
+      scale: 1,
+      opacity: 1,
+    })
+  })
+
+  it('shows one readable source artifact at a time on mobile', () => {
+    const email = artifacts.find(({ id }) => id === 'email')!
+    const sheet = artifacts.find(({ id }) => id === 'sheet')!
+    const supportingArtifacts = artifacts.filter(
+      ({ id }) => id === 'approval' || id === 'reminder',
+    )
+
+    expect(email.poses.recognition.mobile.opacity).toBe(1)
+    expect(email.poses.diagnosis.mobile.opacity).toBe(0)
+    expect(sheet.poses.recognition.mobile.opacity).toBe(0)
+    expect(sheet.poses.diagnosis.mobile.opacity).toBe(1)
+    for (const artifact of supportingArtifacts) {
+      expect(artifact.poses.recognition.mobile.opacity).toBe(0)
+      expect(artifact.poses.diagnosis.mobile.opacity).toBe(0)
+    }
+  })
+
   it('keeps the email artifact recognizable as an inbox message', () => {
     expect(artifacts[0].content).toEqual([
       { label: 'From', value: 'Operations' },
@@ -67,8 +102,9 @@ describe('Tuesday Board model', () => {
   })
 
   it('selects mobile, tablet, and wide layouts at fixed boundaries', () => {
-    expect(layoutModeForWidth(479)).toBe('mobile')
-    expect(layoutModeForWidth(480)).toBe('tablet')
+    expect(layoutModeForWidth(600)).toBe('mobile')
+    expect(layoutModeForWidth(767)).toBe('mobile')
+    expect(layoutModeForWidth(768)).toBe('tablet')
     expect(layoutModeForWidth(899)).toBe('tablet')
     expect(layoutModeForWidth(900)).toBe('wide')
   })

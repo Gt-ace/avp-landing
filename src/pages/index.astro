@@ -66,7 +66,10 @@ const aiProviders = [
       <HeroWorkflow />
 
       <div class="hero-content">
-        <h1 class="hero-title">Your team’s most annoying Tuesday, turned into software.</h1>
+        <h1 class="hero-title">
+          <span>Your team’s most annoying Tuesday,</span>
+          <em>turned into software.</em>
+        </h1>
         <p class="hero-tagline">
           AVP maps the handoffs, builds the system around them, and keeps it running.
         </p>
@@ -214,21 +217,40 @@ const aiProviders = [
 
   .hero-content {
     position: absolute;
-    top: clamp(7rem, 18vh, 12rem);
-    left: clamp(1.5rem, 7vw, 7rem);
-    width: min(32rem, 34vw);
+    top: clamp(7rem, 16vh, 10rem);
+    left: max(clamp(1.5rem, 6vw, 6rem), env(safe-area-inset-left));
+    width: min(38rem, 43vw);
   }
 
   .hero-title {
-    max-width: 8ch;
     font-family: var(--font-body);
-    font-size: clamp(3rem, 5.5vw, 6rem);
+    font-size: clamp(3rem, 5vw, 5rem);
     font-weight: 600;
     color: var(--color-ink);
-    text-wrap: balance;
-    letter-spacing: -0.04em;
-    line-height: 0.96;
+    letter-spacing: -0.035em;
+    line-height: 0.94;
     margin: 0;
+  }
+
+  .hero-title span,
+  .hero-title em {
+    display: block;
+  }
+
+  .hero-title span {
+    max-width: 15ch;
+    text-wrap: balance;
+  }
+
+  .hero-title em {
+    width: max-content;
+    max-width: 100%;
+    margin-top: 0.12em;
+    font-family: var(--font-display);
+    font-size: 0.94em;
+    font-style: italic;
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 
   .hero-tagline {
@@ -503,17 +525,17 @@ const aiProviders = [
 
   @media (max-width: 767px) {
     .hero-stage {
-      min-height: 142dvh;
+      min-height: 155dvh;
     }
 
     .hero-content {
       top: 7rem;
-      left: 1.5rem;
+      left: max(1.5rem, env(safe-area-inset-left));
       width: min(23rem, calc(100vw - 3rem));
+      opacity: var(--hero-copy-opacity, 1);
     }
 
     .hero-title {
-      max-width: 10ch;
       font-size: clamp(2.75rem, 12vw, 4.5rem);
     }
 
@@ -527,13 +549,22 @@ const aiProviders = [
     }
   }
 
+  @media (min-width: 480px) and (max-width: 767px) {
+    .hero-content {
+      width: calc(100vw - 3rem);
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 8vw, 3.75rem);
+    }
+  }
+
   @media (max-width: 360px) {
     .hero-content {
       top: 4.5rem;
     }
 
     .hero-title {
-      max-width: 11ch;
       font-size: 2.1rem;
       line-height: 0.98;
     }
@@ -551,11 +582,7 @@ const aiProviders = [
 
   @media (prefers-reduced-motion: reduce) {
     .hero-stage {
-      min-height: 100dvh;
-    }
-
-    .hero {
-      position: relative;
+      min-height: 155dvh;
     }
 
     .hero-cta {

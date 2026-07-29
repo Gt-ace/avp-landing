@@ -7,10 +7,12 @@ and restrained motion that explains how AVP works.
 ## Tuesday Board hero
 
 The first viewport makes one operational scene legible: a team’s scattered
-email, spreadsheet, approval, reminder, and system handoff become a single
-working system. The left third carries the statement and contact path; the
-right two-thirds carries a labeled synthetic `Example workflow` board. The
-approved message is:
+email, spreadsheet, approval, and reminder become a single working system.
+The statement and contact path anchor the left side while large, cropped work
+artifacts occupy the full viewport rather than sitting inside a separate
+board. A cobalt structural field grows behind the resolved system. The
+synthetic demonstration is labeled `Example workflow`. The approved message
+is:
 
 > Your team’s most annoying Tuesday, turned into software.
 
@@ -63,11 +65,12 @@ an outline emphasis only; it never changes the canonical scroll story.
 
 ## Responsive behavior
 
-Wide screens use the left-copy/right-board composition. Tablet reduces overlap
-and rotation while keeping several artifacts visible. Mobile uses a vertical
-storyboard with manual artifacts, diagnosed handoffs, and the resolved system;
-the headline, copy, CTA, and example label stay readable without horizontal
-scrolling.
+Wide screens let readable work artifacts crop across a full-bleed operational
+scene beside the copy. Tablet reduces overlap and rotation while keeping the
+transformation legible. Mobile shows one primary artifact at a time—email,
+then spreadsheet, then the resolved system—instead of shrinking the desktop
+pile. The headline, copy, CTA, and example label stay readable without
+horizontal scrolling.
 
 ## Accessibility and fallback
 
@@ -76,7 +79,9 @@ server-rendered resolved ordered list. The decorative artifact scene and SVG
 routing layer are `aria-hidden`; the ordered fallback carries the accessible
 workflow meaning. The hero CTA and navigation retain visible focus states.
 
-Reduced motion skips enhancement and keeps the resolved workflow static. If
-JavaScript fails, the same resolved scene and ordered workflow remain in the
-HTML. The controller pauses off-screen, measures only on setup/resize, and
-updates transforms, opacity, CSS variables, and SVG endpoints in one frame.
+Reduced motion remains scroll-linked so the transformation always works. It
+uses shorter travel, zero rotation, and simpler transform changes rather than
+disabling the sequence. If JavaScript fails, the resolved scene and ordered
+workflow remain in the HTML. The controller pauses off-screen, measures only
+on setup/resize, and updates transforms, opacity, CSS variables, and SVG
+endpoints in one frame.
