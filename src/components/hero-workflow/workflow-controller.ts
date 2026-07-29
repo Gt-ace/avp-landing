@@ -125,8 +125,8 @@ export function setupWorkflow(root: HTMLElement) {
       )
       const { pose } = state
       const position = {
-        x: (pose.x / 100) * sceneSize.width,
-        y: (pose.y / 100) * sceneSize.height,
+        x: pose.x,
+        y: pose.y,
       }
       states.set(definition.id, state)
       positions.set(definition.id, position)
@@ -167,7 +167,7 @@ export function setupWorkflow(root: HTMLElement) {
       processTail.setAttribute('x1', String(systemPosition.x))
       processTail.setAttribute('y1', String(systemPosition.y))
       processTail.setAttribute('x2', String(systemPosition.x))
-      processTail.setAttribute('y2', String(sceneSize.height))
+      processTail.setAttribute('y2', '100')
       processTail.style.opacity = String(systemState?.resolvedLineOpacity ?? 0)
     }
   }
