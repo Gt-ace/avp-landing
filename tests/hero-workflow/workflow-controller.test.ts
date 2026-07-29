@@ -130,7 +130,7 @@ describe('workflow frame lifecycle', () => {
     const stageStyle = makeStyle()
     const heroCopy = { style: makeStyle(), inert: false }
     const stage = {
-      getBoundingClientRect: () => ({ top: -180, height: 1125 }),
+      getBoundingClientRect: () => ({ top: -225, height: 1125 }),
       querySelector: (selector: string) =>
         selector === '.hero-content' ? heroCopy : null,
       style: stageStyle,

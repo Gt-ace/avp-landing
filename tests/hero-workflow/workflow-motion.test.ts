@@ -42,13 +42,13 @@ describe('Tuesday Board motion', () => {
     expect(scrollProgress(-270, 1080, 1350)).toBe(1)
   })
 
-  it('interpolates every pose property at the midpoint', () => {
-    expect(interpolatePose(recognition, diagnosis, 0.5)).toEqual({
-      x: 20,
-      y: 30,
-      rotation: -5,
-      scale: 0.95,
-      opacity: 0.9,
+  it('interpolates an already-eased pose value without applying a second curve', () => {
+    expect(interpolatePose(recognition, diagnosis, 0.25)).toEqual({
+      x: 15,
+      y: 25,
+      rotation: -6.5,
+      scale: 0.975,
+      opacity: 0.95,
     })
   })
 
@@ -73,17 +73,26 @@ describe('Tuesday Board motion', () => {
     })
   })
 
-  it('makes the resolved system dominant before the final scroll position', () => {
-    const nearlyResolved = visualStateForProgress(
+  it('distributes the resolved transition through the widened story interval', () => {
+    const hiddenResolved = { ...resolved, opacity: 0 }
+    const oldEndpoint = visualStateForProgress(
       recognition,
       diagnosis,
-      { ...resolved, opacity: 0 },
+      hiddenResolved,
       0.72,
     )
+    const newEndpoint = visualStateForProgress(
+      recognition,
+      diagnosis,
+      hiddenResolved,
+      0.88,
+    )
 
-    expect(nearlyResolved.pose.opacity).toBeLessThan(0.1)
-    expect(nearlyResolved.messyLineOpacity).toBe(0)
-    expect(nearlyResolved.cobaltProgress).toBeGreaterThan(0.9)
+    expect(oldEndpoint.pose.opacity).toBeGreaterThan(0.1)
+    expect(oldEndpoint.cobaltProgress).toBeLessThan(1)
+    expect(newEndpoint.pose.opacity).toBe(0)
+    expect(newEndpoint.cobaltProgress).toBe(1)
+    expect(newEndpoint.messyLineOpacity).toBe(0)
   })
 
   it('keeps mobile copy present initially and clears it for the resolved panel', () => {

@@ -42,7 +42,7 @@ export function interpolatePose(
   to: StoryPose,
   progress: number,
 ): StoryPose {
-  const n = smoothstep01(progress)
+  const n = clamp01(progress)
   const mix = (a: number, b: number) => a + (b - a) * n
   return {
     x: mix(from.x, to.x),
@@ -77,17 +77,17 @@ export function visualStateForProgress(
   progress: number,
 ): ArtifactVisualState {
   const diagnose = segmentProgress(progress, .12, .42)
-  const resolve = segmentProgress(progress, .36, .72)
-  const pose = progress < .36
+  const resolve = segmentProgress(progress, .42, .88)
+  const pose = progress < .42
     ? interpolatePose(recognition, diagnosis, diagnose)
     : interpolatePose(diagnosis, resolved, resolve)
   const annotationOpacity =
-    segmentProgress(progress, .1, .28) * (1 - segmentProgress(progress, .4, .56))
+    segmentProgress(progress, .1, .28) * (1 - segmentProgress(progress, .46, .62))
   return {
     pose,
     annotationOpacity,
-    messyLineOpacity: 1 - segmentProgress(progress, .25, .55),
-    resolvedLineOpacity: segmentProgress(progress, .5, .74),
-    cobaltProgress: segmentProgress(progress, .4, .72),
+    messyLineOpacity: 1 - segmentProgress(progress, .3, .66),
+    resolvedLineOpacity: segmentProgress(progress, .58, .9),
+    cobaltProgress: segmentProgress(progress, .45, .88),
   }
 }
