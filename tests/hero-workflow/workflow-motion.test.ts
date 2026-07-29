@@ -1,34 +1,37 @@
 import { describe, expect, it } from 'vitest'
 import {
   clamp01,
-  composedProgress,
   interpolatePose,
-  proximityProgress,
   scrollProgress,
-  stepSpring,
+  segmentProgress,
+  visualStateForProgress,
+  type StoryPose,
 } from '../../src/components/hero-workflow/workflow-motion'
 
-describe('workflow motion', () => {
+const recognition: StoryPose = {
+  x: 10, y: 20, rotation: -8, scale: 1, opacity: 1,
+}
+const diagnosis: StoryPose = {
+  x: 30, y: 40, rotation: -2, scale: .9, opacity: .8,
+}
+const resolved: StoryPose = {
+  x: 50, y: 60, rotation: 0, scale: .7, opacity: 1,
+}
+
+describe('Tuesday Board motion', () => {
   it('clamps values to normalized progress', () => {
     expect(clamp01(-0.25)).toBe(0)
     expect(clamp01(0.4)).toBe(0.4)
     expect(clamp01(1.25)).toBe(1)
   })
 
-  it('interpolates position, rotation, and opacity', () => {
-    expect(
-      interpolatePose(
-        { x: 10, y: 20, rotation: -8, opacity: 1 },
-        { x: 50, y: 60, rotation: 0, opacity: 0 },
-        0.5,
-      ),
-    ).toEqual({ x: 30, y: 40, rotation: -4, opacity: 0.5 })
-  })
-
-  it('creates a smooth local influence inside the radius', () => {
-    expect(proximityProgress({ x: 0, y: 0 }, { x: 0, y: 0 }, 200)).toBe(1)
-    expect(proximityProgress({ x: 200, y: 0 }, { x: 0, y: 0 }, 200)).toBe(0)
-    expect(proximityProgress({ x: 100, y: 0 }, { x: 0, y: 0 }, 200)).toBeCloseTo(0.5)
+  it('maps normalized progress through fixed narrative segments', () => {
+    expect(segmentProgress(0.15, 0.15, 0.45)).toBe(0)
+    expect(segmentProgress(0.25, 0.15, 0.45)).toBeCloseTo(0.259259)
+    expect(segmentProgress(0.45, 0.15, 0.45)).toBe(1)
+    expect(segmentProgress(0.45, 0.45, 0.82)).toBe(0)
+    expect(segmentProgress(0.6, 0.45, 0.82)).toBeCloseTo(0.359801)
+    expect(segmentProgress(0.82, 0.45, 0.82)).toBe(1)
   })
 
   it('maps the sticky travel distance to scroll progress', () => {
@@ -37,25 +40,34 @@ describe('workflow motion', () => {
     expect(scrollProgress(-270, 1080, 1350)).toBe(1)
   })
 
-  it('advances an offset spring toward rest without overshooting wildly', () => {
-    const next = stepSpring(
-      { value: 80, velocity: 0 },
-      0,
-      1 / 60,
-      { stiffness: 180, damping: 24 },
+  it('interpolates every pose property at the midpoint', () => {
+    expect(interpolatePose(recognition, diagnosis, 0.5)).toEqual({
+      x: 20,
+      y: 30,
+      rotation: -5,
+      scale: 0.95,
+      opacity: 0.9,
+    })
+  })
+
+  it('reveals annotations during diagnosis and resolves the routing lines', () => {
+    const start = visualStateForProgress(recognition, diagnosis, resolved, 0)
+    const diagnosisState = visualStateForProgress(
+      recognition,
+      diagnosis,
+      resolved,
+      0.3,
     )
-    expect(next.value).toBeLessThan(80)
-    expect(next.value).toBeGreaterThan(0)
-    expect(next.velocity).toBeLessThan(0)
-  })
-})
+    const end = visualStateForProgress(recognition, diagnosis, resolved, 1)
 
-describe('composed workflow progress', () => {
-  it('lets global scroll progress remain authoritative', () => {
-    expect(composedProgress(0.7, 0.2)).toBe(0.7)
-  })
-
-  it('lets local interaction temporarily reveal more clarity', () => {
-    expect(composedProgress(0.2, 0.8)).toBe(0.8)
+    expect(start.messyLineOpacity).toBe(1)
+    expect(start.resolvedLineOpacity).toBe(0)
+    expect(diagnosisState.annotationOpacity).toBeGreaterThan(start.annotationOpacity)
+    expect(end).toMatchObject({
+      pose: resolved,
+      annotationOpacity: 0,
+      messyLineOpacity: 0,
+      resolvedLineOpacity: 1,
+    })
   })
 })

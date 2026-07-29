@@ -1,45 +1,28 @@
-export type Point = { x: number; y: number }
-
-export type Pose = Point & {
+export type StoryPose = {
+  x: number
+  y: number
   rotation: number
+  scale: number
   opacity: number
 }
 
-export type SpringState = {
-  value: number
-  velocity: number
+export type ArtifactVisualState = {
+  pose: StoryPose
+  annotationOpacity: number
+  messyLineOpacity: number
+  resolvedLineOpacity: number
+  cobaltProgress: number
 }
 
-export type SpringConfig = {
-  stiffness: number
-  damping: number
-}
-
-export function clamp01(value: number) {
-  return Math.min(1, Math.max(0, value))
-}
+export const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
 
 export function smoothstep01(value: number) {
   const n = clamp01(value)
   return n * n * (3 - 2 * n)
 }
 
-export function interpolatePose(from: Pose, to: Pose, progress: number): Pose {
-  const n = smoothstep01(progress)
-  const mix = (start: number, end: number) => start + (end - start) * n
-
-  return {
-    x: mix(from.x, to.x),
-    y: mix(from.y, to.y),
-    rotation: mix(from.rotation, to.rotation),
-    opacity: mix(from.opacity, to.opacity),
-  }
-}
-
-export function proximityProgress(point: Point, pointer: Point, radius: number) {
-  if (radius <= 0) return 0
-  const distance = Math.hypot(point.x - pointer.x, point.y - pointer.y)
-  return smoothstep01(1 - distance / radius)
+export function segmentProgress(value: number, start: number, end: number) {
+  return smoothstep01((value - start) / Math.max(.0001, end - start))
 }
 
 export function scrollProgress(
@@ -47,28 +30,43 @@ export function scrollProgress(
   viewportHeight: number,
   stageHeight: number,
 ) {
-  const travel = Math.max(1, stageHeight - viewportHeight)
-  return clamp01(-stageTop / travel)
+  return clamp01(-stageTop / Math.max(1, stageHeight - viewportHeight))
 }
 
-export function stepSpring(
-  state: SpringState,
-  target: number,
-  deltaSeconds: number,
-  config: SpringConfig,
-): SpringState {
-  const dt = Math.min(deltaSeconds, 1 / 30)
-  const acceleration =
-    (target - state.value) * config.stiffness -
-    state.velocity * config.damping
-  const velocity = state.velocity + acceleration * dt
-
+export function interpolatePose(
+  from: StoryPose,
+  to: StoryPose,
+  progress: number,
+): StoryPose {
+  const n = smoothstep01(progress)
+  const mix = (a: number, b: number) => a + (b - a) * n
   return {
-    value: state.value + velocity * dt,
-    velocity,
+    x: mix(from.x, to.x),
+    y: mix(from.y, to.y),
+    rotation: mix(from.rotation, to.rotation),
+    scale: mix(from.scale, to.scale),
+    opacity: mix(from.opacity, to.opacity),
   }
 }
 
-export function composedProgress(scroll: number, local: number) {
-  return Math.max(clamp01(scroll), clamp01(local))
+export function visualStateForProgress(
+  recognition: StoryPose,
+  diagnosis: StoryPose,
+  resolved: StoryPose,
+  progress: number,
+): ArtifactVisualState {
+  const diagnose = segmentProgress(progress, .12, .42)
+  const resolve = segmentProgress(progress, .42, .88)
+  const pose = progress < .42
+    ? interpolatePose(recognition, diagnosis, diagnose)
+    : interpolatePose(diagnosis, resolved, resolve)
+  const annotationOpacity =
+    segmentProgress(progress, .1, .28) * (1 - segmentProgress(progress, .46, .62))
+  return {
+    pose,
+    annotationOpacity,
+    messyLineOpacity: 1 - segmentProgress(progress, .3, .66),
+    resolvedLineOpacity: segmentProgress(progress, .58, .9),
+    cobaltProgress: segmentProgress(progress, .45, .9),
+  }
 }
