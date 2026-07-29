@@ -222,20 +222,6 @@ const resolvedSteps = [
     pointer-events: auto;
   }
 
-  .workflow-scene::before {
-    position: absolute;
-    top: 4%;
-    right: 2%;
-    bottom: 4%;
-    left: 46%;
-    z-index: 0;
-    background: var(--color-cobalt);
-    content: '';
-    transform: scaleX(var(--cobalt-progress));
-    transform-origin: right center;
-    will-change: transform;
-  }
-
   .workflow-lines {
     position: absolute;
     inset: 0;
@@ -323,7 +309,19 @@ const resolvedSteps = [
 
   .workflow-artifact[data-artifact='system'] {
     z-index: 6;
+    isolation: isolate;
     width: min(49rem, 56vw);
+  }
+
+  .workflow-artifact[data-artifact='system']::before {
+    position: absolute;
+    inset: 0.75rem -0.75rem -0.75rem 0.75rem;
+    z-index: -1;
+    background: var(--color-cobalt);
+    content: '';
+    transform: scaleX(var(--cobalt-progress));
+    transform-origin: right center;
+    will-change: transform;
   }
 
   .artifact-surface {
@@ -601,10 +599,6 @@ const resolvedSteps = [
   }
 
   @media (max-width: 899px) {
-    .workflow-scene::before {
-      left: 39%;
-    }
-
     .workflow-artifact[data-artifact='email'] {
       width: min(30rem, 51vw);
     }
@@ -629,15 +623,6 @@ const resolvedSteps = [
       left: 1.5rem;
     }
 
-    .workflow-scene::before {
-      top: 49%;
-      right: 1rem;
-      bottom: 2.5%;
-      left: 1rem;
-      transform: scaleY(var(--cobalt-progress));
-      transform-origin: bottom center;
-    }
-
     .workflow-artifact[data-artifact='email'] {
       width: min(22rem, 88vw);
     }
@@ -656,6 +641,10 @@ const resolvedSteps = [
 
     .workflow-artifact[data-artifact='system'] {
       width: min(23rem, 88vw);
+    }
+
+    .workflow-artifact[data-artifact='system']::before {
+      inset: 0.5rem -0.5rem -0.5rem 0.5rem;
     }
 
     .workflow:not([data-enhanced='true']) .workflow-artifact[data-artifact='system'] {
@@ -729,10 +718,6 @@ const resolvedSteps = [
       top: 53%;
     }
 
-    .workflow-scene::before {
-      top: 35%;
-    }
-
     .workflow[data-enhanced='true'] .workflow-artifact[data-artifact='system'] {
       --artifact-y-offset: -4rem;
     }
@@ -764,10 +749,6 @@ const resolvedSteps = [
   }
 
   @media (max-width: 360px) and (max-height: 650px) {
-    .workflow-scene::before {
-      top: 26%;
-    }
-
     .workflow[data-enhanced='true'] .workflow-artifact[data-artifact='system'] {
       --artifact-y-offset: -6rem;
     }
@@ -775,7 +756,7 @@ const resolvedSteps = [
 
   @media (prefers-reduced-motion: reduce) {
     .workflow-artifact,
-    .workflow-scene::before {
+    .workflow-artifact[data-artifact='system']::before {
       will-change: auto;
     }
   }
