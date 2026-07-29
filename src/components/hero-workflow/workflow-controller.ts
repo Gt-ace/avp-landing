@@ -112,6 +112,7 @@ export function setupWorkflow(root: HTMLElement) {
     const positions = new Map<ArtifactId, ScenePoint>()
     const states = new Map<ArtifactId, ArtifactVisualState>()
     let cobaltValue = 0
+    let annotationValue = 0
 
     for (const definition of artifacts) {
       const item = runtime.get(definition.id)
@@ -135,6 +136,7 @@ export function setupWorkflow(root: HTMLElement) {
       states.set(definition.id, state)
       positions.set(definition.id, position)
       cobaltValue = Math.max(cobaltValue, state.cobaltProgress)
+      annotationValue = Math.max(annotationValue, state.annotationOpacity)
 
       setCustomProperty(item.element, '--artifact-x', `${pixelPosition.x}px`)
       setCustomProperty(item.element, '--artifact-y', `${pixelPosition.y}px`)
@@ -147,6 +149,7 @@ export function setupWorkflow(root: HTMLElement) {
 
     setCustomProperty(root, '--story-progress', String(storyValue))
     setCustomProperty(root, '--cobalt-progress', String(cobaltValue))
+    setCustomProperty(root, '--annotation-opacity', String(annotationValue))
 
     for (const connection of connections) {
       const line = lineElements.get(connection.id)

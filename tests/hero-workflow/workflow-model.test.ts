@@ -49,6 +49,15 @@ describe('Tuesday Board model', () => {
     expect(reminder.poses.recognition.wide.y).toBeLessThan(sheet.poses.recognition.wide.y + 20)
   })
 
+  it('uses the canonical resolved system sequence', () => {
+    const system = artifacts.find((item) => item.id === 'system')!
+
+    expect(system.content).toContainEqual({
+      label: 'Flow',
+      value: 'Request → Check → Approve → Sync → Done',
+    })
+  })
+
   it('references valid artifact ids in every connection', () => {
     const ids = new Set(artifacts.map((item) => item.id))
     for (const edge of connections) {

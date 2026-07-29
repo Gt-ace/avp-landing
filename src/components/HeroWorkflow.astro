@@ -8,15 +8,23 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
 ---
 
 <div class="workflow" data-workflow-root>
-  <span class="workflow-example-label">Example workflow</span>
+  <span class="workflow-example-label" id="workflow-example-label">Example workflow</span>
+  <span class="visually-hidden" id="workflow-resolved-label">Resolved workflow</span>
 
-  <ol class="workflow-fallback" aria-label="Resolved workflow">
+  <ol class="workflow-fallback" aria-labelledby="workflow-example-label workflow-resolved-label">
     {resolvedSteps.map((step) => (
       <li><span>{step}</span></li>
     ))}
   </ol>
 
   <div class="workflow-scene" data-workflow-scene aria-hidden="true">
+    <div class="workflow-annotation-stack" aria-hidden="true">
+      <span>Missing information</span>
+      <span>Updated in two places</span>
+      <span>Waiting for approval</span>
+      <span>Copied manually</span>
+    </div>
+
     <svg
       class="workflow-lines"
       viewBox="0 0 100 100"
@@ -160,9 +168,23 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
     --color-paper: #F2EFE8;
     --color-ink: #111315;
     --cobalt-progress: 1;
+    --annotation-opacity: 0;
     z-index: 1;
     pointer-events: none;
     font-family: var(--font-body);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
 
   .workflow-example-label {
@@ -209,6 +231,10 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
     width: 100%;
     height: 100%;
     overflow: visible;
+  }
+
+  .workflow-annotation-stack {
+    display: none;
   }
 
   .workflow-lines line {
@@ -562,7 +588,7 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
   @media (min-width: 480px) and (max-width: 899px) {
     .workflow-scene {
       right: 2.5%;
-      left: 36%;
+      left: 43%;
     }
 
     .workflow-example-label {
@@ -628,25 +654,55 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
     }
 
     .workflow-artifact {
-      width: min(18rem, 76vw);
+      width: min(17rem, 72vw);
+    }
+
+    .artifact-surface {
+      min-height: 6rem;
+      padding: 0.6rem;
+    }
+
+    .artifact-header {
+      gap: 0.4rem;
+      padding-bottom: 0.45rem;
+    }
+
+    .artifact-icon {
+      width: 1.55rem;
+      height: 1.55rem;
+    }
+
+    .artifact-icon svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .artifact-content {
+      gap: 0.25rem;
+      padding-top: 0.45rem;
+    }
+
+    .artifact-row dd,
+    .sheet-cell strong {
+      font-size: 0.58rem;
     }
 
     .workflow-artifact[data-artifact='email'] {
       --artifact-static-x: 50%;
       --artifact-static-y: 22%;
-      --artifact-scale: 0.76;
+      --artifact-scale: 0.62;
     }
 
     .workflow-artifact[data-artifact='sheet'] {
       --artifact-static-x: 50%;
       --artifact-static-y: 37%;
-      --artifact-scale: 0.7;
+      --artifact-scale: 0.56;
     }
 
     .workflow-artifact[data-artifact='approval'] {
       --artifact-static-x: 50%;
       --artifact-static-y: 52%;
-      --artifact-scale: 0.72;
+      --artifact-scale: 0.58;
     }
 
     .workflow-artifact[data-artifact='reminder'] {
@@ -657,7 +713,7 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
     .workflow-artifact[data-artifact='system'] {
       --artifact-static-x: 50%;
       --artifact-static-y: 79%;
-      --artifact-scale: 0.9;
+      --artifact-scale: 0.72;
     }
 
     .artifact-surface {
@@ -665,13 +721,40 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
     }
 
     .workflow-annotation {
+      display: none;
       top: calc(100% + 0.4rem);
+    }
+
+    .workflow-annotation-stack {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      z-index: 6;
+      display: grid;
+      gap: 0.3rem;
+      max-width: calc(100% - 1.5rem);
+      color: var(--color-ink);
+      opacity: var(--annotation-opacity);
+      pointer-events: none;
+    }
+
+    .workflow-annotation-stack span {
+      width: max-content;
+      max-width: 100%;
+      padding: 0.3rem 0.4rem;
+      background: var(--color-highlight);
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      line-height: 1;
+      text-transform: uppercase;
     }
   }
 
   @media (max-width: 360px) {
     .workflow-example-label {
       top: 57%;
+      background: transparent;
     }
   }
 

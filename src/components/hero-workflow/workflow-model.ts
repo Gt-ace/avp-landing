@@ -44,13 +44,13 @@ export const artifacts: ArtifactDefinition[] = [
     ],
     poses: {
       recognition: {
-        wide: pose(28, 15, -3), tablet: pose(20, 12, -2), mobile: pose(50, 10, -1),
+        wide: pose(28, 15, -3), tablet: pose(26, 12, -2), mobile: pose(50, 22, -1, .58),
       },
       diagnosis: {
-        wide: pose(24, 13, -1), tablet: pose(17, 10, -1), mobile: pose(50, 8, 0),
+        wide: pose(24, 13, -1), tablet: pose(22, 10, -1), mobile: pose(50, 22, 0, .56),
       },
       resolved: {
-        wide: pose(17, 34, 0, .78), tablet: pose(18, 38, 0, .72), mobile: pose(50, 22, 0, .76),
+        wide: pose(17, 34, 0, .78), tablet: pose(24, 38, 0, .72), mobile: pose(50, 24, 0, .58),
       },
     },
   },
@@ -65,13 +65,13 @@ export const artifacts: ArtifactDefinition[] = [
     ],
     poses: {
       recognition: {
-        wide: pose(55, 9, 2), tablet: pose(48, 8, 1), mobile: pose(50, 29, 1),
+        wide: pose(55, 9, 2), tablet: pose(48, 8, 1), mobile: pose(50, 42, 1, .52),
       },
       diagnosis: {
-        wide: pose(50, 12, 0), tablet: pose(46, 10, 0), mobile: pose(50, 28, 0),
+        wide: pose(50, 12, 0), tablet: pose(46, 10, 0), mobile: pose(50, 42, 0, .5),
       },
       resolved: {
-        wide: pose(30, 34, 0, .72), tablet: pose(27, 38, 0, .68), mobile: pose(50, 37, 0, .7),
+        wide: pose(30, 34, 0, .72), tablet: pose(27, 38, 0, .68), mobile: pose(50, 42, 0, .52),
       },
     },
   },
@@ -85,13 +85,13 @@ export const artifacts: ArtifactDefinition[] = [
     ],
     poses: {
       recognition: {
-        wide: pose(35, 52, 4), tablet: pose(20, 48, 2), mobile: pose(50, 48, -1),
+        wide: pose(35, 52, 4), tablet: pose(30, 48, 2), mobile: pose(50, 61, -1, .54),
       },
       diagnosis: {
-        wide: pose(33, 48, 1), tablet: pose(20, 46, 0), mobile: pose(50, 47, 0),
+        wide: pose(33, 48, 1), tablet: pose(28, 46, 0), mobile: pose(50, 61, 0, .52),
       },
       resolved: {
-        wide: pose(50, 34, 0, .76), tablet: pose(47, 38, 0, .7), mobile: pose(50, 52, 0, .72),
+        wide: pose(50, 34, 0, .76), tablet: pose(52, 38, 0, .7), mobile: pose(50, 63, 0, .54),
       },
     },
   },
@@ -101,30 +101,30 @@ export const artifacts: ArtifactDefinition[] = [
     content: [{ label: 'Note', value: 'Follow up again' }],
     poses: {
       recognition: {
-        wide: pose(52, 18, -7), tablet: pose(52, 44, -5), mobile: pose(50, 64, 2),
+        wide: pose(52, 18, -7), tablet: pose(52, 44, -5), mobile: pose(50, 76, 2, .46),
       },
       diagnosis: {
-        wide: pose(53, 51, -3), tablet: pose(54, 46, -2), mobile: pose(50, 63, 0),
+        wide: pose(53, 51, -3), tablet: pose(54, 46, -2), mobile: pose(50, 76, 0, .46),
       },
       resolved: {
-        wide: pose(61, 34, 0, .55, 0), tablet: pose(61, 38, 0, .5, 0), mobile: pose(50, 67, 0, .5, 0),
+        wide: pose(61, 34, 0, .55, 0), tablet: pose(61, 38, 0, .5, 0), mobile: pose(50, 76, 0, .42, 0),
       },
     },
   },
   {
     id: 'system', title: 'System handoff', icon: 'accounting', role: 'system',
     content: [
-      { label: 'Flow', value: 'Request → Validate → Approve → Sync' },
+      { label: 'Flow', value: 'Request → Check → Approve → Sync → Done' },
     ],
     poses: {
       recognition: {
-        wide: pose(66, 47, 1, .88, .72), tablet: pose(55, 62, 0, .82, .7), mobile: pose(50, 82, 0, .8, .68),
+        wide: pose(66, 47, 1, .88, .72), tablet: pose(55, 62, 0, .82, .7), mobile: pose(50, 85, 0, .62, .68),
       },
       diagnosis: {
-        wide: pose(67, 45, 0, .92, .88), tablet: pose(55, 61, 0, .86, .84), mobile: pose(50, 80, 0, .84, .82),
+        wide: pose(67, 45, 0, .92, .88), tablet: pose(55, 61, 0, .86, .84), mobile: pose(50, 85, 0, .64, .82),
       },
       resolved: {
-        wide: pose(76, 34, 0, 1, 1), tablet: pose(78, 38, 0, .92, 1), mobile: pose(50, 70, 0, .9, 1),
+        wide: pose(76, 34, 0, 1, 1), tablet: pose(78, 38, 0, .92, 1), mobile: pose(50, 85, 0, .62, 1),
       },
     },
   },
