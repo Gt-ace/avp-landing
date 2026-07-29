@@ -26,4 +26,8 @@ describe('Tuesday Board structural styling', () => {
     expect(pageSource).toContain('min-height: 180dvh;')
     expect(pageSource).toContain('min-height: 190dvh;')
   })
+
+  it('keeps the wide resolved card inside its half of the hero', () => {
+    expect(workflowSource).toContain('width: min(46rem, 50vw);')
+  })
 })

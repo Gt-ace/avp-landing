@@ -49,6 +49,14 @@ describe('Tuesday Board model', () => {
     })
   })
 
+  it('positions the resolved system clear of desktop copy and mobile edges', () => {
+    const system = artifacts.find(({ id }) => id === 'system')!
+
+    expect(system.poses.resolved.wide.x).toBe(74)
+    expect(system.poses.resolved.tablet.x).toBe(75)
+    expect(system.poses.resolved.mobile.y).toBe(74)
+  })
+
   it('shows one readable source artifact at a time on mobile', () => {
     const email = artifacts.find(({ id }) => id === 'email')!
     const sheet = artifacts.find(({ id }) => id === 'sheet')!

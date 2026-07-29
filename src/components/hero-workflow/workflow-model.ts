@@ -124,7 +124,7 @@ export const artifacts: ArtifactDefinition[] = [
         wide: pose(72, 64, 0, .84, .5), tablet: pose(67, 65, 0, .8, .5), mobile: pose(50, 80, 0, .82, .18),
       },
       resolved: {
-        wide: pose(72, 52, 0, 1, 1), tablet: pose(62, 54, 0, 1, 1), mobile: pose(50, 79, 0, 1, 1),
+        wide: pose(74, 52, 0, 1, 1), tablet: pose(75, 54, 0, 1, 1), mobile: pose(50, 74, 0, 1, 1),
       },
     },
   },
