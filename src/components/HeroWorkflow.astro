@@ -276,51 +276,59 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
   }
 
   .workflow-artifact {
-    --artifact-x: 50%;
-    --artifact-y: 50%;
+    --artifact-static-x: 50%;
+    --artifact-static-y: 50%;
+    --artifact-x: 0px;
+    --artifact-y: 0px;
     --artifact-rotation: 0deg;
     --artifact-scale: 1;
     --artifact-opacity: 1;
     --annotation-opacity: 0;
     position: absolute;
-    top: 0;
-    left: 0;
+    top: var(--artifact-static-y);
+    left: var(--artifact-static-x);
     width: min(18rem, 34vw);
-    transform: translate3d(var(--artifact-x), var(--artifact-y), 0) translate(-50%, -50%) rotate(var(--artifact-rotation)) scale(var(--artifact-scale));
+    transform: translate(-50%, -50%) rotate(var(--artifact-rotation)) scale(var(--artifact-scale));
     transform-origin: center;
     opacity: var(--artifact-opacity);
     will-change: transform, opacity;
   }
 
+  .workflow[data-enhanced='true'] .workflow-artifact {
+    top: 0;
+    left: 0;
+    transform: translate3d(var(--artifact-x), var(--artifact-y), 0) translate(-50%, -50%) rotate(var(--artifact-rotation)) scale(var(--artifact-scale));
+  }
+
   .workflow-artifact[data-artifact='email'] {
-    --artifact-x: 10%;
-    --artifact-y: 34%;
+    --artifact-static-x: 10%;
+    --artifact-static-y: 34%;
     --artifact-scale: 0.78;
   }
 
   .workflow-artifact[data-artifact='sheet'] {
-    --artifact-x: 30%;
-    --artifact-y: 34%;
+    --artifact-static-x: 30%;
+    --artifact-static-y: 34%;
     --artifact-scale: 0.72;
   }
 
   .workflow-artifact[data-artifact='approval'] {
-    --artifact-x: 50%;
-    --artifact-y: 34%;
+    --artifact-static-x: 50%;
+    --artifact-static-y: 34%;
     --artifact-scale: 0.76;
   }
 
   .workflow-artifact[data-artifact='reminder'] {
-    --artifact-x: 61%;
-    --artifact-y: 34%;
+    --artifact-static-x: 61%;
+    --artifact-static-y: 34%;
     --artifact-scale: 0.55;
     --artifact-opacity: 0;
     z-index: 4;
   }
 
   .workflow-artifact[data-artifact='system'] {
-    --artifact-x: 76%;
-    --artifact-y: 34%;
+    --artifact-static-x: 76%;
+    --artifact-static-y: 34%;
     z-index: 1;
   }
 
@@ -567,45 +575,45 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
     }
 
     .workflow-artifact[data-artifact='email'] {
-      --artifact-x: 8%;
-      --artifact-y: 38%;
+      --artifact-static-x: 8%;
+      --artifact-static-y: 38%;
       --artifact-scale: 0.72;
     }
 
     .workflow-artifact[data-artifact='sheet'] {
-      --artifact-x: 27%;
-      --artifact-y: 38%;
+      --artifact-static-x: 27%;
+      --artifact-static-y: 38%;
       --artifact-scale: 0.68;
     }
 
     .workflow-artifact[data-artifact='approval'] {
-      --artifact-x: 47%;
-      --artifact-y: 38%;
+      --artifact-static-x: 47%;
+      --artifact-static-y: 38%;
       --artifact-scale: 0.7;
     }
 
     .workflow-artifact[data-artifact='reminder'] {
-      --artifact-x: 61%;
-      --artifact-y: 38%;
+      --artifact-static-x: 61%;
+      --artifact-static-y: 38%;
     }
 
     .workflow-artifact[data-artifact='system'] {
-      --artifact-x: 78%;
-      --artifact-y: 38%;
+      --artifact-static-x: 78%;
+      --artifact-static-y: 38%;
       --artifact-scale: 0.92;
     }
   }
 
   @media (max-width: 479px) {
     .workflow-scene {
-      top: 45%;
+      top: 58%;
       right: 4%;
       bottom: 3%;
       left: 4%;
     }
 
     .workflow-example-label {
-      top: 42%;
+      top: 55%;
       right: auto;
       left: 7%;
     }
@@ -624,31 +632,31 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
     }
 
     .workflow-artifact[data-artifact='email'] {
-      --artifact-x: 50%;
-      --artifact-y: 22%;
+      --artifact-static-x: 50%;
+      --artifact-static-y: 22%;
       --artifact-scale: 0.76;
     }
 
     .workflow-artifact[data-artifact='sheet'] {
-      --artifact-x: 50%;
-      --artifact-y: 37%;
+      --artifact-static-x: 50%;
+      --artifact-static-y: 37%;
       --artifact-scale: 0.7;
     }
 
     .workflow-artifact[data-artifact='approval'] {
-      --artifact-x: 50%;
-      --artifact-y: 52%;
+      --artifact-static-x: 50%;
+      --artifact-static-y: 52%;
       --artifact-scale: 0.72;
     }
 
     .workflow-artifact[data-artifact='reminder'] {
-      --artifact-x: 50%;
-      --artifact-y: 67%;
+      --artifact-static-x: 50%;
+      --artifact-static-y: 67%;
     }
 
     .workflow-artifact[data-artifact='system'] {
-      --artifact-x: 50%;
-      --artifact-y: 79%;
+      --artifact-static-x: 50%;
+      --artifact-static-y: 79%;
       --artifact-scale: 0.9;
     }
 
@@ -658,6 +666,12 @@ const resolvedSteps = ['Request', 'Check', 'Approve', 'Sync', 'Done']
 
     .workflow-annotation {
       top: calc(100% + 0.4rem);
+    }
+  }
+
+  @media (max-width: 360px) {
+    .workflow-example-label {
+      top: 57%;
     }
   }
 

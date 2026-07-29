@@ -128,16 +128,21 @@ export function setupWorkflow(root: HTMLElement) {
         x: pose.x,
         y: pose.y,
       }
+      const pixelPosition = {
+        x: (pose.x / 100) * sceneSize.width,
+        y: (pose.y / 100) * sceneSize.height,
+      }
       states.set(definition.id, state)
       positions.set(definition.id, position)
       cobaltValue = Math.max(cobaltValue, state.cobaltProgress)
 
-      setCustomProperty(item.element, '--artifact-x', `${pose.x}%`)
-      setCustomProperty(item.element, '--artifact-y', `${pose.y}%`)
+      setCustomProperty(item.element, '--artifact-x', `${pixelPosition.x}px`)
+      setCustomProperty(item.element, '--artifact-y', `${pixelPosition.y}px`)
       setCustomProperty(item.element, '--artifact-rotation', `${pose.rotation}deg`)
       setCustomProperty(item.element, '--artifact-scale', String(pose.scale))
       setCustomProperty(item.element, '--artifact-opacity', String(pose.opacity))
       setCustomProperty(item.element, '--annotation-opacity', String(state.annotationOpacity))
+      item.element.style.pointerEvents = pose.opacity < 0.05 ? 'none' : 'auto'
     }
 
     setCustomProperty(root, '--story-progress', String(storyValue))

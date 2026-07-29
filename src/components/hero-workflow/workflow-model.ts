@@ -44,13 +44,13 @@ export const artifacts: ArtifactDefinition[] = [
     ],
     poses: {
       recognition: {
-        wide: pose(20, 15, -3), tablet: pose(13, 12, -2), mobile: pose(50, 10, -1),
+        wide: pose(28, 15, -3), tablet: pose(20, 12, -2), mobile: pose(50, 10, -1),
       },
       diagnosis: {
-        wide: pose(15, 13, -1), tablet: pose(10, 10, -1), mobile: pose(50, 8, 0),
+        wide: pose(24, 13, -1), tablet: pose(17, 10, -1), mobile: pose(50, 8, 0),
       },
       resolved: {
-        wide: pose(10, 34, 0, .78), tablet: pose(8, 38, 0, .72), mobile: pose(50, 22, 0, .76),
+        wide: pose(17, 34, 0, .78), tablet: pose(18, 38, 0, .72), mobile: pose(50, 22, 0, .76),
       },
     },
   },
@@ -85,10 +85,10 @@ export const artifacts: ArtifactDefinition[] = [
     ],
     poses: {
       recognition: {
-        wide: pose(25, 52, 4), tablet: pose(13, 48, 2), mobile: pose(50, 48, -1),
+        wide: pose(35, 52, 4), tablet: pose(20, 48, 2), mobile: pose(50, 48, -1),
       },
       diagnosis: {
-        wide: pose(27, 48, 1), tablet: pose(15, 46, 0), mobile: pose(50, 47, 0),
+        wide: pose(33, 48, 1), tablet: pose(20, 46, 0), mobile: pose(50, 47, 0),
       },
       resolved: {
         wide: pose(50, 34, 0, .76), tablet: pose(47, 38, 0, .7), mobile: pose(50, 52, 0, .72),
@@ -124,7 +124,7 @@ export const artifacts: ArtifactDefinition[] = [
         wide: pose(67, 45, 0, .92, .88), tablet: pose(55, 61, 0, .86, .84), mobile: pose(50, 80, 0, .84, .82),
       },
       resolved: {
-        wide: pose(76, 34, 0, 1, 1), tablet: pose(78, 38, 0, .92, 1), mobile: pose(50, 79, 0, .9, 1),
+        wide: pose(76, 34, 0, 1, 1), tablet: pose(78, 38, 0, .92, 1), mobile: pose(50, 70, 0, .9, 1),
       },
     },
   },
