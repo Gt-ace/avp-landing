@@ -52,12 +52,28 @@ const faqs = [
   },
 ]
 
-const summaryQuery = encodeURIComponent('Summarize https://avp.software')
+const summaryQuery = encodeURIComponent("Summarize https://thesoftware.company")
 const aiProviders = [
-  { name: 'Google AI Mode', href: `https://www.google.com/search?udm=50&aep=11&q=${summaryQuery}` },
-  { name: 'ChatGPT', href: `https://chatgpt.com/?q=${summaryQuery}` },
-  { name: 'Claude', href: `https://claude.ai/new?q=${summaryQuery}` },
-  { name: 'Perplexity', href: `https://www.perplexity.ai/search?q=${summaryQuery}` },
+  {
+    name: "ChatGPT",
+    logo: "/logos/chatgpt.svg",
+    href: `https://chatgpt.com/?q=${summaryQuery}`,
+  },
+  {
+    name: "Claude",
+    logo: "/logos/claude.svg",
+    href: `https://claude.ai/new?q=${summaryQuery}`,
+  },
+  {
+    name: "Gemini",
+    logo: "/logos/gemini.svg",
+    href: `https://gemini.google.com/app?prompt=${summaryQuery}`,
+  },
+  {
+    name: "Grok",
+    logo: "/logos/grok.svg",
+    href: `https://grok.com/?q=${summaryQuery}`,
+  },
 ]
 ---
 <BaseLayout title="AVP Software">
@@ -130,8 +146,8 @@ const aiProviders = [
     <span class="label">Request an AI summary</span>
     <nav class="ai-links" aria-label="AI summary providers">
       {aiProviders.map((p) => (
-        <a class="ai-link label" href={p.href} target="_blank" rel="noopener">
-          {p.name} <span aria-hidden="true">&#8599;</span>
+        <a class="ai-link" href={p.href} target="_blank" rel="noopener">
+          <img src={p.logo} alt={p.name} width="128" height="128" loading="lazy" />
         </a>
       ))}
     </nav>
@@ -302,16 +318,35 @@ const aiProviders = [
   .ai-links {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem;
+    align-items: center;
+    gap: 1rem clamp(1.25rem, 3vw, 2.5rem);
   }
 
   .ai-link {
-    color: var(--color-muted);
-    transition: color 200ms;
+    display: inline-flex;
+    width: clamp(3.25rem, 5vw, 4.5rem);
+    aspect-ratio: 1;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.64;
+    transition: opacity 200ms ease-out, transform 200ms ease-out;
   }
 
-  .ai-link:hover {
-    color: var(--color-ink);
+  .ai-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .ai-link:hover,
+  .ai-link:focus-visible {
+    opacity: 1;
+    transform: translateY(-0.125rem);
+  }
+
+  .ai-link:focus-visible {
+    outline: 2px solid var(--color-coral);
+    outline-offset: 0.3rem;
   }
 
   /* ---- FAQ ---- */
@@ -538,6 +573,10 @@ const aiProviders = [
     .hero-scroll,
     .hero-scroll-arrow {
       animation: none;
+    }
+
+    .ai-link {
+      transition: none;
     }
   }
 </style>
