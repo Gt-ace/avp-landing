@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "node --test tests/bigtype-motion.test.mjs && vitest run --exclude='**/.worktrees/**' --exclude='**/bigtype-motion.test.mjs'",
+    "test": "node --test tests/*.test.mjs && vitest run --exclude='**/.worktrees/**' --exclude='**/*.test.mjs'",
     "test:watch": "vitest"
   },
   "dependencies": {
