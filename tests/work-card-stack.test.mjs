@@ -21,3 +21,28 @@ test('work project card is one semantic link with only a visible title', async (
   assert.doesNotMatch(source, /card\.(client|year|description|tech|credits)/)
   assert.doesNotMatch(source, /\bautoplay\b/i)
 })
+
+test('work index maps project data into the static card stack', async () => {
+  const page = await readFile(
+    new URL('../src/pages/work/index.astro', import.meta.url),
+    'utf8',
+  )
+  const stack = await readFile(
+    new URL('../src/components/WorkCardStack.tsx', import.meta.url),
+    'utf8',
+  )
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(page, /toWorkCards\(projects\)/)
+  assert.match(page, /<WorkCardStack cards=\{cards\} \/>/)
+  assert.doesNotMatch(page, /project-row/)
+  assert.doesNotMatch(page, /project\.description/)
+  assert.match(stack, /cards\.map/)
+  assert.match(stack, /<WorkProjectCard/)
+  assert.doesNotMatch(stack, /client:/)
+  assert.match(detail, /class="detail-layout"/)
+  assert.match(detail, /Visit project/)
+})

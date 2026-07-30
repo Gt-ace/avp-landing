@@ -1,175 +1,20 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
+import WorkCardStack from '../../components/WorkCardStack'
+import { toWorkCards } from '../../components/work-card-stack/work-card-model'
 import { projects } from '../../data/projects'
 
-const rows = projects.map((project) => ({
-  project,
-  previewImages: project.previewImages ?? project.images,
-}))
+const cards = toWorkCards(projects)
 ---
+
 <BaseLayout title="Work | AVP Software">
   <main class="work-page">
-    {rows.map(({ project, previewImages }, i) => (
-      <article class="project-row" style={`--row-index:${i}`}>
-        <a href={`/work/${project.slug}`} class="project-row-inner">
-          <div class="project-text">
-            <div class="project-meta">
-              <span class="label">{project.client}</span>
-              <span class="label">{project.year}</span>
-            </div>
-            <h2
-              class="project-title"
-              transition:name={`title-${project.slug}`}
-            >
-              {project.title}
-            </h2>
-            <p class="project-desc">{project.description}</p>
-            <span class="project-read label">Read more</span>
-          </div>
-          <div class="project-images">
-            {project.video && (
-              <video
-                class="project-video"
-                autoplay
-                muted
-                loop
-                playsinline
-                preload="metadata"
-                poster={project.video.poster}
-                transition:name={`image-${project.slug}`}
-              >
-                {project.video.desktopWebm && (
-                  <source src={project.video.desktopWebm} type="video/webm" media="(min-width: 768px)" />
-                )}
-                <source src={project.video.desktopMp4} type="video/mp4" media="(min-width: 768px)" />
-                {project.video.mobileWebm && (
-                  <source src={project.video.mobileWebm} type="video/webm" />
-                )}
-                <source src={project.video.mobileMp4} type="video/mp4" />
-              </video>
-            )}
-            {previewImages.map((src, i) => (
-              <img
-                src={src}
-                alt={project.title}
-                loading="lazy"
-                transition:name={!project.video && i === 0 ? `image-${project.slug}` : undefined}
-              />
-            ))}
-          </div>
-        </a>
-      </article>
-    ))}
+    <WorkCardStack cards={cards} />
   </main>
 </BaseLayout>
 
 <style>
   .work-page {
-    padding-top: clamp(8rem, 15vh, 12rem);
-  }
-
-  .project-row {
-    border-top: 1px solid var(--color-border);
-  }
-
-  .project-row:last-child {
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  /* Content is visible by default. When JS is present, animate each row in once
-     on load with a small stagger. Never hold content at opacity:0 as a resting
-     state, so a non-scrolling render (crawlers, full-page screenshots) is never blank. */
-  :global(html.js) .project-row {
-    animation: row-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: calc(var(--row-index, 0) * 90ms);
-  }
-
-  @keyframes row-in {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    :global(html.js) .project-row {
-      animation: none;
-    }
-  }
-
-  .project-row-inner {
-    display: grid;
-    grid-template-columns: 2fr 3fr;
-    padding: 4rem 0 4rem clamp(2rem, 5vw, 6rem);
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .project-text {
-    padding-right: 3rem;
-  }
-
-  .project-meta {
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .project-title {
-    font-family: var(--font-display);
-    font-size: clamp(1.5rem, 3vw, 2.5rem);
-    font-weight: 600;
-    font-optical-sizing: none;
-    color: var(--color-ink);
-    margin-top: 0.5rem;
-    line-height: 1.1;
-    text-wrap: balance;
-  }
-
-  .project-desc {
-    font-family: var(--font-body);
-    font-size: 1rem;
-    color: var(--color-muted);
-    max-width: 44ch;
-    margin-top: 1rem;
-    line-height: 1.6;
-  }
-
-  .project-read {
-    display: inline-block;
-    color: var(--color-ink);
-    margin-top: 1.5rem;
-  }
-
-  .project-row-inner:hover .project-read {
-    text-decoration: underline;
-  }
-
-  .project-images {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .project-images img,
-  .project-images .project-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    aspect-ratio: 4 / 3;
-  }
-
-  @media (max-width: 767px) {
-    .project-row-inner {
-      grid-template-columns: 1fr;
-      padding-left: 1.25rem;
-      padding-right: 1.25rem;
-    }
-
-    .project-text {
-      padding-right: 0;
-    }
-
-    .project-images {
-      margin-top: 1.5rem;
-    }
+    padding-top: clamp(6rem, 12vh, 9rem);
   }
 </style>
-
-
