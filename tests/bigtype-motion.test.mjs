@@ -32,18 +32,17 @@ test('downward scrolling moves both big type lines equally in opposite direction
   assert.equal(Math.abs(topMovement), Math.abs(bottomMovement))
 })
 
-test('big type composes scroll wrappers with independent Skiper58 rolls', async () => {
+test('big type exposes one focused Skiper58 text roll', async () => {
   const component = await readFile(
     new URL('../src/components/BigTypeRoll.tsx', import.meta.url),
     'utf8'
   )
 
   assert.match(component, /from ['"].*skiper58['"]/)
-  assert.match(component, /data-speed="-0\.35"/)
-  assert.match(component, /data-speed="0\.35"/)
-  assert.equal((component.match(/data-bigtype-shift/g) || []).length, 2)
-  assert.match(component, />DESIGN BUILD<\/TextRoll>/)
-  assert.match(component, />\s*AUTOMATE RUN\s*<\/TextRoll>/)
+  assert.match(component, /text: string/)
+  assert.match(component, /center\?: boolean/)
+  assert.match(component, /<TextRoll className="bigtype-roll" center=\{center\}>/)
+  assert.match(component, /\{text\}<\/TextRoll>/)
 })
 
 test('Skiper58 disables hover animation for reduced-motion visitors', async () => {
@@ -57,6 +56,7 @@ test('Skiper58 disables hover animation for reduced-motion visitors', async () =
     source,
     /whileHover=\{shouldReduceMotion \? undefined : ['"]hovered['"]\}/
   )
+  assert.doesNotMatch(source, /lineHeight:\s*0\.75/)
 })
 
 test('landing page mounts the roll island and scrolls its outer wrappers', async () => {
@@ -66,11 +66,29 @@ test('landing page mounts the roll island and scrolls its outer wrappers', async
   )
 
   assert.match(page, /import BigTypeRoll from ['"].*BigTypeRoll['"]/)
-  assert.match(page, /<BigTypeRoll client:visible \/>/)
+  assert.equal((page.match(/<BigTypeRoll/g) || []).length, 2)
+  assert.match(page, /text="DESIGN BUILD"/)
+  assert.match(page, /text="AUTOMATE RUN"/)
+  assert.match(page, /data-speed="-0\.35"/)
+  assert.match(page, /data-speed="0\.35"/)
+  assert.equal((page.match(/data-bigtype-shift/g) || []).length, 3)
   assert.ok(
     page.includes(
       "line.querySelector<HTMLElement>('[data-bigtype-shift]')"
     )
   )
   assert.doesNotMatch(page, /span\.style\.setProperty\('--shift'/)
+})
+
+test('scroll-owned wrappers stay outside the React islands', async () => {
+  const page = await readFile(
+    new URL('../src/pages/index.astro', import.meta.url),
+    'utf8'
+  )
+
+  assert.match(
+    page,
+    /<div class="bigtype-shift" data-bigtype-shift>\s*<BigTypeRoll/
+  )
+  assert.doesNotMatch(page, /addEventListener\('astro:hydrate'/)
 })

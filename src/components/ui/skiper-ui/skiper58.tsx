@@ -76,9 +76,6 @@ const TextRoll: React.FC<{
       className={["relative block overflow-hidden", className]
         .filter(Boolean)
         .join(" ")}
-      style={{
-        lineHeight: 0.75,
-      }}
     >
       <div>
         {children.split("").map((l, i) => {
