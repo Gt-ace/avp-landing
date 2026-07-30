@@ -2,7 +2,7 @@
 
 // Adapted from Skiper UI's Skiper58:
 // https://skiper-ui.com/v1/skiper58
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import React from "react";
 
 const navigationItems = [
@@ -67,12 +67,10 @@ const TextRoll: React.FC<{
   className?: string;
   center?: boolean;
 }> = ({ children, className, center = false }) => {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
     <motion.span
       initial="initial"
-      whileHover={shouldReduceMotion ? undefined : "hovered"}
+      whileHover="hovered"
       className={["relative block overflow-hidden", className]
         .filter(Boolean)
         .join(" ")}

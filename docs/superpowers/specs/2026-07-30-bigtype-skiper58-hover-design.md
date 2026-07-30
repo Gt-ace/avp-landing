@@ -42,9 +42,9 @@ not imported into the landing page.
 - Touch devices keep the existing scroll-linked presentation without requiring
   a hover substitute.
 - The existing responsive type scale and overflow clipping remain unchanged.
-- Under `prefers-reduced-motion: reduce`, character rolling is disabled and the
-  text remains readable and visually stable. Existing scroll behavior remains
-  consistent with the project's current big-type motion policy.
+- On fine-pointer desktops, character rolling remains available under
+  `prefers-reduced-motion: reduce`, matching the existing big-type policy that
+  keeps its decorative scroll response active.
 
 ## Verification
 

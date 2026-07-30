@@ -14,7 +14,8 @@
 - `DESIGN BUILD` moves right and `AUTOMATE RUN` moves left by equal amounts while scrolling down.
 - Hover rolls only the line under the pointer; it does not track pointer position, tilt text, or alter scroll state.
 - Keep the big-type band decorative with `aria-hidden="true"`.
-- Disable character rolling under `prefers-reduced-motion: reduce`.
+- Keep character rolling available on fine-pointer desktops under
+  `prefers-reduced-motion: reduce`.
 - Keep the current Bodoni display face, ink color, responsive type scale, spacing, and overflow clipping.
 - Preserve Skiper UI's generated provenance/attribution comments.
 - Do not change the hero workflow, Process, FAQ, page copy, or global scroll behavior.
@@ -25,7 +26,7 @@
 
 - Create `components.json`: shadcn registry configuration for the existing Astro/Tailwind project.
 - Modify `tsconfig.json`: add the `@/*` alias required by generated shadcn source.
-- Create `src/components/ui/skiper-ui/skiper58.tsx`: registry-provided `TextRoll`, minimally adapted for reduced motion.
+- Create `src/components/ui/skiper-ui/skiper58.tsx`: registry-provided `TextRoll` with its native hover behavior retained.
 - Create `src/components/BigTypeRoll.tsx`: one React island that renders both scrolling line shells and two independent `TextRoll` instances.
 - Modify `src/pages/index.astro`: mount the island, direct scroll transforms to dedicated wrappers, and expose scoped big-type styles globally to React-rendered markup.
 - Modify `tests/bigtype-motion.test.mjs`: retain direction/parity coverage and add integration-source assertions.
@@ -76,7 +77,7 @@ test('big type composes scroll wrappers with independent Skiper58 rolls', async 
   assert.match(page, /querySelector<HTMLElement>\('\\[data-bigtype-shift\\]'\)/)
 })
 
-test('Skiper58 disables hover animation for reduced-motion visitors', async () => {
+test('Skiper58 keeps hover animation enabled for reduced-motion desktops', async () => {
   const source = await readFile(
     new URL(
       '../src/components/ui/skiper-ui/skiper58.tsx',
@@ -85,8 +86,8 @@ test('Skiper58 disables hover animation for reduced-motion visitors', async () =
     'utf8'
   )
 
-  assert.match(source, /useReducedMotion/)
-  assert.match(source, /whileHover=\{shouldReduceMotion \? undefined : ['"]hover['"]\}/)
+  assert.doesNotMatch(source, /useReducedMotion/)
+  assert.match(source, /whileHover=['"]hovered['"]/)
 })
 ```
 
@@ -160,20 +161,17 @@ Expected: shadcn resolves the trusted Skiper UI registry and creates
 `src/components/ui/skiper-ui/skiper58.tsx`. Framer Motion is already present,
 so no duplicate animation dependency is introduced.
 
-- [ ] **Step 4: Make Skiper58 honor reduced motion**
+- [ ] **Step 4: Keep Skiper58 hover available under reduced motion**
 
-In `src/components/ui/skiper-ui/skiper58.tsx`, preserve the generated source
-and provenance comments. Add `useReducedMotion` to the existing
-`framer-motion` import, read it inside `TextRoll`, and gate the generated hover
-state:
+In `src/components/ui/skiper-ui/skiper58.tsx`, preserve the generated source,
+provenance comments, and native hover state without adding a reduced-motion
+gate:
 
 ```tsx
-const shouldReduceMotion = useReducedMotion()
-
 return (
   <motion.div
     initial="initial"
-    whileHover={shouldReduceMotion ? undefined : "hover"}
+    whileHover="hovered"
     className={className}
   >
     {/* Keep the registry-generated character markup and variants unchanged. */}
@@ -181,9 +179,8 @@ return (
 )
 ```
 
-If the registry uses a different root motion element or variant name, apply
-the same gate to that generated root without changing its character timing,
-layout, or public `children`, `className`, and `center` props.
+Keep the registry's character timing, layout, and public `children`,
+`className`, and `center` props unchanged.
 
 - [ ] **Step 5: Add the focused React island**
 
@@ -384,8 +381,8 @@ At 375 × 812, confirm both lines remain clipped by the band rather than
 creating page-level horizontal overflow. Then emulate
 `prefers-reduced-motion: reduce`, reload, and hover both lines.
 
-Expected: the scroll-linked layout remains present according to the existing
-big-type policy, while character roll does not start.
+Expected: the scroll-linked layout and character roll both remain available,
+matching the existing big-type motion policy.
 
 - [ ] **Step 4: Check console and production build**
 

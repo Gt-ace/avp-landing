@@ -45,17 +45,14 @@ test('big type exposes one focused Skiper58 text roll', async () => {
   assert.match(component, /\{text\}<\/TextRoll>/)
 })
 
-test('Skiper58 disables hover animation for reduced-motion visitors', async () => {
+test('Skiper58 keeps hover animation enabled for reduced-motion desktops', async () => {
   const source = await readFile(
     new URL('../src/components/ui/skiper-ui/skiper58.tsx', import.meta.url),
     'utf8'
   )
 
-  assert.match(source, /useReducedMotion/)
-  assert.match(
-    source,
-    /whileHover=\{shouldReduceMotion \? undefined : ['"]hovered['"]\}/
-  )
+  assert.doesNotMatch(source, /useReducedMotion/)
+  assert.match(source, /whileHover=['"]hovered['"]/)
   assert.doesNotMatch(source, /lineHeight:\s*0\.75/)
 })
 
