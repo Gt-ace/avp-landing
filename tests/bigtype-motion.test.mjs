@@ -58,3 +58,19 @@ test('Skiper58 disables hover animation for reduced-motion visitors', async () =
     /whileHover=\{shouldReduceMotion \? undefined : ['"]hovered['"]\}/
   )
 })
+
+test('landing page mounts the roll island and scrolls its outer wrappers', async () => {
+  const page = await readFile(
+    new URL('../src/pages/index.astro', import.meta.url),
+    'utf8'
+  )
+
+  assert.match(page, /import BigTypeRoll from ['"].*BigTypeRoll['"]/)
+  assert.match(page, /<BigTypeRoll client:visible \/>/)
+  assert.ok(
+    page.includes(
+      "line.querySelector<HTMLElement>('[data-bigtype-shift]')"
+    )
+  )
+  assert.doesNotMatch(page, /span\.style\.setProperty\('--shift'/)
+})

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
+import BigTypeRoll from '../components/BigTypeRoll'
 import HeroWorkflow from '../components/HeroWorkflow.astro'
 
 const steps = [
@@ -118,8 +119,7 @@ const aiProviders = [
   </section>
 
   <section class="bigtype" aria-hidden="true">
-    <div class="bigtype-line" data-speed="-0.35"><span>DESIGN BUILD</span></div>
-    <div class="bigtype-line" data-speed="0.35"><span>AUTOMATE RUN</span></div>
+    <BigTypeRoll client:visible />
   </section>
 
   <section class="faq">
@@ -193,8 +193,8 @@ const aiProviders = [
         const lineCenter = rect.top + rect.height / 2
         const speed = parseFloat(line.dataset.speed || '0')
         const shift = calculateBigtypeShift(lineCenter, vh, innerWidth, speed)
-        const span = line.firstElementChild as HTMLElement
-        span.style.setProperty('--shift', `${shift}px`)
+        const shiftTarget = line.querySelector<HTMLElement>('[data-bigtype-shift]')
+        shiftTarget?.style.setProperty('--shift', `${shift}px`)
       }
     }
     const onScroll = () => {
@@ -456,12 +456,17 @@ const aiProviders = [
     background: var(--color-bg);
   }
 
-  .bigtype-line {
+  :global(.bigtype-line) {
     display: flex;
     justify-content: center;
   }
 
-  .bigtype-line span {
+  :global(.bigtype-shift) {
+    transform: translateX(var(--shift, 0px));
+    will-change: transform;
+  }
+
+  :global(.bigtype-roll) {
     font-family: var(--font-display);
     font-size: clamp(4.5rem, 16vw, 15rem);
     font-weight: 600;
@@ -469,8 +474,6 @@ const aiProviders = [
     line-height: 0.95;
     white-space: nowrap;
     color: var(--color-ink);
-    transform: translateX(var(--shift, 0px));
-    will-change: transform;
   }
 
   /* ---- Process ---- */
