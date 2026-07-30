@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 import { calculateBigtypeShift } from '../src/scripts/bigtype-motion.mjs'
@@ -29,4 +30,31 @@ test('downward scrolling moves both big type lines equally in opposite direction
   assert.ok(topMovement > 0, 'DESIGN BUILD should move right')
   assert.ok(bottomMovement < 0, 'AUTOMATE RUN should move left')
   assert.equal(Math.abs(topMovement), Math.abs(bottomMovement))
+})
+
+test('big type composes scroll wrappers with independent Skiper58 rolls', async () => {
+  const component = await readFile(
+    new URL('../src/components/BigTypeRoll.tsx', import.meta.url),
+    'utf8'
+  )
+
+  assert.match(component, /from ['"].*skiper58['"]/)
+  assert.match(component, /data-speed="-0\.35"/)
+  assert.match(component, /data-speed="0\.35"/)
+  assert.equal((component.match(/data-bigtype-shift/g) || []).length, 2)
+  assert.match(component, />DESIGN BUILD<\/TextRoll>/)
+  assert.match(component, />\s*AUTOMATE RUN\s*<\/TextRoll>/)
+})
+
+test('Skiper58 disables hover animation for reduced-motion visitors', async () => {
+  const source = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper58.tsx', import.meta.url),
+    'utf8'
+  )
+
+  assert.match(source, /useReducedMotion/)
+  assert.match(
+    source,
+    /whileHover=\{shouldReduceMotion \? undefined : ['"]hovered['"]\}/
+  )
 })
