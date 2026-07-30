@@ -46,3 +46,23 @@ test('work index maps project data into the static card stack', async () => {
   assert.match(detail, /class="detail-layout"/)
   assert.match(detail, /Visit project/)
 })
+
+test('adapted Skiper17 scopes its trigger and cleanup', async () => {
+  const source = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(source, /from ['"]@gsap\/react['"]/)
+  assert.match(source, /ScrollTrigger/)
+  assert.match(source, /trigger:\s*stack\.current/)
+  assert.match(source, /pin:\s*stack\.current/)
+  assert.match(source, /scope:\s*container/)
+  assert.match(source, /timeline\.kill\(\)/)
+  assert.match(source, /trigger\.kill\(\)/)
+  assert.doesNotMatch(source, /querySelector(All)?\(/)
+  assert.doesNotMatch(source, /ScrollTrigger\.getAll/)
+  assert.doesNotMatch(source, /ReactLenis|lenis\/react/)
+  assert.match(source, /Skiper17 StickyCard_002/)
+  assert.match(source, /Free to use and modify/)
+})
