@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import test from 'node:test'
+
+const runner = process.env.VITEST ? await import('vitest') : await import('node:test')
+const test = process.env.VITEST ? runner.test : runner.default
 
 test('work project card is one semantic link with only a visible title', async () => {
   const source = await readFile(
@@ -22,7 +24,7 @@ test('work project card is one semantic link with only a visible title', async (
   assert.doesNotMatch(source, /\bautoplay\b/i)
 })
 
-test('work index maps project data into the static card stack', async () => {
+test('work index hydrates only the work card stack', async () => {
   const page = await readFile(
     new URL('../src/pages/work/index.astro', import.meta.url),
     'utf8',
@@ -37,10 +39,10 @@ test('work index maps project data into the static card stack', async () => {
   )
 
   assert.match(page, /toWorkCards\(projects\)/)
-  assert.match(page, /<WorkCardStack cards=\{cards\} \/>/)
+  assert.match(page, /<WorkCardStack cards=\{cards\} client:load \/>/)
   assert.doesNotMatch(page, /project-row/)
   assert.doesNotMatch(page, /project\.description/)
-  assert.match(stack, /cards\.map/)
+  assert.match(stack, /<StickyCard002/)
   assert.match(stack, /<WorkProjectCard/)
   assert.doesNotMatch(stack, /client:/)
   assert.match(detail, /class="detail-layout"/)
@@ -65,4 +67,31 @@ test('adapted Skiper17 scopes its trigger and cleanup', async () => {
   assert.doesNotMatch(source, /ReactLenis|lenis\/react/)
   assert.match(source, /Skiper17 StickyCard_002/)
   assert.match(source, /Free to use and modify/)
+})
+
+test('work stack progressively enhances motion and video', async () => {
+  const stack = await readFile(
+    new URL('../src/components/WorkCardStack.tsx', import.meta.url),
+    'utf8',
+  )
+  const card = await readFile(
+    new URL(
+      '../src/components/work-card-stack/WorkProjectCard.tsx',
+      import.meta.url,
+    ),
+    'utf8',
+  )
+  const page = await readFile(
+    new URL('../src/pages/work/index.astro', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(stack, /workStackMode/)
+  assert.match(stack, /matchMedia\(['"]\(prefers-reduced-motion: reduce\)['"]\)/)
+  assert.match(stack, /const \[reducedMotion, setReducedMotion\] = useState\(true\)/)
+  assert.match(stack, /<StickyCard002/)
+  assert.match(stack, /\.play\(\)\.catch/)
+  assert.match(stack, /\.pause\(\)/)
+  assert.match(card, /videoRef/)
+  assert.match(page, /<WorkCardStack cards=\{cards\} client:load \/>/)
 })
