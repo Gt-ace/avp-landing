@@ -23,7 +23,10 @@ dist/
 inspo/
 
 # local agent sessions and worktrees
-.agents/skills/impeccable/
+# .agents/ is vendored third-party skill content (~3MB) restored from
+# skills-lock.json by local tooling, not project source.
+.agents/
+skills-lock.json
 .claude/settings.local.json
 .claude/worktrees/
 .codex/hooks.json
