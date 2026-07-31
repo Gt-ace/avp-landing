@@ -69,6 +69,18 @@ test('adapted Skiper17 scopes its trigger and cleanup', async () => {
   assert.match(source, /Free to use and modify/)
 })
 
+test('adapted Skiper17 constrains the enabled 4:3 frame by viewport height', async () => {
+  const source = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(
+    source,
+    /min\(64rem,\s*100%,\s*calc\(\(100dvh - 10rem\) \* 4 \/ 3\)\)/,
+  )
+})
+
 test('adapted Skiper17 limits stack focusability to the active desktop card', async () => {
   const source = await readFile(
     new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),

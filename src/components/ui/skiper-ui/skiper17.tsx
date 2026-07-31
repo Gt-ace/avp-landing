@@ -179,6 +179,13 @@ function StickyCard002<T extends IdentifiedCard>({
               : "contents",
             containerClassName,
           )}
+          style={
+            enabled
+              ? {
+                  width: "min(64rem, 100%, calc((100dvh - 10rem) * 4 / 3))",
+                }
+              : undefined
+          }
         >
           {cards.map((card, index) => (
             <div
