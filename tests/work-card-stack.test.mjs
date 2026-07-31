@@ -96,6 +96,65 @@ test('adapted Skiper17 limits stack focusability to the active desktop card', as
   assert.match(source, /resetCardInteractivity\(cardElements\)/)
 })
 
+test('pinned stack clips its cards and owns the full viewport', async () => {
+  const skiper = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
+    'utf8',
+  )
+  const page = await readFile(
+    new URL('../src/pages/work/index.astro', import.meta.url),
+    'utf8',
+  )
+
+  // Without overflow clipping on the frame, the queued cards sitting at
+  // yPercent 110 spill down the page instead of waiting behind the active one.
+  assert.match(skiper, /aspect-\[4\/3\][^"']*overflow-hidden/)
+  // The pinned section is h-dvh and its frame is sized off 100dvh, so any page
+  // padding above it pushes the card out of view and jerks it up when pinning.
+  assert.doesNotMatch(page, /padding-top/)
+  // List mode therefore has to clear the fixed nav pill itself.
+  assert.match(skiper, /pt-28/)
+})
+
+test('work stack drives Lenis from the GSAP ticker only while pinned', async () => {
+  const stack = await readFile(
+    new URL('../src/components/WorkCardStack.tsx', import.meta.url),
+    'utf8',
+  )
+  const smooth = await readFile(
+    new URL('../src/components/work-card-stack/smooth-scroll.ts', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(stack, /startSmoothScroll/)
+  assert.match(stack, /mode !== ['"]stack['"]/)
+  assert.match(smooth, /autoRaf: false/)
+  assert.match(smooth, /lenis\.on\(['"]scroll['"]/)
+  assert.match(smooth, /ScrollTrigger\.update\(\)/)
+  assert.match(smooth, /gsap\.ticker\.add/)
+  assert.match(smooth, /lagSmoothing\(0\)/)
+  assert.match(smooth, /gsap\.ticker\.remove/)
+  assert.match(smooth, /lenis\.destroy\(\)/)
+})
+
+test('work stack stays unpainted until it resolves its layout mode', async () => {
+  const stack = await readFile(
+    new URL('../src/components/WorkCardStack.tsx', import.meta.url),
+    'utf8',
+  )
+  const page = await readFile(
+    new URL('../src/pages/work/index.astro', import.meta.url),
+    'utf8',
+  )
+
+  // Hydrating with a different mode than the server rendered leaves React's
+  // server attributes in place, which pins GSAP onto the list layout.
+  assert.match(stack, /useState<WorkStackMode>\(['"]list['"]\)/)
+  assert.match(stack, /data-work-stack-ready/)
+  assert.match(page, /html\.js \.work-stack:not\(\[data-work-stack-ready\]\)/)
+  assert.match(page, /visibility: hidden/)
+})
+
 test('work stack progressively enhances motion and video', async () => {
   const stack = await readFile(
     new URL('../src/components/WorkCardStack.tsx', import.meta.url),

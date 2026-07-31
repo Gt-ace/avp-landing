@@ -177,13 +177,13 @@ function StickyCard002<T extends IdentifiedCard>({
         className={
           enabled
             ? "relative flex h-dvh w-full items-center justify-center overflow-hidden px-10 py-20"
-            : "mx-auto grid w-full max-w-6xl gap-6 px-5 pb-16 md:gap-10 md:px-10 md:pb-24"
+            : "mx-auto grid w-full max-w-6xl gap-6 px-5 pb-16 pt-28 md:gap-10 md:px-10 md:pb-24 md:pt-32"
         }
       >
         <div
           className={classes(
             enabled
-              ? "relative aspect-[4/3] w-full max-w-5xl"
+              ? "relative aspect-[4/3] w-full max-w-5xl overflow-hidden rounded-lg"
               : "contents",
             containerClassName,
           )}

@@ -13,8 +13,25 @@ const cards = toWorkCards(projects)
   </main>
 </BaseLayout>
 
-<style>
-  .work-page {
-    padding-top: clamp(6rem, 12vh, 9rem);
+<style is:global>
+  /*
+   * The island renders the list layout on the server so no-JS visitors get a
+   * usable page. When JS can take over, keep that markup reserved but unpainted
+   * until the island has picked its layout, otherwise the list flashes before
+   * the stack pins.
+   */
+  html.js .work-stack {
+    transition: opacity 200ms ease-out;
+  }
+
+  html.js .work-stack:not([data-work-stack-ready]) {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html.js .work-stack {
+      transition: none;
+    }
   }
 </style>

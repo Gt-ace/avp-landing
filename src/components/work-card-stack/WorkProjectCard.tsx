@@ -16,7 +16,7 @@ export default function WorkProjectCard({
     <a
       href={card.href}
       aria-label={card.title}
-      className="group relative block aspect-[4/3] w-full overflow-hidden rounded-lg bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+      className="group relative block aspect-[4/3] w-full overflow-hidden rounded-lg bg-black focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-white"
     >
       {card.media.kind === 'image' ? (
         <img
