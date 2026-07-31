@@ -75,12 +75,15 @@ test('adapted Skiper17 limits stack focusability to the active desktop card', as
     'utf8',
   )
 
-  assert.match(source, /function setActiveCardInteractivity/)
+  assert.match(source, /export const WORK_CARD_ACTIVE_ATTRIBUTE/)
+  assert.match(source, /export function getActiveCardIndexFromProgress/)
+  assert.match(source, /export function setActiveCardInteractivity/)
+  assert.match(source, /export function resetCardInteractivity/)
   assert.match(source, /\.inert = !isActive/)
-  assert.match(source, /data-work-card-active/)
+  assert.match(source, /WORK_CARD_ACTIVE_ATTRIBUTE/)
   assert.match(source, /onUpdate:\s*\(self\)\s*=>/)
-  assert.match(source, /setActiveCardInteractivity\(Math\.round\(self\.progress \* \(cardElements\.length - 1\)\)\)/)
-  assert.match(source, /card\.inert = false/)
+  assert.match(source, /getActiveCardIndexFromProgress\(self\.progress,\s*cardElements\.length\)/)
+  assert.match(source, /resetCardInteractivity\(cardElements\)/)
 })
 
 test('work stack progressively enhances motion and video', async () => {

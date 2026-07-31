@@ -18,8 +18,52 @@ interface StickyCard002Props<T extends IdentifiedCard> {
   containerClassName?: string;
 }
 
+export interface StackCardInteractivityTarget {
+  inert: boolean;
+  toggleAttribute: (qualifiedName: string, force?: boolean) => boolean | void;
+  removeAttribute: (qualifiedName: string) => void;
+}
+
+export const WORK_CARD_ACTIVE_ATTRIBUTE = "data-work-card-active";
+
 function classes(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
+}
+
+function clampActiveCardIndex(index: number, cardCount: number) {
+  if (cardCount <= 0) return -1;
+
+  return Math.min(cardCount - 1, Math.max(0, index));
+}
+
+export function getActiveCardIndexFromProgress(
+  progress: number,
+  cardCount: number,
+) {
+  return clampActiveCardIndex(Math.round(progress * (cardCount - 1)), cardCount);
+}
+
+export function setActiveCardInteractivity(
+  cardElements: StackCardInteractivityTarget[],
+  index: number,
+) {
+  const activeIndex = clampActiveCardIndex(index, cardElements.length);
+  if (activeIndex < 0) return;
+
+  cardElements.forEach((card, cardIndex) => {
+    const isActive = cardIndex === activeIndex;
+    card.inert = !isActive;
+    card.toggleAttribute(WORK_CARD_ACTIVE_ATTRIBUTE, isActive);
+  });
+}
+
+export function resetCardInteractivity(
+  cardElements: StackCardInteractivityTarget[],
+) {
+  cardElements.forEach((card) => {
+    card.inert = false;
+    card.removeAttribute(WORK_CARD_ACTIVE_ATTRIBUTE);
+  });
 }
 
 function StickyCard002<T extends IdentifiedCard>({
@@ -43,19 +87,6 @@ function StickyCard002<T extends IdentifiedCard>({
       );
       if (cardElements.length === 0) return;
 
-      function setActiveCardInteractivity(index: number) {
-        const activeIndex = Math.min(
-          cardElements.length - 1,
-          Math.max(0, index),
-        );
-
-        cardElements.forEach((card, cardIndex) => {
-          const isActive = cardIndex === activeIndex;
-          card.inert = !isActive;
-          card.toggleAttribute("data-work-card-active", isActive);
-        });
-      }
-
       gsap.set(cardElements[0], { yPercent: 0, scale: 1, rotation: 0 });
       if (cardElements.length > 1) {
         gsap.set(cardElements.slice(1), {
@@ -64,7 +95,7 @@ function StickyCard002<T extends IdentifiedCard>({
           rotation: 0,
         });
       }
-      setActiveCardInteractivity(0);
+      setActiveCardInteractivity(cardElements, 0);
 
       const timeline = gsap.timeline();
       for (let index = 0; index < cardElements.length - 1; index += 1) {
@@ -99,7 +130,10 @@ function StickyCard002<T extends IdentifiedCard>({
         pinSpacing: true,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
-          setActiveCardInteractivity(Math.round(self.progress * (cardElements.length - 1)));
+          setActiveCardInteractivity(
+            cardElements,
+            getActiveCardIndexFromProgress(self.progress, cardElements.length),
+          );
         },
       });
 
@@ -108,10 +142,7 @@ function StickyCard002<T extends IdentifiedCard>({
 
       return () => {
         resizeObserver.disconnect();
-        cardElements.forEach((card) => {
-          card.inert = false;
-          card.removeAttribute("data-work-card-active");
-        });
+        resetCardInteractivity(cardElements);
         trigger.kill();
         timeline.kill();
         gsap.set(cardElements, { clearProps: "transform" });
