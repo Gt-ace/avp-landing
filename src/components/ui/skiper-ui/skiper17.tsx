@@ -30,6 +30,14 @@ function classes(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
+export function getStackFrameStyle(enabled: boolean) {
+  return enabled
+    ? {
+        width: "min(64rem, 100%, calc((100dvh - 10rem) * 4 / 3))",
+      }
+    : undefined;
+}
+
 function clampActiveCardIndex(index: number, cardCount: number) {
   if (cardCount <= 0) return -1;
 
@@ -179,13 +187,7 @@ function StickyCard002<T extends IdentifiedCard>({
               : "contents",
             containerClassName,
           )}
-          style={
-            enabled
-              ? {
-                  width: "min(64rem, 100%, calc((100dvh - 10rem) * 4 / 3))",
-                }
-              : undefined
-          }
+          style={getStackFrameStyle(enabled)}
         >
           {cards.map((card, index) => (
             <div
