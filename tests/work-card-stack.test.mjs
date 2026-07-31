@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-import test from 'node:test'
+
+const runner = process.env.VITEST ? await import('vitest') : await import('node:test')
+const test = process.env.VITEST ? runner.test : runner.default
 
 test('work project card is one semantic link with only a visible title', async () => {
   const source = await readFile(
@@ -22,7 +24,7 @@ test('work project card is one semantic link with only a visible title', async (
   assert.doesNotMatch(source, /\bautoplay\b/i)
 })
 
-test('work index maps project data into the static card stack', async () => {
+test('work index hydrates only the work card stack', async () => {
   const page = await readFile(
     new URL('../src/pages/work/index.astro', import.meta.url),
     'utf8',
@@ -37,12 +39,86 @@ test('work index maps project data into the static card stack', async () => {
   )
 
   assert.match(page, /toWorkCards\(projects\)/)
-  assert.match(page, /<WorkCardStack cards=\{cards\} \/>/)
+  assert.match(page, /<WorkCardStack cards=\{cards\} client:load \/>/)
   assert.doesNotMatch(page, /project-row/)
   assert.doesNotMatch(page, /project\.description/)
-  assert.match(stack, /cards\.map/)
+  assert.match(stack, /<StickyCard002/)
   assert.match(stack, /<WorkProjectCard/)
   assert.doesNotMatch(stack, /client:/)
   assert.match(detail, /class="detail-layout"/)
   assert.match(detail, /Visit project/)
+})
+
+test('adapted Skiper17 scopes its trigger and cleanup', async () => {
+  const source = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(source, /from ['"]@gsap\/react['"]/)
+  assert.match(source, /ScrollTrigger/)
+  assert.match(source, /trigger:\s*stack\.current/)
+  assert.match(source, /pin:\s*stack\.current/)
+  assert.match(source, /scope:\s*container/)
+  assert.match(source, /timeline\.kill\(\)/)
+  assert.match(source, /trigger\.kill\(\)/)
+  assert.doesNotMatch(source, /querySelector(All)?\(/)
+  assert.doesNotMatch(source, /ScrollTrigger\.getAll/)
+  assert.doesNotMatch(source, /ReactLenis|lenis\/react/)
+  assert.match(source, /Skiper17 StickyCard_002/)
+  assert.match(source, /Free to use and modify/)
+})
+
+test('adapted Skiper17 reuses the stack frame sizing helper for the enabled frame', async () => {
+  const source = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(source, /export function getStackFrameStyle/)
+  assert.match(source, /style=\{getStackFrameStyle\(enabled\)\}/)
+})
+
+test('adapted Skiper17 limits stack focusability to the active desktop card', async () => {
+  const source = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(source, /export const WORK_CARD_ACTIVE_ATTRIBUTE/)
+  assert.match(source, /export function getActiveCardIndexFromProgress/)
+  assert.match(source, /export function setActiveCardInteractivity/)
+  assert.match(source, /export function resetCardInteractivity/)
+  assert.match(source, /\.inert = !isActive/)
+  assert.match(source, /WORK_CARD_ACTIVE_ATTRIBUTE/)
+  assert.match(source, /onUpdate:\s*\(self\)\s*=>/)
+  assert.match(source, /getActiveCardIndexFromProgress\(self\.progress,\s*cardElements\.length\)/)
+  assert.match(source, /resetCardInteractivity\(cardElements\)/)
+})
+
+test('work stack progressively enhances motion and video', async () => {
+  const stack = await readFile(
+    new URL('../src/components/WorkCardStack.tsx', import.meta.url),
+    'utf8',
+  )
+  const card = await readFile(
+    new URL(
+      '../src/components/work-card-stack/WorkProjectCard.tsx',
+      import.meta.url,
+    ),
+    'utf8',
+  )
+  const page = await readFile(
+    new URL('../src/pages/work/index.astro', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(stack, /workStackMode/)
+  assert.match(stack, /matchMedia\(['"]\(prefers-reduced-motion: reduce\)['"]\)/)
+  assert.match(stack, /const \[reducedMotion, setReducedMotion\] = useState\(true\)/)
+  assert.match(stack, /<StickyCard002/)
+  assert.match(stack, /\.play\(\)\.catch/)
+  assert.match(stack, /\.pause\(\)/)
+  assert.match(card, /videoRef/)
+  assert.match(page, /<WorkCardStack cards=\{cards\} client:load \/>/)
 })

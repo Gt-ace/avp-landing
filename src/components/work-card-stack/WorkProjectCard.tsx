@@ -1,13 +1,16 @@
+import type { Ref } from 'react'
 import type { WorkCard } from './work-card-model'
 
 interface WorkProjectCardProps {
   card: WorkCard
   eager?: boolean
+  videoRef?: Ref<HTMLVideoElement>
 }
 
 export default function WorkProjectCard({
   card,
   eager = false,
+  videoRef,
 }: WorkProjectCardProps) {
   return (
     <a
@@ -24,6 +27,7 @@ export default function WorkProjectCard({
         />
       ) : (
         <video
+          ref={videoRef}
           muted
           loop
           playsInline
