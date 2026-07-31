@@ -69,6 +69,20 @@ test('adapted Skiper17 scopes its trigger and cleanup', async () => {
   assert.match(source, /Free to use and modify/)
 })
 
+test('adapted Skiper17 limits stack focusability to the active desktop card', async () => {
+  const source = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(source, /function setActiveCardInteractivity/)
+  assert.match(source, /\.inert = !isActive/)
+  assert.match(source, /data-work-card-active/)
+  assert.match(source, /onUpdate:\s*\(self\)\s*=>/)
+  assert.match(source, /setActiveCardInteractivity\(Math\.round\(self\.progress \* \(cardElements\.length - 1\)\)\)/)
+  assert.match(source, /card\.inert = false/)
+})
+
 test('work stack progressively enhances motion and video', async () => {
   const stack = await readFile(
     new URL('../src/components/WorkCardStack.tsx', import.meta.url),

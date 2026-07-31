@@ -43,6 +43,19 @@ function StickyCard002<T extends IdentifiedCard>({
       );
       if (cardElements.length === 0) return;
 
+      function setActiveCardInteractivity(index: number) {
+        const activeIndex = Math.min(
+          cardElements.length - 1,
+          Math.max(0, index),
+        );
+
+        cardElements.forEach((card, cardIndex) => {
+          const isActive = cardIndex === activeIndex;
+          card.inert = !isActive;
+          card.toggleAttribute("data-work-card-active", isActive);
+        });
+      }
+
       gsap.set(cardElements[0], { yPercent: 0, scale: 1, rotation: 0 });
       if (cardElements.length > 1) {
         gsap.set(cardElements.slice(1), {
@@ -51,6 +64,7 @@ function StickyCard002<T extends IdentifiedCard>({
           rotation: 0,
         });
       }
+      setActiveCardInteractivity(0);
 
       const timeline = gsap.timeline();
       for (let index = 0; index < cardElements.length - 1; index += 1) {
@@ -84,6 +98,9 @@ function StickyCard002<T extends IdentifiedCard>({
         scrub: 0.5,
         pinSpacing: true,
         invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          setActiveCardInteractivity(Math.round(self.progress * (cardElements.length - 1)));
+        },
       });
 
       const resizeObserver = new ResizeObserver(() => trigger.refresh());
@@ -91,6 +108,10 @@ function StickyCard002<T extends IdentifiedCard>({
 
       return () => {
         resizeObserver.disconnect();
+        cardElements.forEach((card) => {
+          card.inert = false;
+          card.removeAttribute("data-work-card-active");
+        });
         trigger.kill();
         timeline.kill();
         gsap.set(cardElements, { clearProps: "transform" });
