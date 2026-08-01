@@ -33,9 +33,16 @@ function classes(...values: Array<string | undefined | false>) {
 export function getStackFrameStyle(enabled: boolean) {
   return enabled
     ? {
-        width: "min(64rem, 100%, calc((100dvh - 10rem) * 4 / 3))",
+        width: "min(64rem, 100%, calc((100svh - 8rem) * 4 / 3))",
       }
     : undefined;
+}
+
+export function getStackScrollDistance(
+  sceneHeight: number,
+  cardCount: number,
+) {
+  return Math.max(0, sceneHeight) * Math.max(0, cardCount - 1);
 }
 
 function clampActiveCardIndex(index: number, cardCount: number) {
@@ -133,7 +140,11 @@ function StickyCard002<T extends IdentifiedCard>({
         trigger: stack.current,
         pin: stack.current,
         start: "top top",
-        end: () => `+=${window.innerHeight * (cardElements.length - 1)}`,
+        end: () =>
+          `+=${getStackScrollDistance(
+            stack.current?.clientHeight ?? 0,
+            cardElements.length,
+          )}`,
         scrub: 0.5,
         pinSpacing: true,
         invalidateOnRefresh: true,
@@ -176,7 +187,7 @@ function StickyCard002<T extends IdentifiedCard>({
         ref={stack}
         className={
           enabled
-            ? "relative flex h-dvh w-full items-center justify-center overflow-hidden px-10 py-20"
+            ? "relative flex h-svh w-full items-center justify-center overflow-hidden px-5 py-16 sm:px-10 sm:py-20"
             : "mx-auto grid w-full max-w-6xl gap-6 px-5 pb-16 pt-28 md:gap-10 md:px-10 md:pb-24 md:pt-32"
         }
       >

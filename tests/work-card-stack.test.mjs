@@ -109,11 +109,13 @@ test('pinned stack clips its cards and owns the full viewport', async () => {
   // Without overflow clipping on the frame, the queued cards sitting at
   // yPercent 110 spill down the page instead of waiting behind the active one.
   assert.match(skiper, /aspect-\[4\/3\][^"']*overflow-hidden/)
-  // The pinned section is h-dvh and its frame is sized off 100dvh, so any page
-  // padding above it pushes the card out of view and jerks it up when pinning.
+  // The pinned section uses a stable viewport height and mobile-first padding,
+  // while list mode still clears the fixed nav pill itself.
   assert.doesNotMatch(page, /padding-top/)
-  // List mode therefore has to clear the fixed nav pill itself.
-  assert.match(skiper, /pt-28/)
+  assert.match(skiper, /h-svh/)
+  assert.match(skiper, /px-5/)
+  assert.match(skiper, /sm:px-10/)
+  assert.match(skiper, /getStackScrollDistance\([\s\S]*stack\.current\?\.clientHeight/)
 })
 
 test('work stack stays unpainted until it resolves its layout mode', async () => {
