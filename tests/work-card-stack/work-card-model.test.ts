@@ -26,6 +26,7 @@ describe('work card adapter', () => {
       desktopMp4: '/volunteer-platform-desktop.mp4',
       mobileWebm: undefined,
       mobileMp4: '/volunteer-platform-mobile.mp4',
+      fallbackWebm: '/volunteer-platform-desktop.webm',
       poster: '/images/volunteer-platform.avif',
     })
     expect(crux.media).toEqual({

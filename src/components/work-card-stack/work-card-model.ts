@@ -12,6 +12,7 @@ export interface WorkVideoMedia {
   desktopMp4: string
   mobileWebm?: string
   mobileMp4: string
+  fallbackWebm?: string
   poster: string
 }
 
@@ -33,6 +34,7 @@ export function toWorkCards(source: readonly Project[]): WorkCard[] {
           desktopMp4: project.video.desktopMp4,
           mobileWebm: project.video.mobileWebm,
           mobileMp4: project.video.mobileMp4,
+          fallbackWebm: project.video.desktopWebm,
           poster: project.video.poster,
         }
       : {

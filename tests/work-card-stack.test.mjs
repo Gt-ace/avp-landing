@@ -19,6 +19,7 @@ test('work project card is one semantic link with only a visible title', async (
   assert.match(source, /card\.media\.kind === ['"]image['"] /)
   assert.match(source, /<video/)
   assert.match(source, /poster=\{card\.media\.poster\}/)
+  assert.match(source, /mobileMp4[\s\S]*fallbackWebm/)
   assert.match(source, /aria-hidden="true"[\s\S]*\{card\.title\}/)
   assert.doesNotMatch(source, /card\.(client|year|description|tech|credits)/)
   assert.doesNotMatch(source, /\bautoplay\b/i)

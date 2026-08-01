@@ -52,6 +52,9 @@ export default function WorkProjectCard({
             <source src={card.media.mobileWebm} type="video/webm" />
           )}
           <source src={card.media.mobileMp4} type="video/mp4" />
+          {card.media.fallbackWebm && (
+            <source src={card.media.fallbackWebm} type="video/webm" />
+          )}
         </video>
       )}
 
