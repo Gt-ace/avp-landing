@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 const runner = process.env.VITEST ? await import('vitest') : await import('node:test')
 const test = process.env.VITEST ? runner.test : runner.default
 
-test('work project card is one semantic link with only a visible title', async () => {
+test('work project card keeps its playback control outside the semantic link', async () => {
   const source = await readFile(
     new URL(
       '../src/components/work-card-stack/WorkProjectCard.tsx',
@@ -21,6 +21,12 @@ test('work project card is one semantic link with only a visible title', async (
   assert.match(source, /poster=\{card\.media\.poster\}/)
   assert.match(source, /mobileMp4[\s\S]*fallbackWebm/)
   assert.match(source, /aria-hidden="true"[\s\S]*\{card\.title\}/)
+  assert.match(source, /data-work-video-toggle/)
+  assert.match(source, /Pause preview/)
+  assert.match(source, /Play preview/)
+  assert.match(source, /min-h-11/)
+  assert.match(source, /min-w-11/)
+  assert.ok(source.indexOf('</a>') < source.indexOf('data-work-video-toggle'))
   assert.doesNotMatch(source, /card\.(client|year|description|tech|credits)/)
   assert.doesNotMatch(source, /\bautoplay\b/i)
 })
@@ -154,6 +160,7 @@ test('work stack enhances identically on every client context', async () => {
   assert.match(stack, /const \[enhanced, setEnhanced\] = useState\(false\)/)
   assert.match(stack, /setEnhanced\(true\)/)
   assert.match(stack, /enabled=\{enhanced\}/)
+  assert.match(stack, /videoControlsEnabled=\{enhanced\}/)
   assert.match(stack, /video\.play\(\)\.catch/)
   assert.doesNotMatch(stack, /matchMedia|innerWidth|workStackMode/)
   assert.doesNotMatch(stack, /startSmoothScroll|prefers-reduced-motion/)

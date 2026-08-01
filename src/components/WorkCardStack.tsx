@@ -36,6 +36,7 @@ export default function WorkCardStack({ cards }: WorkCardStackProps) {
           <WorkProjectCard
             card={card}
             eager={index === 0}
+            videoControlsEnabled={enhanced}
             videoRef={card.media.kind === 'video' ? videoRef : undefined}
           />
         )}

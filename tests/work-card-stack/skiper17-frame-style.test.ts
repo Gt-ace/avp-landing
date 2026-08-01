@@ -7,7 +7,7 @@ import {
 describe('Skiper17 responsive stack geometry', () => {
   it('constrains the 4:3 frame with a stable viewport unit', () => {
     expect(getStackFrameStyle(true)).toEqual({
-      width: 'min(64rem, 100%, calc((100svh - 8rem) * 4 / 3))',
+      width: 'min(64rem, 100%, calc((100svh - 10rem) * 4 / 3))',
     })
   })
 

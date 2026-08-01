@@ -33,7 +33,7 @@ function classes(...values: Array<string | undefined | false>) {
 export function getStackFrameStyle(enabled: boolean) {
   return enabled
     ? {
-        width: "min(64rem, 100%, calc((100svh - 8rem) * 4 / 3))",
+        width: "min(64rem, 100%, calc((100svh - 10rem) * 4 / 3))",
       }
     : undefined;
 }

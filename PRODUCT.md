@@ -67,5 +67,5 @@ performance benchmarks, so future work must not fabricate them.
 ## Accessibility & Inclusion
 
 Interactive marketing elements must retain a meaningful static experience,
-respect reduced-motion preferences, and avoid making pointer precision
-necessary to understand or use the site.
+persistent autoplay media must provide a user control, and pointer precision
+must not be required to understand or use the site.
