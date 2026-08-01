@@ -116,27 +116,6 @@ test('pinned stack clips its cards and owns the full viewport', async () => {
   assert.match(skiper, /pt-28/)
 })
 
-test('work stack drives Lenis from the GSAP ticker only while pinned', async () => {
-  const stack = await readFile(
-    new URL('../src/components/WorkCardStack.tsx', import.meta.url),
-    'utf8',
-  )
-  const smooth = await readFile(
-    new URL('../src/components/work-card-stack/smooth-scroll.ts', import.meta.url),
-    'utf8',
-  )
-
-  assert.match(stack, /startSmoothScroll/)
-  assert.match(stack, /mode !== ['"]stack['"]/)
-  assert.match(smooth, /autoRaf: false/)
-  assert.match(smooth, /lenis\.on\(['"]scroll['"]/)
-  assert.match(smooth, /ScrollTrigger\.update\(\)/)
-  assert.match(smooth, /gsap\.ticker\.add/)
-  assert.match(smooth, /lagSmoothing\(0\)/)
-  assert.match(smooth, /gsap\.ticker\.remove/)
-  assert.match(smooth, /lenis\.destroy\(\)/)
-})
-
 test('work stack stays unpainted until it resolves its layout mode', async () => {
   const stack = await readFile(
     new URL('../src/components/WorkCardStack.tsx', import.meta.url),
@@ -149,22 +128,19 @@ test('work stack stays unpainted until it resolves its layout mode', async () =>
 
   // Hydrating with a different mode than the server rendered leaves React's
   // server attributes in place, which pins GSAP onto the list layout.
-  assert.match(stack, /useState<WorkStackMode>\(['"]list['"]\)/)
+  assert.match(stack, /useState\(false\)/)
   assert.match(stack, /data-work-stack-ready/)
   assert.match(page, /html\.js \.work-stack:not\(\[data-work-stack-ready\]\)/)
   assert.match(page, /visibility: hidden/)
 })
 
-test('work stack progressively enhances motion and video', async () => {
+test('work stack enhances identically on every client context', async () => {
   const stack = await readFile(
     new URL('../src/components/WorkCardStack.tsx', import.meta.url),
     'utf8',
   )
   const card = await readFile(
-    new URL(
-      '../src/components/work-card-stack/WorkProjectCard.tsx',
-      import.meta.url,
-    ),
+    new URL('../src/components/work-card-stack/WorkProjectCard.tsx', import.meta.url),
     'utf8',
   )
   const page = await readFile(
@@ -172,12 +148,27 @@ test('work stack progressively enhances motion and video', async () => {
     'utf8',
   )
 
-  assert.match(stack, /workStackMode/)
-  assert.match(stack, /matchMedia\(['"]\(prefers-reduced-motion: reduce\)['"]\)/)
-  assert.match(stack, /const \[reducedMotion, setReducedMotion\] = useState\(true\)/)
-  assert.match(stack, /<StickyCard002/)
-  assert.match(stack, /\.play\(\)\.catch/)
-  assert.match(stack, /\.pause\(\)/)
+  assert.match(stack, /const \[enhanced, setEnhanced\] = useState\(false\)/)
+  assert.match(stack, /setEnhanced\(true\)/)
+  assert.match(stack, /enabled=\{enhanced\}/)
+  assert.match(stack, /video\.play\(\)\.catch/)
+  assert.doesNotMatch(stack, /matchMedia|innerWidth|workStackMode/)
+  assert.doesNotMatch(stack, /startSmoothScroll|prefers-reduced-motion/)
+  assert.doesNotMatch(stack, /video\.currentTime\s*=\s*0/)
+  assert.doesNotMatch(page, /prefers-reduced-motion/)
   assert.match(card, /videoRef/)
-  assert.match(page, /<WorkCardStack cards=\{cards\} client:load \/>/)
+})
+
+test('work page does not install a page-specific smooth scroller', async () => {
+  const stack = await readFile(
+    new URL('../src/components/WorkCardStack.tsx', import.meta.url),
+    'utf8',
+  )
+  const skiper = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
+    'utf8',
+  )
+
+  assert.doesNotMatch(stack, /Lenis|startSmoothScroll/)
+  assert.doesNotMatch(skiper, /Lenis|ReactLenis|lenis\/react/)
 })
