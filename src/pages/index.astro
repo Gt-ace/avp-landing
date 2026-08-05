@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
 import BigTypeRoll from '../components/BigTypeRoll'
-import HeroWorkflow from '../components/HeroWorkflow.astro'
 
 const steps = [
   {
@@ -78,24 +77,20 @@ const aiProviders = [
 ]
 ---
 <BaseLayout title="AVP Software">
-  <div class="hero-stage" data-workflow-stage>
-    <section class="hero">
-      <HeroWorkflow />
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">AVP Software</h1>
+      <p class="hero-tagline">
+        A small studio that designs and builds software end to end: interface,
+        product, and the infrastructure underneath.
+      </p>
+    </div>
 
-      <div class="hero-content">
-        <h1 class="hero-title">AVP Software</h1>
-        <p class="hero-tagline">
-          A small studio that designs and builds software end to end: interface,
-          product, and the infrastructure underneath.
-        </p>
-      </div>
-
-      <a class="hero-scroll" href="#process" aria-label="Scroll to process">
-        <span class="label">Process</span>
-        <span class="hero-scroll-arrow" aria-hidden="true">&#8595;</span>
-      </a>
-    </section>
-  </div>
+    <a class="hero-scroll" href="#process" aria-label="Scroll to process">
+      <span class="label">Process</span>
+      <span class="hero-scroll-arrow" aria-hidden="true">&#8595;</span>
+    </a>
+  </section>
 
   <section class="process" id="process">
     <header class="process-head" data-reveal>
@@ -221,15 +216,8 @@ const aiProviders = [
 </script>
 
 <style>
-  .hero-stage {
-    position: relative;
-    min-height: 135dvh;
-    background: var(--color-bg);
-  }
-
   .hero {
-    position: sticky;
-    top: 0;
+    position: relative;
     min-height: 100dvh;
     overflow: hidden;
     background: var(--color-bg);
@@ -557,10 +545,6 @@ const aiProviders = [
   }
 
   @media (max-width: 767px) {
-    .hero-stage {
-      min-height: 125dvh;
-    }
-
     .hero-content {
       bottom: max(5.5rem, 14vh);
     }
@@ -572,14 +556,6 @@ const aiProviders = [
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hero-stage {
-      min-height: 100dvh;
-    }
-
-    .hero {
-      position: relative;
-    }
-
     .hero-title,
     .hero-tagline,
     .hero-scroll,
