@@ -9,9 +9,24 @@ interface WorkCardStackProps {
 
 export default function WorkCardStack({ cards }: WorkCardStackProps) {
   const [enhanced, setEnhanced] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => setEnhanced(true), [])
+
+  // The stack pins on the first card, so nothing on screen says the page still
+  // moves. The hint retires as soon as the visitor proves they found the scroll.
+  useEffect(() => {
+    if (!enhanced) return
+
+    const onScroll = () => {
+      if (window.scrollY > 24) setScrolled(true)
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [enhanced])
 
   useEffect(() => {
     if (!enhanced) return
@@ -41,6 +56,15 @@ export default function WorkCardStack({ cards }: WorkCardStackProps) {
           />
         )}
       />
+
+      {enhanced && cards.length > 1 && (
+        <p className="work-scroll-hint" data-work-scroll-hint-done={scrolled ? '' : undefined}>
+          Scroll
+          <span className="work-scroll-hint-arrow" aria-hidden="true">
+            &darr;
+          </span>
+        </p>
+      )}
     </section>
   )
 }

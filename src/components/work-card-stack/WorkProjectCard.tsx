@@ -83,7 +83,7 @@ export default function WorkProjectCard({
           aria-hidden="true"
         />
         <span
-          className="pointer-events-none absolute bottom-0 left-0 max-w-[85%] p-5 font-display text-[clamp(1.5rem,3vw,2.75rem)] font-semibold leading-[1.05] text-white sm:p-7"
+          className="work-card-title pointer-events-none absolute bottom-0 left-0 max-w-[85%] p-5 font-display text-[clamp(1.5rem,3vw,2.75rem)] font-semibold leading-[1.05] text-white sm:p-7"
           aria-hidden="true"
         >
           {card.title}
@@ -93,11 +93,17 @@ export default function WorkProjectCard({
       {card.media.kind === 'video' && videoControlsEnabled && (
         <button
           type="button"
-          className="absolute right-3 top-3 z-10 inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-white/50 bg-black/80 px-3 text-xs font-semibold text-white shadow-md transition-transform duration-150 hover:bg-black/90 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white focus-visible:ring-2 focus-visible:ring-black"
+          className="group/toggle absolute right-1 top-1 z-10 inline-flex min-h-11 min-w-11 items-center justify-center bg-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           data-work-video-toggle
           onClick={toggleVideoPlayback}
         >
-          {videoPlaying ? 'Pause preview' : 'Play preview'}
+          {/*
+           * The visible chip stays small and translucent; the button keeps the
+           * 44px hit area around it so the control is still touch-reachable.
+           */}
+          <span className="rounded-full border border-white/25 bg-black/25 px-2 py-[0.2rem] text-[0.625rem] font-medium tracking-wide text-white/70 backdrop-blur-sm transition-colors duration-150 group-hover/toggle:bg-black/45 group-hover/toggle:text-white">
+            {videoPlaying ? 'Pause preview' : 'Play preview'}
+          </span>
         </button>
       )}
     </div>
