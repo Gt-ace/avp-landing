@@ -29,6 +29,8 @@ inspo/
 skills-lock.json
 .claude/settings.local.json
 .claude/worktrees/
+# symlinks into the gitignored .agents/ skill cache; broken elsewhere
+.claude/skills/
 .codex/hooks.json
 .superpowers/
 .worktrees/
