@@ -35,6 +35,13 @@ skills-lock.json
 .superpowers/
 .worktrees/
 
+# AI company logos: unused since the AI summary section was removed;
+# keep the files locally but stop tracking them for now
+public/logos/chatgpt.svg
+public/logos/claude.svg
+public/logos/gemini.svg
+public/logos/grok.svg
+
 # obsolete local execution plan
 docs/superpowers/plans/2026-07-26-bigtype-desktop-scroll.md
 
