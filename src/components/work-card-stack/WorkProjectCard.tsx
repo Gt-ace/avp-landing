@@ -30,7 +30,7 @@ export default function WorkProjectCard({
   }
 
   return (
-    <div className="relative aspect-[4/3] w-full">
+    <div className="relative aspect-[4/3] w-full" data-work-card={card.id}>
       <a
         href={card.href}
         aria-label={card.title}
@@ -42,6 +42,7 @@ export default function WorkProjectCard({
             alt={card.media.alt}
             loading={eager ? 'eager' : 'lazy'}
             className="h-full w-full object-cover"
+            data-morph-image
           />
         ) : (
           <video
@@ -84,6 +85,7 @@ export default function WorkProjectCard({
         />
         <span
           className="work-card-title pointer-events-none absolute bottom-0 left-0 max-w-[85%] p-5 font-display text-[clamp(1.5rem,3vw,2.75rem)] font-semibold leading-[1.05] text-white sm:p-7"
+          data-morph-title
           aria-hidden="true"
         >
           {card.title}

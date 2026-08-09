@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import { projects } from '../../data/projects'
+import { fade } from 'astro:transitions'
 
 export function getStaticPaths() {
   return projects.map((p) => ({ params: { slug: p.slug } }))
@@ -12,6 +13,8 @@ const project = projects.find((p) => p.slug === slug)
 if (!project) {
   return Astro.redirect('/work')
 }
+
+const morph = fade({ duration: 480 })
 
 // Repeat the single image 3 times for visual richness
 // (placeholder until real screenshots are added to project.images).
@@ -31,6 +34,7 @@ const displayImages =
       <h1
         class="detail-title"
         transition:name={`title-${project.slug}`}
+        transition:animate={morph}
       >
         {project.title}
       </h1>
@@ -74,7 +78,6 @@ const displayImages =
           playsinline
           preload="metadata"
           poster={project.video.poster}
-          transition:name={`image-${project.slug}`}
         >
           {project.video.desktopWebm && (
             <source src={project.video.desktopWebm} type="video/webm" media="(min-width: 768px)" />
@@ -93,6 +96,7 @@ const displayImages =
           loading={i === 0 ? 'eager' : 'lazy'}
           class={src.includes('-mobile') ? 'detail-image-mobile' : undefined}
           transition:name={i === 0 && !project.video ? `image-${project.slug}` : undefined}
+          transition:animate={i === 0 && !project.video ? morph : undefined}
         />
       ))}
     </div>
