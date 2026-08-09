@@ -636,3 +636,84 @@ test('a remount starts from the base pose, not the previous one', async () => {
   )
   assert.match(teardown, /target\.x = BASE_POSE\.x/)
 })
+
+test('a coarse pointer gets no cursor listeners at all', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const attach = source.slice(
+    source.indexOf('function attachInput'),
+    source.indexOf('function detachInput')
+  )
+
+  assert.match(
+    attach,
+    /matchMedia\('\(pointer: fine\)'\)\.matches/,
+    'matched positively as fine, so a device reporting neither falls to scroll-only'
+  )
+  assert.ok(
+    attach.indexOf("matchMedia('(pointer: fine)')") <
+      attach.indexOf("addEventListener('mousemove'"),
+    'the query gates the cursor listener rather than being read after it'
+  )
+  assert.match(
+    attach,
+    /addEventListener\('scroll', onScroll, \{ passive: true \}\)/,
+    'scroll input is attached on every device'
+  )
+})
+
+test('switching from fine to coarse clears stale cursor input', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const attach = source.slice(
+    source.indexOf('function attachInput'),
+    source.indexOf('function detachInput')
+  )
+
+  assert.match(
+    attach,
+    /else\s*\{[^}]*pointer\.x = 0[^}]*pointer\.y = 0/s,
+    'pointer state outlives listener attachment, so coarse re-entry must clear values left by a fine pointer'
+  )
+})
+
+test('the coarse-pointer query is evaluated per attach, not once at module scope', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const beforeAttach = source.slice(0, source.indexOf('function attachInput'))
+
+  assert.doesNotMatch(
+    beforeAttach,
+    /matchMedia\('\(pointer: fine\)'\)/,
+    'attachInput runs on every viewport re-entry, so a hybrid device that switches input mode is handled for free'
+  )
+})
+
+test('detachInput stays unconditional', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const detach = source.slice(source.indexOf('function detachInput'))
+  const body = detach.slice(0, detach.indexOf('}'))
+
+  assert.doesNotMatch(
+    body,
+    /if\s*\(|matchMedia/,
+    'removing a listener that was never added is a no-op; a conditional removal leaks when the query result changes between attach and detach'
+  )
+  assert.match(body, /removeEventListener\('mousemove', onPointerMove\)/)
+  assert.match(body, /removeEventListener\('scroll', onScroll\)/)
+})
+
+test('the single-flight loop still has exactly two frame call sites', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const frames = source.match(/requestAnimationFrame\(/g) ?? []
+
+  assert.equal(
+    frames.length,
+    2,
+    'the requestLoop guard and the tick re-arm. A third — a debounced or rAF-throttled resize — breaks single flight; ResizeObserver already coalesces'
+  )
+})
+
+test('no idle animation survived the responsive work', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.doesNotMatch(source, /setInterval|setTimeout/)
+  assert.doesNotMatch(source, /rotation\.[xy]\s*\+=/)
+})
