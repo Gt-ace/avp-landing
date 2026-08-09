@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Design authority: `docs/superpowers/specs/2026-08-09-hero-wireframe-knot-design.md`. The prototype at `docs/superpowers/specs/2026-08-09-hero-wireframe-knot-prototype.html` is reference material only. Do not copy its structure.
-- Work on branch `feat/hero-knot-scene`. Phases 2, 3, and 4 stack on this branch; it merges to `main` once, after phase 4. Do not open a PR against `main` from this phase.
+- Work on branch `feat/hero-knot-scene`. Phases 2, 3, and 4 stack on this branch; it merges to `main` once, after phase 4. **Do not open a PR against `main` from this phase.** Open the phase 2 PR with `feat/hero-knot-scene` as its base, from a working branch named `feat/hero-knot-scene-p2`, so each phase still gets its own review gate without deploying. The final `feat/hero-knot-scene` → `main` PR happens after phase 4 and is the only one that triggers a production deploy.
 - Phase 1 is already merged. `src/scripts/hero-knot-motion.mjs` exists and is tested. **Do not modify it in this phase**, and do not duplicate any constant it already exports. Import what you need.
 - **No lights.** The prototype adds an `AmbientLight` and two `DirectionalLight`s. `LineBasicMaterial` is unlit and ignores every one of them, so porting them adds scene-graph cost and reviewer confusion for zero pixels. Do not add any light.
 - **No static `import ... from 'three'` anywhere in `src/`.** The only permitted reference is a dynamic `import('three')`, and it must sit after the `shouldRender` gate has returned `'animated'`. A static import puts the 129 KB chunk in the initial graph and defeats the entire loading design.
@@ -387,8 +387,15 @@ Replace the `buildScene` stub in `src/components/HeroKnot.astro` with:
     // The page may have navigated away while the chunk was in flight.
     if (token.disposed) return
 
-    const segments = getSegmentCounts(innerWidth)
-    const placement = getPlacement(innerWidth, innerHeight)
+    // One source of truth for dimensions: the hero box, with the viewport as
+    // a fallback for the pre-layout case. Mixing innerWidth here with
+    // hero.clientWidth in resize() would disagree by the scrollbar width and
+    // could straddle the 768px breakpoint.
+    const initialWidth = hero.clientWidth || innerWidth
+    const initialHeight = hero.clientHeight || innerHeight
+
+    const segments = getSegmentCounts(initialWidth)
+    const placement = getPlacement(initialWidth, initialHeight)
 
     const knot = new TorusKnotGeometry(
       1.4,
@@ -473,18 +480,14 @@ Run:
 
 ```bash
 npm run build
-grep -rl "three" dist/*.html dist/**/*.html
+CHUNK=$(grep -rl "TorusKnotGeometry" dist/_astro/*.js | head -1 | xargs basename)
+echo "chunk: $CHUNK"
+grep -rl "$CHUNK" dist --include='*.html'
 ```
 
-Expected: the build succeeds, and `grep` prints **nothing** and exits non-zero. Three.js must not be referenced in any built HTML page, or it stops being a runtime-only fetch and the title stops being the LCP element.
+Expected: the build succeeds, `$CHUNK` names a real `dist/_astro/*.js` file, and the final `grep` prints **nothing** and exits non-zero. The Three.js chunk must not be referenced from any built HTML page, or it stops being a runtime-only fetch and the title stops being the LCP element.
 
-Then confirm the chunk exists but is separate:
-
-```bash
-grep -rl "TorusKnotGeometry" dist/_astro/ | head
-```
-
-Expected: one or more `dist/_astro/*.js` files. The code is in the bundle, just not linked from the HTML.
+Do **not** shortcut this to `grep -rl "three" dist/**/*.html`. That matches the English word "three" in ordinary page prose and fails for reasons that have nothing to do with the bundle.
 
 - [ ] **Step 6: Commit**
 
@@ -547,6 +550,15 @@ test('teardown releases every GPU resource the scene holds', async () => {
   const source = await read('../src/components/HeroKnot.astro')
   const teardown = source.slice(source.indexOf('function teardown'))
 
+  assert.match(
+    teardown,
+    /renderer\?\.forceContextLoss\(\)/,
+    'dispose() alone leaves the WebGL context alive'
+  )
+  assert.ok(
+    teardown.indexOf('forceContextLoss') < teardown.indexOf('renderer?.dispose'),
+    'the context is released before the renderer is disposed'
+  )
   assert.match(teardown, /renderer\?\.dispose\(\)/)
   assert.match(teardown, /geometry\?\.dispose\(\)/)
   assert.match(teardown, /material\?\.dispose\(\)/)
@@ -585,7 +597,15 @@ In `src/components/HeroKnot.astro`, add `teardown` immediately after `buildScene
     current.disposed = true
 
     current.observer?.disconnect()
+
+    // dispose() frees the renderer's own caches and listeners but leaves the
+    // WebGL context alive (verified in three.module.js). Only
+    // forceContextLoss() calls WEBGL_lose_context.loseContext(), which is what
+    // actually returns the context to the browser's ~16 slot budget. Without
+    // this line the teardown does not prevent the leak it exists to prevent.
+    current.renderer?.forceContextLoss()
     current.renderer?.dispose()
+
     current.geometry?.dispose()
     current.material?.dispose()
 
@@ -640,8 +660,14 @@ apart from a genuine remount onto a freshly swapped-in canvas."
 
 - [ ] `npm run build` succeeds.
 - [ ] `npm test` passes, reporting 59 Node tests and the existing 9 Vitest tests.
-- [ ] `grep -rl "three" dist/*.html dist/**/*.html` prints nothing. Three.js is absent from every built HTML page, so it stays a runtime-only fetch and the title remains the LCP element.
-- [ ] `grep -rl "TorusKnotGeometry" dist/_astro/ | head` prints at least one file. The scene code is bundled, just not linked from the HTML.
+- [ ] The Three.js chunk is bundled but unreferenced by any HTML page. Run:
+
+  ```bash
+  CHUNK=$(grep -rl "TorusKnotGeometry" dist/_astro/*.js | head -1 | xargs basename)
+  test -n "$CHUNK" && ! grep -rl "$CHUNK" dist --include='*.html'
+  ```
+
+  Expected: succeeds. `$CHUNK` must be non-empty (the scene code is in the bundle) and unreferenced from HTML (it stays a runtime-only fetch, so the title remains the LCP element). Match on the chunk filename, never on the bare word `three`, which appears in ordinary page prose.
 - [ ] `! grep -rE "^\s*import\s.*from\s+['\"]three['\"]" src/` succeeds. No static Three.js import exists anywhere in the source.
 - [ ] `git diff --stat <baseline>..HEAD` touches only `src/components/HeroKnot.astro`, `src/pages/index.astro`, and `tests/hero-knot-scene.test.mjs`. Record `<baseline>` with `git rev-parse HEAD` before the first commit. Do not use `main...HEAD`; this branch carries the plan document ahead of `main`.
 - [ ] `src/scripts/hero-knot-motion.mjs` is unmodified: `git diff <baseline>..HEAD -- src/scripts/` is empty.
@@ -654,8 +680,9 @@ Run `npm run dev` and open the homepage. The reviewer cannot check any of these.
 - [ ] The knot is visible on the right side of the hero, and it is **still** — no idle rotation, no drift.
 - [ ] The title and tagline are fully readable. The knot does not overlap the reading zone at a normal desktop width.
 - [ ] Lines read as fine and deliberate, not chunky. If they look heavy, the cause is pixel ratio or opacity, not segment count; report rather than tune.
-- [ ] Navigate `/` → `/work` → `/`. The knot is still there on return. **This is the ViewTransitions check and the single most likely thing to be broken.**
-- [ ] With devtools open on that round trip, the console shows no WebGL context warnings, and the Three.js chunk is fetched exactly once.
+- [ ] Navigate `/` → `/work` → `/` **at least eight times in a row**, with the console open. The knot returns every time, and no "Too many active WebGL contexts" warning ever appears. **This is the ViewTransitions check and the single most likely thing to be broken.** One round trip is not enough: the browser cap is around 16 contexts, so a leak stays invisible until the budget runs out.
+- [ ] Now the other direction. Hard-reload directly onto `/work`, then navigate to `/`. The knot must appear. This is a genuinely different mechanism from the check above: here the component's module script is executed for the first time on swap-in, rather than a persisted `astro:page-load` listener firing on an already-loaded module. Both paths must mount.
+- [ ] Across those navigations the Three.js chunk is fetched exactly once in the network panel; subsequent mounts reuse the cached module.
 - [ ] In devtools, emulate `prefers-reduced-motion: reduce` and hard-reload. No canvas content is drawn and the Three.js chunk is never requested in the network panel.
 - [ ] Resize the window from wide to narrow. The knot re-places without distorting and never lands on top of the title.
 
