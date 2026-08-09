@@ -685,3 +685,21 @@ test('detachInput stays unconditional', async () => {
   assert.match(body, /removeEventListener\('mousemove', onPointerMove\)/)
   assert.match(body, /removeEventListener\('scroll', onScroll\)/)
 })
+
+test('the single-flight loop still has exactly two frame call sites', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const frames = source.match(/requestAnimationFrame\(/g) ?? []
+
+  assert.equal(
+    frames.length,
+    2,
+    'the requestLoop guard and the tick re-arm. A third — a debounced or rAF-throttled resize — breaks single flight; ResizeObserver already coalesces'
+  )
+})
+
+test('no idle animation survived the responsive work', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.doesNotMatch(source, /setInterval|setTimeout/)
+  assert.doesNotMatch(source, /rotation\.[xy]\s*\+=/)
+})
