@@ -56,7 +56,15 @@
 
     if (shouldRender(prefersReducedMotion, hasWebGL()) === 'none') return
 
-    await buildScene(canvas)
+    try {
+      await buildScene(canvas)
+    } catch {
+      // Spec fallback: a failed chunk fetch, a blocked script, or a renderer
+      // that throws because WebGL contexts are exhausted must render nothing
+      // and leave the hero untouched. Releasing here also drops the partially
+      // built record so a later teardown has nothing stale to walk.
+      teardown()
+    }
   }
 
   async function buildScene(canvas) {
@@ -154,7 +162,6 @@
       draw,
     })
 
-    resize()
   }
 
   function teardown() {

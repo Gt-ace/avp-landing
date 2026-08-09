@@ -233,3 +233,32 @@ test('a teardown mid-import does not build an orphan scene', async () => {
     'buildScene bails after the dynamic import if it was torn down'
   )
 })
+
+test('a failed chunk fetch or renderer construction renders nothing quietly', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const mount = source.slice(
+    source.indexOf('async function mount'),
+    source.indexOf('async function buildScene')
+  )
+
+  assert.match(mount, /try\s*\{/, 'the scene build is guarded')
+  assert.match(mount, /await buildScene\(canvas\)/)
+  assert.match(mount, /catch/, 'a rejection must not escape as an unhandled promise')
+  assert.match(mount, /teardown\(\)/, 'a partial build is released on failure')
+})
+
+test('the observer is the only thing that triggers a resize', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const build = source.slice(
+    source.indexOf('async function buildScene'),
+    source.indexOf('function teardown')
+  )
+
+  const calls = build.match(/^\s*resize\(\)/gm) ?? []
+  assert.equal(
+    calls.length,
+    0,
+    'ResizeObserver fires on observe(); an explicit call would double-fire a function that now restarts the loop'
+  )
+  assert.match(build, /observer\.observe\(hero\)/)
+})
