@@ -17,8 +17,12 @@
 <script>
   import {
     BASE_POSE,
+    calculateRotationTarget,
+    dampToward,
     getPlacement,
+    getScrollProgress,
     getSegmentCounts,
+    isConverged,
     shouldRender,
   } from '../scripts/hero-knot-motion.mjs'
 
@@ -27,6 +31,47 @@
 
   /** The live scene, or null. Phase 3 reads and extends this record. */
   let current = null
+
+  const pointer = { x: 0, y: 0 }
+  const target = { x: BASE_POSE.x, y: BASE_POSE.y }
+  const rotation = { x: BASE_POSE.x, y: BASE_POSE.y }
+  let scrollProgress = 0
+
+  function updateTarget() {
+    const next = calculateRotationTarget(pointer.x, pointer.y, scrollProgress)
+    target.x = next.x
+    target.y = next.y
+    requestLoop()
+  }
+
+  function readScroll() {
+    // innerHeight is 0 before first layout and in some hidden frames. The
+    // resulting 0/0 is NaN, which would propagate into rotation and make the
+    // knot vanish with nothing thrown and nothing logged.
+    if (!innerHeight) return
+    scrollProgress = getScrollProgress(scrollY, innerHeight)
+  }
+
+  function onPointerMove(event) {
+    pointer.x = (event.clientX / innerWidth) * 2 - 1
+    pointer.y = (event.clientY / innerHeight) * 2 - 1
+    updateTarget()
+  }
+
+  function onScroll() {
+    readScroll()
+    updateTarget()
+  }
+
+  function attachInput() {
+    addEventListener('mousemove', onPointerMove, { passive: true })
+    addEventListener('scroll', onScroll, { passive: true })
+  }
+
+  function detachInput() {
+    removeEventListener('mousemove', onPointerMove)
+    removeEventListener('scroll', onScroll)
+  }
 
   function hasWebGL() {
     try {

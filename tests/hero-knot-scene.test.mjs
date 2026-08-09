@@ -106,11 +106,10 @@ test('the unlit wireframe material gets no lights', async () => {
   assert.match(source, /LineBasicMaterial/)
 })
 
-test('phase 2 draws no animation loop and captures no input', async () => {
+test('phase 2 draws no animation loop or intersection observer', async () => {
   const source = await read('../src/components/HeroKnot.astro')
 
   assert.doesNotMatch(source, /requestAnimationFrame/)
-  assert.doesNotMatch(source, /addEventListener\(['"](mousemove|scroll|pointermove)['"]/)
   assert.doesNotMatch(source, /IntersectionObserver/)
 })
 
@@ -261,4 +260,71 @@ test('the observer is the only thing that triggers a resize', async () => {
     'ResizeObserver fires on observe(); an explicit call would double-fire a function that now restarts the loop'
   )
   assert.match(build, /observer\.observe\(hero\)/)
+})
+
+test('both inputs are re-summed whenever either one changes', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(
+    source,
+    /calculateRotationTarget\(\s*pointer\.x,\s*pointer\.y,\s*scrollProgress\s*\)/,
+    'the target always comes from both inputs, never from one'
+  )
+
+  const updates = source.match(/calculateRotationTarget\(/g) ?? []
+  assert.equal(
+    updates.length,
+    1,
+    'a single updateTarget call site keeps the two inputs from overwriting each other'
+  )
+})
+
+test('cursor position is normalised to the viewport, not the hero box', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /clientX\s*\/\s*innerWidth\s*\)\s*\*\s*2\s*-\s*1/)
+  assert.match(source, /clientY\s*\/\s*innerHeight\s*\)\s*\*\s*2\s*-\s*1/)
+})
+
+test('scroll progress is delegated, never recomputed inline', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /getScrollProgress\(scrollY,\s*innerHeight\)/)
+  assert.doesNotMatch(
+    source,
+    /innerHeight\s*\*\s*0\.8|0\.8\s*\*\s*innerHeight/,
+    'the 0.8 range factor belongs to the motion module, not inlined here'
+  )
+})
+
+test('a zero-height viewport cannot poison the rotation with NaN', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const readScroll = source.slice(source.indexOf('function readScroll'))
+
+  assert.match(
+    readScroll.slice(0, 300),
+    /if \(!innerHeight\) return/,
+    'innerHeight can be 0 pre-layout or in a hidden frame; 0/0 is NaN and NaN rotation renders nothing'
+  )
+})
+
+test('the scroll listener never interferes with scrolling', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /addEventListener\('scroll',\s*onScroll,\s*\{\s*passive:\s*true\s*\}\)/)
+  assert.doesNotMatch(source, /preventDefault|scrollTo|overflow\s*=/)
+})
+
+test('input attachment is symmetric so it can be detached and reattached', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const attach = source.slice(
+    source.indexOf('function attachInput'),
+    source.indexOf('function detachInput')
+  )
+  const detach = source.slice(source.indexOf('function detachInput'))
+
+  for (const handler of ['onPointerMove', 'onScroll']) {
+    assert.match(attach, new RegExp(`addEventListener\\('[a-z]+', ${handler}`))
+    assert.match(detach, new RegExp(`removeEventListener\\('[a-z]+', ${handler}`))
+  }
 })
