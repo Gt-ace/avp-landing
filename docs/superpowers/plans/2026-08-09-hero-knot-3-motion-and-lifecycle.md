@@ -213,7 +213,11 @@ test('scroll progress is delegated, never recomputed inline', async () => {
   const source = await read('../src/components/HeroKnot.astro')
 
   assert.match(source, /getScrollProgress\(scrollY,\s*innerHeight\)/)
-  assert.doesNotMatch(source, /0\.8/, 'the range factor belongs to the motion module')
+  assert.doesNotMatch(
+    source,
+    /innerHeight\s*\*\s*0\.8|0\.8\s*\*\s*innerHeight/,
+    'the 0.8 range factor belongs to the motion module, not inlined here'
+  )
 })
 
 test('a zero-height viewport cannot poison the rotation with NaN', async () => {
@@ -540,6 +544,10 @@ Three states, per the spec. The knot must be able to leave and re-enter each of 
 
 On re-entry, scroll position has changed while the listener was detached, so `scrollProgress` is stale. Re-read it and refresh the target immediately rather than waiting for the next event, or the knot eases from a pose that no longer matches the page.
 
+**Decision: `stopLoop()` leaves `rotation` wherever it froze. Do not snap it to the target on stop, and do not snap it on re-entry either.** The observer can stop the loop mid-ease, so the knot may be part-way through a large move when the hero leaves. Re-entry then eases from that intermediate pose to the freshly computed target, which is always smooth.
+
+The tempting alternative — snap `rotation` to `target` on stop, or straight to the new target on re-entry, on the theory that nobody is watching — is wrong here. The observer uses `threshold: 0`, so it fires the moment a single pixel of the hero intersects. At that instant the knot can already be partly on screen, and a snap would be a visible jump. Easing is never wrong; snapping is wrong exactly when the user is looking. `teardown()` is the only place that resets the pose, because there the scene is genuinely gone.
+
 - [ ] **Step 1: Add the failing tests**
 
 Append to `tests/hero-knot-scene.test.mjs`:
@@ -706,7 +714,7 @@ page's rotation."
 - [ ] `git diff --stat <baseline>..HEAD` touches only `src/components/HeroKnot.astro` and `tests/hero-knot-scene.test.mjs`. Record `<baseline>` with `git rev-parse HEAD` before the first commit.
 - [ ] `git diff <baseline>..HEAD -- src/scripts/ src/pages/` is empty. The motion module and the page are untouched.
 - [ ] `grep -c "requestAnimationFrame(" src/components/HeroKnot.astro` returns exactly `2`.
-- [ ] `! grep -nE "0\.06|1\.2|0\.35|0\.8|768" src/components/HeroKnot.astro` succeeds. No tested constant is duplicated in the component.
+- [ ] `! grep -nE "0\.06|1\.2|0\.35|768|innerHeight \* 0\.8" src/components/HeroKnot.astro` succeeds. No tested constant is duplicated in the component. The scroll factor is matched in context rather than as a bare `0.8`, so a future opacity or placement value cannot trip it spuriously.
 - [ ] `! grep -nE "preventDefault|scrollTo|setInterval" src/components/HeroKnot.astro` succeeds. Scroll is never captured and nothing runs on a timer.
 - [ ] The PR targets `feat/hero-knot-scene`, not `main`.
 
