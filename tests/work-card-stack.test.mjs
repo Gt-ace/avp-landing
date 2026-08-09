@@ -197,3 +197,30 @@ test('work project card links its image and title to the detail page morph', asy
   assert.equal(imageNameOccurrences.length, 2, 'both the <img> and <video> branches must carry the image transition name')
   assert.match(source, /style=\{\{ viewTransitionName: `title-\$\{card\.id\}` \}\}/)
 })
+
+test('detail page slows its named transitions to match the card morph', async () => {
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(detail, /import \{ fade \} from ['"]astro:transitions['"]/)
+  assert.match(detail, /const morph = fade\(\{ duration: 480 \}\)/)
+  const morphOccurrences = detail.match(/transition:animate=\{morph\}/g) ?? []
+  assert.equal(morphOccurrences.length, 2, 'the title and the video should both use the shared morph config')
+  assert.match(detail, /transition:animate=\{i === 0 && !project\.video \? morph : undefined\}/)
+  assert.match(detail, /::view-transition-group\(\*\)/)
+  assert.match(detail, /animation-duration: 480ms/)
+  assert.match(detail, /cubic-bezier\(0\.16, 1, 0\.3, 1\)/)
+})
+
+test('work index shares the same transition group timing as the detail page', async () => {
+  const page = await readFile(
+    new URL('../src/pages/work/index.astro', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(page, /::view-transition-group\(\*\)/)
+  assert.match(page, /animation-duration: 480ms/)
+  assert.match(page, /cubic-bezier\(0\.16, 1, 0\.3, 1\)/)
+})

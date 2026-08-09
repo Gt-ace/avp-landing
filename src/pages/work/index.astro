@@ -14,6 +14,11 @@ const cards = toWorkCards(projects)
 </BaseLayout>
 
 <style is:global>
+  ::view-transition-group(*) {
+    animation-duration: 480ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   /*
    * The island renders the list layout on the server so no-JS visitors get a
    * usable page. When JS can take over, keep that markup reserved but unpainted
