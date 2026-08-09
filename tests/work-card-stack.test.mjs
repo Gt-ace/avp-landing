@@ -182,3 +182,18 @@ test('work page does not install a page-specific smooth scroller', async () => {
   assert.doesNotMatch(stack, /Lenis|startSmoothScroll/)
   assert.doesNotMatch(skiper, /Lenis|ReactLenis|lenis\/react/)
 })
+
+test('work project card links its image and title to the detail page morph', async () => {
+  const source = await readFile(
+    new URL(
+      '../src/components/work-card-stack/WorkProjectCard.tsx',
+      import.meta.url,
+    ),
+    'utf8',
+  )
+
+  const imageNameOccurrences =
+    source.match(/style=\{\{ viewTransitionName: `image-\$\{card\.id\}` \}\}/g) ?? []
+  assert.equal(imageNameOccurrences.length, 2, 'both the <img> and <video> branches must carry the image transition name')
+  assert.match(source, /style=\{\{ viewTransitionName: `title-\$\{card\.id\}` \}\}/)
+})
