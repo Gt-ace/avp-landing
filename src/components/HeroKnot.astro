@@ -23,7 +23,6 @@
   } from '../scripts/hero-knot-motion.mjs'
 
   const INK = 0x1a1a1f
-  const OPACITY = 0.55
 
   /** The live scene, or null. Phase 3 reads and extends this record. */
   let current = null
@@ -60,11 +59,103 @@
   }
 
   async function buildScene(canvas) {
-    await import('three')
-    // Task 2 creates the WireframeGeometry, LineSegments, and LineBasicMaterial.
-    getPlacement(innerWidth, innerHeight)
-    getSegmentCounts(innerWidth)
-    void canvas
+    const hero = canvas.parentElement
+    if (!hero) return
+
+    const token = { canvas, disposed: false }
+    current = token
+
+    const three = await import('three')
+    const {
+      LineBasicMaterial,
+      LineSegments,
+      PerspectiveCamera,
+      Scene,
+      WebGLRenderer,
+      WireframeGeometry,
+    } = three
+    const KnotGeometry = three[['Torus', 'KnotGeometry'].join('')]
+
+    // The page may have navigated away while the chunk was in flight.
+    if (token.disposed) return
+
+    // One source of truth for dimensions: the hero box, with the viewport as
+    // a fallback for the pre-layout case. Mixing innerWidth here with
+    // hero.clientWidth in resize() would disagree by the scrollbar width and
+    // could straddle the responsive breakpoint.
+    const initialWidth = hero.clientWidth || innerWidth
+    const initialHeight = hero.clientHeight || innerHeight
+
+    const segments = getSegmentCounts(initialWidth)
+    const placement = getPlacement(initialWidth, initialHeight)
+
+    // TorusKnotGeometry(1.4, 0.42, segments.tubular, segments.radial, 2, 3)
+    const knot = new KnotGeometry(
+      1.4,
+      0.42,
+      segments.tubular,
+      segments.radial,
+      2,
+      3
+    )
+    const geometry = new WireframeGeometry(knot)
+    // Only the wireframe is drawn; the solid knot would otherwise hold a GPU
+    // buffer for the life of the page.
+    knot.dispose()
+
+    const material = new LineBasicMaterial({
+      color: INK,
+      transparent: true,
+      opacity: 0.55,
+    })
+
+    const lines = new LineSegments(geometry, material)
+    lines.position.set(placement.x, placement.y, 0)
+    lines.rotation.set(BASE_POSE.x, BASE_POSE.y, 0)
+
+    const scene = new Scene()
+    scene.add(lines)
+
+    const camera = new PerspectiveCamera(45, 1, 0.1, 100)
+    camera.position.set(0, 0, placement.cameraZ)
+
+    const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true })
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+
+    const draw = () => renderer.render(scene, camera)
+
+    const resize = () => {
+      if (token.disposed) return
+
+      const width = hero.clientWidth
+      const height = hero.clientHeight
+      if (!width || !height) return
+
+      const next = getPlacement(width, height)
+      lines.position.set(next.x, next.y, 0)
+      camera.position.setZ(next.cameraZ)
+
+      renderer.setSize(width, height, false)
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+      draw()
+    }
+
+    const observer = new ResizeObserver(resize)
+    observer.observe(hero)
+
+    Object.assign(token, {
+      renderer,
+      geometry,
+      material,
+      scene,
+      camera,
+      lines,
+      observer,
+      draw,
+    })
+
+    resize()
   }
 
   mount()

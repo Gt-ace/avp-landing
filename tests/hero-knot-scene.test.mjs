@@ -107,3 +107,50 @@ test('the hero renders the knot behind its existing content', async () => {
     'the canvas paints before the title and tagline'
   )
 })
+
+test('the scene is built once from the approved geometry values', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /TorusKnotGeometry\(\s*1\.4,\s*0\.42,/)
+  assert.match(source, /2,\s*3\s*\)/, 'p = 2 and q = 3')
+  assert.match(source, /0x1a1a1f/)
+  assert.match(source, /opacity:\s*0\.55/)
+  assert.match(source, /transparent:\s*true/)
+})
+
+test('the renderer is transparent, antialiased, and ratio capped at 2', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /alpha:\s*true/)
+  assert.match(source, /antialias:\s*true/)
+  assert.match(source, /Math\.min\(devicePixelRatio,\s*2\)/)
+})
+
+test('the source torus geometry is released after the wireframe is taken', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  const knot = source.indexOf('TorusKnotGeometry(')
+  const wireframe = source.indexOf('WireframeGeometry(')
+  const dispose = source.indexOf('.dispose()')
+
+  assert.ok(knot < wireframe, 'the wireframe is derived from the knot')
+  assert.ok(
+    wireframe < dispose,
+    'the source knot geometry is disposed once the wireframe exists'
+  )
+})
+
+test('the camera matches the approved projection', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /PerspectiveCamera\(\s*45,/)
+  assert.match(source, /0\.1,\s*100\s*\)/)
+  assert.match(source, /cameraZ/)
+})
+
+test('sizing is measured by observer, never per frame', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /ResizeObserver/)
+  assert.match(source, /updateProjectionMatrix\(\)/)
+})
