@@ -70,26 +70,24 @@ const displayImages =
 
     <div class="detail-right">
       {project.video && (
-        <div transition:name={`image-${project.slug}`} transition:animate={morph}>
-          <video
-            class="detail-video"
-            autoplay
-            muted
-            loop
-            playsinline
-            preload="metadata"
-            poster={project.video.poster}
-          >
-            {project.video.desktopWebm && (
-              <source src={project.video.desktopWebm} type="video/webm" media="(min-width: 768px)" />
-            )}
-            <source src={project.video.desktopMp4} type="video/mp4" media="(min-width: 768px)" />
-            {project.video.mobileWebm && (
-              <source src={project.video.mobileWebm} type="video/webm" />
-            )}
-            <source src={project.video.mobileMp4} type="video/mp4" />
-          </video>
-        </div>
+        <video
+          class="detail-video"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster={project.video.poster}
+        >
+          {project.video.desktopWebm && (
+            <source src={project.video.desktopWebm} type="video/webm" media="(min-width: 768px)" />
+          )}
+          <source src={project.video.desktopMp4} type="video/mp4" media="(min-width: 768px)" />
+          {project.video.mobileWebm && (
+            <source src={project.video.mobileWebm} type="video/webm" />
+          )}
+          <source src={project.video.mobileMp4} type="video/mp4" />
+        </video>
       )}
       {displayImages.map((src, i) => (
         <img

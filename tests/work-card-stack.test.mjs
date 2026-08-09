@@ -194,7 +194,7 @@ test('work project card links its image and title to the detail page morph', asy
 
   const imageNameOccurrences =
     source.match(/style=\{\{ viewTransitionName: `image-\$\{card\.id\}` \}\}/g) ?? []
-  assert.equal(imageNameOccurrences.length, 2, 'both the <img> and <video> branches must carry the image transition name')
+  assert.equal(imageNameOccurrences.length, 1, 'only the <img> branch carries the image transition name; video is excluded (see below)')
   assert.match(source, /style=\{\{ viewTransitionName: `title-\$\{card\.id\}` \}\}/)
 })
 
@@ -207,7 +207,7 @@ test('detail page slows its named transitions to match the card morph', async ()
   assert.match(detail, /import \{ fade \} from ['"]astro:transitions['"]/)
   assert.match(detail, /const morph = fade\(\{ duration: 480 \}\)/)
   const morphOccurrences = detail.match(/transition:animate=\{morph\}/g) ?? []
-  assert.equal(morphOccurrences.length, 2, 'the title and the video should both use the shared morph config')
+  assert.equal(morphOccurrences.length, 1, 'only the title uses the shared morph config directly; video is excluded (see below)')
   assert.match(detail, /transition:animate=\{i === 0 && !project\.video \? morph : undefined\}/)
   assert.match(detail, /::view-transition-group\(\*\)/)
   assert.match(detail, /animation-duration: 480ms/)
@@ -225,7 +225,7 @@ test('work index shares the same transition group timing as the detail page', as
   assert.match(page, /cubic-bezier\(0\.16, 1, 0\.3, 1\)/)
 })
 
-test('the video branch names a wrapper, not the media element itself', async () => {
+test('the video is excluded from the morph entirely, on both sides', async () => {
   const cardSource = await readFile(
     new URL(
       '../src/components/work-card-stack/WorkProjectCard.tsx',
@@ -238,14 +238,28 @@ test('the video branch names a wrapper, not the media element itself', async () 
     'utf8',
   )
 
+  // Chromium drops <video> playback across a view transition when the video
+  // (or an ancestor) carries a view-transition-name, even briefly. Naming a
+  // wrapper div was tried and still broke playback, so the video keeps no
+  // transition name at all and just cuts with the rest of the page.
   assert.doesNotMatch(
     cardSource,
     /<video\b[^>]*style=\{\{ viewTransitionName/,
-    'the <video> tag itself must not carry the transition name (Chromium drops video playback across a named view transition)',
+    'the <video> tag itself must not carry a transition name',
+  )
+  assert.doesNotMatch(
+    cardSource,
+    /<div\s+className="h-full w-full"\s+style=\{\{ viewTransitionName/,
+    'the video must not be wrapped in a named div either',
   )
   assert.doesNotMatch(
     detail,
     /<video\b[^>]*transition:(name|animate)/,
     'the detail <video> tag itself must not carry transition:name/transition:animate',
+  )
+  assert.doesNotMatch(
+    detail,
+    /<div transition:name=\{`image-\$\{project\.slug\}`\}/,
+    'the detail video must not be wrapped in a named div either',
   )
 })

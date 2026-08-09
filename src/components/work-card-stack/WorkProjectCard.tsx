@@ -45,43 +45,38 @@ export default function WorkProjectCard({
             style={{ viewTransitionName: `image-${card.id}` }}
           />
         ) : (
-          <div
-            className="h-full w-full"
-            style={{ viewTransitionName: `image-${card.id}` }}
+          <video
+            ref={videoRef}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={card.media.poster}
+            className="h-full w-full object-cover"
+            data-work-card-video
+            onPlay={() => setVideoPlaying(true)}
+            onPause={() => setVideoPlaying(false)}
           >
-            <video
-              ref={videoRef}
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              poster={card.media.poster}
-              className="h-full w-full object-cover"
-              data-work-card-video
-              onPlay={() => setVideoPlaying(true)}
-              onPause={() => setVideoPlaying(false)}
-            >
-              {card.media.desktopWebm && (
-                <source
-                  src={card.media.desktopWebm}
-                  type="video/webm"
-                  media="(min-width: 768px)"
-                />
-              )}
+            {card.media.desktopWebm && (
               <source
-                src={card.media.desktopMp4}
-                type="video/mp4"
+                src={card.media.desktopWebm}
+                type="video/webm"
                 media="(min-width: 768px)"
               />
-              {card.media.mobileWebm && (
-                <source src={card.media.mobileWebm} type="video/webm" />
-              )}
-              <source src={card.media.mobileMp4} type="video/mp4" />
-              {card.media.fallbackWebm && (
-                <source src={card.media.fallbackWebm} type="video/webm" />
-              )}
-            </video>
-          </div>
+            )}
+            <source
+              src={card.media.desktopMp4}
+              type="video/mp4"
+              media="(min-width: 768px)"
+            />
+            {card.media.mobileWebm && (
+              <source src={card.media.mobileWebm} type="video/webm" />
+            )}
+            <source src={card.media.mobileMp4} type="video/mp4" />
+            {card.media.fallbackWebm && (
+              <source src={card.media.fallbackWebm} type="video/webm" />
+            )}
+          </video>
         )}
 
         <span
