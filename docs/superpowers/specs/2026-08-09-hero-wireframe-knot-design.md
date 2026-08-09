@@ -162,6 +162,20 @@ normally.
 
 ### Narrow-viewport placement
 
+> **Amended 2026-08-09, owner request, after phase 2.** The hero copy no longer
+> sits at the bottom of the section. It is now vertically centred at every
+> width (`top: 50%` with a `-50%` translate), left aligned, and the hero has
+> gained a masked grid background at `z-index: 0`. The paragraph below is
+> preserved for its reasoning, but its stated bottom offset is no longer true.
+>
+> Consequence for phase 4: the empty region above the title is now roughly the
+> top third of the viewport rather than the top two thirds, so the provisional
+> narrow placement (`y: 1.5`, `cameraZ: 9`) has materially less room than when
+> it was chosen and must be re-derived on a real narrow viewport, not merely
+> confirmed. On desktop the copy is now at the same vertical centre as the
+> knot, so the no-overlap check matters most at intermediate widths around
+> 1024px, where the horizontal extent shrinks but the copy does not.
+
 Below 768px the hero content changes shape: the title and tagline span nearly
 the full width (`left`/`right: 1.5rem`) and sit at `bottom: max(5.5rem, 14vh)`.
 A right-side offset has nowhere to go. The knot therefore moves to the **upper

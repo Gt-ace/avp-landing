@@ -190,6 +190,28 @@ const faqs = [
     min-height: 100dvh;
     overflow: hidden;
     background: var(--color-bg);
+
+    --hero-grid-size: clamp(2.5rem, 5vw, 4.5rem);
+    --hero-grid-line: oklch(85% 0.003 260 / 55%);
+  }
+
+  /* Grid sits at z-index 0: under the knot canvas (1) and the copy (2).
+     Its own element so the edge fade can be masked without touching them. */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, var(--hero-grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--hero-grid-line) 1px, transparent 1px);
+    background-size: var(--hero-grid-size) var(--hero-grid-size);
+    mask-image: radial-gradient(
+      ellipse 90% 75% at 50% 50%,
+      #000 45%,
+      transparent 100%
+    );
   }
 
   .hero-content,
@@ -199,7 +221,8 @@ const faqs = [
 
   .hero-content {
     position: absolute;
-    bottom: 14vh;
+    top: 50%;
+    translate: 0 -50%;
     left: 10vw;
     right: 10vw;
     max-width: 38rem;
@@ -469,7 +492,8 @@ const faqs = [
 
   @media (max-width: 767px) {
     .hero-content {
-      bottom: max(5.5rem, 14vh);
+      left: 1.5rem;
+      right: 1.5rem;
     }
 
     .hero-scroll {
