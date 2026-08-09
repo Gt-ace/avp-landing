@@ -106,10 +106,9 @@ test('the unlit wireframe material gets no lights', async () => {
   assert.match(source, /LineBasicMaterial/)
 })
 
-test('phase 2 draws no animation loop or intersection observer', async () => {
+test('phase 2 draws no intersection observer', async () => {
   const source = await read('../src/components/HeroKnot.astro')
 
-  assert.doesNotMatch(source, /requestAnimationFrame/)
   assert.doesNotMatch(source, /IntersectionObserver/)
 })
 
@@ -277,6 +276,84 @@ test('both inputs are re-summed whenever either one changes', async () => {
     1,
     'a single updateTarget call site keeps the two inputs from overwriting each other'
   )
+})
+
+test('only one animation frame is ever in flight', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const requestLoop = source.slice(
+    source.indexOf('function requestLoop'),
+    source.indexOf('function stopLoop')
+  )
+
+  assert.match(
+    requestLoop,
+    /if \(frame\) return/,
+    'a second scheduled frame would damp twice per frame and halve the easing time'
+  )
+  assert.match(requestLoop, /frame = requestAnimationFrame\(tick\)/)
+})
+
+test('the loop stops itself on convergence and can be restarted', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const tick = source.slice(source.indexOf('function tick'))
+
+  assert.match(tick, /isConverged\(/)
+
+  const beforeDamping = tick.slice(0, tick.indexOf('dampToward'))
+  assert.match(
+    beforeDamping,
+    /if \(!current \|\| current\.disposed\) \{\s*frame = 0/,
+    'the only early clear is the disposed guard'
+  )
+
+  assert.match(
+    tick,
+    /frame = settled \? 0 : requestAnimationFrame\(tick\)/,
+    'otherwise the handle is decided after damping, so an event landing before this frame is seen by its convergence test'
+  )
+})
+
+test('convergence snaps the rotation exactly onto the target', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const tick = source.slice(source.indexOf('function tick'))
+
+  assert.match(
+    tick,
+    /rotation\.x = target\.x/,
+    'damping approaches asymptotically; snapping avoids a permanent sub-epsilon offset'
+  )
+  assert.match(tick, /rotation\.y = target\.y/)
+})
+
+test('the loop damps both axes and draws through the phase 2 record', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const tick = source.slice(source.indexOf('function tick'))
+
+  assert.match(tick, /dampToward\(rotation\.x,\s*target\.x\)/)
+  assert.match(tick, /dampToward\(rotation\.y,\s*target\.y\)/)
+  assert.match(tick, /lines\.rotation\.x = rotation\.x/)
+  assert.match(tick, /current\.draw\(\)/)
+})
+
+test('the loop never runs without a live scene', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const tick = source.slice(source.indexOf('function tick'))
+
+  assert.match(
+    tick.slice(0, 200),
+    /if \(!current \|\| current\.disposed\)/,
+    'a frame queued before teardown must not touch a disposed renderer'
+  )
+})
+
+test('there is no idle animation anywhere', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.doesNotMatch(source, /setInterval|setTimeout/)
+  assert.doesNotMatch(source, /rotation\.[xy]\s*\+=/, 'no unconditional per-frame increment')
+
+  const frames = source.match(/requestAnimationFrame\(/g) ?? []
+  assert.equal(frames.length, 2, 'exactly two: the requestLoop guard and the tick re-arm')
 })
 
 test('cursor position is normalised to the viewport, not the hero box', async () => {

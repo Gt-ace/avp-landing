@@ -73,6 +73,50 @@
     removeEventListener('scroll', onScroll)
   }
 
+  let frame = 0
+
+  function requestLoop() {
+    // Single-flight. A second in-flight frame would apply dampToward twice
+    // per displayed frame, silently halving the easing time.
+    if (frame) return
+    frame = requestAnimationFrame(tick)
+  }
+
+  function stopLoop() {
+    if (!frame) return
+    cancelAnimationFrame(frame)
+    frame = 0
+  }
+
+  function tick() {
+    if (!current || current.disposed) {
+      frame = 0
+      return
+    }
+
+    rotation.x = dampToward(rotation.x, target.x)
+    rotation.y = dampToward(rotation.y, target.y)
+
+    const settled =
+      isConverged(rotation.x, target.x) && isConverged(rotation.y, target.y)
+
+    if (settled) {
+      // Damping is asymptotic, so without this the pose would rest a
+      // fraction below target forever.
+      rotation.x = target.x
+      rotation.y = target.y
+    }
+
+    current.lines.rotation.x = rotation.x
+    current.lines.rotation.y = rotation.y
+    current.draw()
+
+    // Cleared only here, never at the top: an event that fired before this
+    // frame has already updated `target`, so the convergence test above saw
+    // it and this branch is not reached.
+    frame = settled ? 0 : requestAnimationFrame(tick)
+  }
+
   function hasWebGL() {
     try {
       const probe = document.createElement('canvas')
