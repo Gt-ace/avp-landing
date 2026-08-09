@@ -661,6 +661,20 @@ test('a coarse pointer gets no cursor listeners at all', async () => {
   )
 })
 
+test('switching from fine to coarse clears stale cursor input', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const attach = source.slice(
+    source.indexOf('function attachInput'),
+    source.indexOf('function detachInput')
+  )
+
+  assert.match(
+    attach,
+    /else\s*\{[^}]*pointer\.x = 0[^}]*pointer\.y = 0/s,
+    'pointer state outlives listener attachment, so coarse re-entry must clear values left by a fine pointer'
+  )
+})
+
 test('the coarse-pointer query is evaluated per attach, not once at module scope', async () => {
   const source = await read('../src/components/HeroKnot.astro')
   const beforeAttach = source.slice(0, source.indexOf('function attachInput'))
