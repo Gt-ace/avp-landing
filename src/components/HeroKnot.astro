@@ -158,5 +158,30 @@
     resize()
   }
 
+  function teardown() {
+    if (!current) return
+
+    // Marked first so an in-flight buildScene bails after its await instead
+    // of attaching a renderer to a canvas that is about to be swapped out.
+    current.disposed = true
+
+    current.observer?.disconnect()
+
+    // dispose() frees the renderer's own caches and listeners but leaves the
+    // WebGL context alive (verified in three.module.js). Only
+    // forceContextLoss() calls WEBGL_lose_context.loseContext(), which is what
+    // actually returns the context to the browser's ~16 slot budget. Without
+    // this line the teardown does not prevent the leak it exists to prevent.
+    current.renderer?.forceContextLoss()
+    current.renderer?.dispose()
+
+    current.geometry?.dispose()
+    current.material?.dispose()
+
+    current = null
+  }
+
   mount()
+  document.addEventListener('astro:page-load', mount)
+  document.addEventListener('astro:before-swap', teardown)
 </script>

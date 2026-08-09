@@ -155,3 +155,60 @@ test('sizing is measured by observer, never per frame', async () => {
   assert.match(source, /ResizeObserver/)
   assert.match(source, /updateProjectionMatrix\(\)/)
 })
+
+test('the mount survives client-side navigation in both directions', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /addEventListener\('astro:page-load', mount\)/)
+  assert.match(source, /addEventListener\('astro:before-swap', teardown\)/)
+})
+
+test('a repeated mount cannot build a second renderer', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(
+    source,
+    /dataset\.knotMounted === 'true'\)\s*return/,
+    'the guard reads a flag on the canvas element'
+  )
+
+  const guard = source.indexOf("dataset.knotMounted = 'true'")
+  const firstAwait = source.indexOf('await ')
+
+  assert.ok(guard !== -1, 'the guard flag is written')
+  assert.ok(
+    guard < firstAwait,
+    'the flag is set synchronously, before any await can yield'
+  )
+})
+
+test('teardown releases every GPU resource the scene holds', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const teardown = source.slice(source.indexOf('function teardown'))
+
+  assert.match(
+    teardown,
+    /renderer\?\.forceContextLoss\(\)/,
+    'dispose() alone leaves the WebGL context alive'
+  )
+  assert.ok(
+    teardown.indexOf('forceContextLoss') < teardown.indexOf('renderer?.dispose'),
+    'the context is released before the renderer is disposed'
+  )
+  assert.match(teardown, /renderer\?\.dispose\(\)/)
+  assert.match(teardown, /geometry\?\.dispose\(\)/)
+  assert.match(teardown, /material\?\.dispose\(\)/)
+  assert.match(teardown, /observer\?\.disconnect\(\)/)
+  assert.match(teardown, /current = null/)
+})
+
+test('a teardown mid-import does not build an orphan scene', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /token\.disposed = true|disposed = true/)
+  assert.match(
+    source,
+    /if \(token\.disposed\) return/,
+    'buildScene bails after the dynamic import if it was torn down'
+  )
+})
