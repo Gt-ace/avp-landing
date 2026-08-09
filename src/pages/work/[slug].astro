@@ -248,3 +248,15 @@ const displayImages =
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 </style>
+
+<script>
+  // A <video> with a view-transition-name can lose its playing state across
+  // the transition swap (the browser captures/hides it for the animation and
+  // doesn't always resume playback on its own), so re-trigger it explicitly.
+  document.addEventListener('astro:page-load', () => {
+    document
+      .querySelector('.detail-video')
+      ?.play()
+      .catch(() => {})
+  })
+</script>

@@ -224,3 +224,14 @@ test('work index shares the same transition group timing as the detail page', as
   assert.match(page, /animation-duration: 480ms/)
   assert.match(page, /cubic-bezier\(0\.16, 1, 0\.3, 1\)/)
 })
+
+test('detail page resumes its named video after the view transition swap', async () => {
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  assert.match(detail, /addEventListener\(['"]astro:page-load['"]/)
+  assert.match(detail, /\.detail-video/)
+  assert.match(detail, /\.play\(\)/)
+})
