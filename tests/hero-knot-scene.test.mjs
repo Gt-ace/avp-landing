@@ -11,7 +11,11 @@ test('the knot canvas is decorative and unreachable by keyboard', async () => {
   assert.match(source, /<canvas[^>]*aria-hidden="true"/)
   assert.match(source, /<canvas[^>]*data-hero-knot/)
   assert.doesNotMatch(source, /tabindex/)
-  assert.doesNotMatch(source, /<canvas[^>]*>[^<]*\S/, 'canvas carries no content')
+  assert.doesNotMatch(
+    source,
+    /<canvas[^>]*>\s*[^<\s][\s\S]*?<\/canvas>/,
+    'canvas carries no fallback text'
+  )
 })
 
 test('the canvas fills the hero beneath the existing content layer', async () => {

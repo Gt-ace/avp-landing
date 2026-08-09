@@ -1,5 +1,7 @@
 ---
 ---
+<canvas class="hero-knot" data-hero-knot aria-hidden="true"></canvas>
+
 <style>
   .hero-knot {
     position: absolute;
@@ -58,22 +60,12 @@
   }
 
   async function buildScene(canvas) {
-    const { WireframeGeometry, LineSegments, LineBasicMaterial } =
-      await import('three')
-    const placement = getPlacement(innerWidth, innerHeight)
-    const segments = getSegmentCounts(innerWidth)
+    await import('three')
+    // Task 2 creates the WireframeGeometry, LineSegments, and LineBasicMaterial.
+    getPlacement(innerWidth, innerHeight)
+    getSegmentCounts(innerWidth)
     void canvas
-    void BASE_POSE
-    void placement
-    void segments
-    void WireframeGeometry
-    void LineSegments
-    void LineBasicMaterial
-    void INK
-    void OPACITY
   }
 
   mount()
 </script>
-
-<canvas class="hero-knot" data-hero-knot aria-hidden="true" />
