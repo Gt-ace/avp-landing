@@ -225,13 +225,27 @@ test('work index shares the same transition group timing as the detail page', as
   assert.match(page, /cubic-bezier\(0\.16, 1, 0\.3, 1\)/)
 })
 
-test('detail page resumes its named video after the view transition swap', async () => {
+test('the video branch names a wrapper, not the media element itself', async () => {
+  const cardSource = await readFile(
+    new URL(
+      '../src/components/work-card-stack/WorkProjectCard.tsx',
+      import.meta.url,
+    ),
+    'utf8',
+  )
   const detail = await readFile(
     new URL('../src/pages/work/[slug].astro', import.meta.url),
     'utf8',
   )
 
-  assert.match(detail, /addEventListener\(['"]astro:page-load['"]/)
-  assert.match(detail, /\.detail-video/)
-  assert.match(detail, /\.play\(\)/)
+  assert.doesNotMatch(
+    cardSource,
+    /<video\b[^>]*style=\{\{ viewTransitionName/,
+    'the <video> tag itself must not carry the transition name (Chromium drops video playback across a named view transition)',
+  )
+  assert.doesNotMatch(
+    detail,
+    /<video\b[^>]*transition:(name|animate)/,
+    'the detail <video> tag itself must not carry transition:name/transition:animate',
+  )
 })

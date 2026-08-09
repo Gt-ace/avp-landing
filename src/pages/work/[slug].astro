@@ -70,26 +70,26 @@ const displayImages =
 
     <div class="detail-right">
       {project.video && (
-        <video
-          class="detail-video"
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="metadata"
-          poster={project.video.poster}
-          transition:name={`image-${project.slug}`}
-          transition:animate={morph}
-        >
-          {project.video.desktopWebm && (
-            <source src={project.video.desktopWebm} type="video/webm" media="(min-width: 768px)" />
-          )}
-          <source src={project.video.desktopMp4} type="video/mp4" media="(min-width: 768px)" />
-          {project.video.mobileWebm && (
-            <source src={project.video.mobileWebm} type="video/webm" />
-          )}
-          <source src={project.video.mobileMp4} type="video/mp4" />
-        </video>
+        <div transition:name={`image-${project.slug}`} transition:animate={morph}>
+          <video
+            class="detail-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            poster={project.video.poster}
+          >
+            {project.video.desktopWebm && (
+              <source src={project.video.desktopWebm} type="video/webm" media="(min-width: 768px)" />
+            )}
+            <source src={project.video.desktopMp4} type="video/mp4" media="(min-width: 768px)" />
+            {project.video.mobileWebm && (
+              <source src={project.video.mobileWebm} type="video/webm" />
+            )}
+            <source src={project.video.mobileMp4} type="video/mp4" />
+          </video>
+        </div>
       )}
       {displayImages.map((src, i) => (
         <img
@@ -248,15 +248,3 @@ const displayImages =
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 </style>
-
-<script>
-  // A <video> with a view-transition-name can lose its playing state across
-  // the transition swap (the browser captures/hides it for the animation and
-  // doesn't always resume playback on its own), so re-trigger it explicitly.
-  document.addEventListener('astro:page-load', () => {
-    document
-      .querySelector('.detail-video')
-      ?.play()
-      .catch(() => {})
-  })
-</script>
