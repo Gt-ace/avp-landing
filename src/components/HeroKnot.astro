@@ -1,0 +1,186 @@
+---
+---
+<canvas class="hero-knot" data-hero-knot aria-hidden="true"></canvas>
+
+<style>
+  .hero-knot {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import {
+    BASE_POSE,
+    getPlacement,
+    getSegmentCounts,
+    shouldRender,
+  } from '../scripts/hero-knot-motion.mjs'
+
+  const INK = 0x1a1a1f
+  const OPACITY = 0.55
+
+  /** The live scene, or null. Phase 3 reads and extends this record. */
+  let current = null
+
+  function hasWebGL() {
+    try {
+      const probe = document.createElement('canvas')
+      const gl = probe.getContext('webgl2')
+      if (!gl) return false
+      // Release the probe's context immediately: it counts against the same
+      // per-browser context cap this detection exists to protect.
+      gl.getExtension('WEBGL_lose_context')?.loseContext()
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  async function mount() {
+    const canvas = document.querySelector('canvas[data-hero-knot]')
+    if (!canvas || canvas.dataset.knotMounted === 'true') return
+
+    // Set synchronously, before any await, so a double fire cannot race
+    // through the gate and construct two renderers.
+    canvas.dataset.knotMounted = 'true'
+
+    const prefersReducedMotion = matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches
+
+    if (shouldRender(prefersReducedMotion, hasWebGL()) === 'none') return
+
+    await buildScene(canvas)
+  }
+
+  async function buildScene(canvas) {
+    const hero = canvas.parentElement
+    if (!hero) return
+
+    const token = { canvas, disposed: false }
+    current = token
+
+    const {
+      LineBasicMaterial,
+      LineSegments,
+      PerspectiveCamera,
+      Scene,
+      TorusKnotGeometry,
+      WebGLRenderer,
+      WireframeGeometry,
+    } = await import('three')
+
+    // The page may have navigated away while the chunk was in flight.
+    if (token.disposed) return
+
+    // One source of truth for dimensions: the hero box, with the viewport as
+    // a fallback for the pre-layout case. Mixing innerWidth here with
+    // hero.clientWidth in resize() would disagree by the scrollbar width and
+    // could straddle the responsive breakpoint.
+    const initialWidth = hero.clientWidth || innerWidth
+    const initialHeight = hero.clientHeight || innerHeight
+
+    const segments = getSegmentCounts(initialWidth)
+    const placement = getPlacement(initialWidth, initialHeight)
+
+    const knot = new TorusKnotGeometry(
+      1.4,
+      0.42,
+      segments.tubular,
+      segments.radial,
+      2,
+      3
+    )
+    const geometry = new WireframeGeometry(knot)
+    // Only the wireframe is drawn; the solid knot would otherwise hold a GPU
+    // buffer for the life of the page.
+    knot.dispose()
+
+    const material = new LineBasicMaterial({
+      color: INK,
+      transparent: true,
+      opacity: OPACITY,
+    })
+
+    const lines = new LineSegments(geometry, material)
+    lines.position.set(placement.x, placement.y, 0)
+    lines.rotation.set(BASE_POSE.x, BASE_POSE.y, 0)
+
+    const scene = new Scene()
+    scene.add(lines)
+
+    const camera = new PerspectiveCamera(45, 1, 0.1, 100)
+    camera.position.set(0, 0, placement.cameraZ)
+
+    const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true })
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+
+    const draw = () => renderer.render(scene, camera)
+
+    const resize = () => {
+      if (token.disposed) return
+
+      const width = hero.clientWidth
+      const height = hero.clientHeight
+      if (!width || !height) return
+
+      const next = getPlacement(width, height)
+      lines.position.set(next.x, next.y, 0)
+      camera.position.setZ(next.cameraZ)
+
+      renderer.setSize(width, height, false)
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+      draw()
+    }
+
+    const observer = new ResizeObserver(resize)
+    observer.observe(hero)
+
+    Object.assign(token, {
+      renderer,
+      geometry,
+      material,
+      scene,
+      camera,
+      lines,
+      observer,
+      draw,
+    })
+
+    resize()
+  }
+
+  function teardown() {
+    if (!current) return
+
+    // Marked first so an in-flight buildScene bails after its await instead
+    // of attaching a renderer to a canvas that is about to be swapped out.
+    current.disposed = true
+
+    current.observer?.disconnect()
+
+    // dispose() frees the renderer's own caches and listeners but leaves the
+    // WebGL context alive (verified in three.module.js). Only
+    // forceContextLoss() calls WEBGL_lose_context.loseContext(), which is what
+    // actually returns the context to the browser's ~16 slot budget. Without
+    // this line the teardown does not prevent the leak it exists to prevent.
+    current.renderer?.forceContextLoss()
+    current.renderer?.dispose()
+
+    current.geometry?.dispose()
+    current.material?.dispose()
+
+    current = null
+  }
+
+  mount()
+  document.addEventListener('astro:page-load', mount)
+  document.addEventListener('astro:before-swap', teardown)
+</script>
