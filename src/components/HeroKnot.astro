@@ -240,6 +240,25 @@
     const observer = new ResizeObserver(resize)
     observer.observe(hero)
 
+    const viewport = new IntersectionObserver(
+      ([entry]) => {
+        if (token.disposed) return
+
+        if (entry.isIntersecting) {
+          attachInput()
+          // Scroll moved while the listener was detached, so the stored
+          // progress is stale. Refresh it before easing anywhere.
+          readScroll()
+          updateTarget()
+        } else {
+          detachInput()
+          stopLoop()
+        }
+      },
+      { threshold: 0 }
+    )
+    viewport.observe(hero)
+
     Object.assign(token, {
       renderer,
       geometry,
@@ -248,6 +267,7 @@
       camera,
       lines,
       observer,
+      viewport,
       draw,
     })
 
@@ -260,18 +280,32 @@
     // of attaching a renderer to a canvas that is about to be swapped out.
     current.disposed = true
 
+    stopLoop()
+    detachInput()
+
+    current.viewport?.disconnect()
     current.observer?.disconnect()
 
     // dispose() frees the renderer's own caches and listeners but leaves the
     // WebGL context alive (verified in three.module.js). Only
     // forceContextLoss() calls WEBGL_lose_context.loseContext(), which is what
-    // actually returns the context to the browser's ~16 slot budget. Without
-    // this line the teardown does not prevent the leak it exists to prevent.
+    // actually returns the context to the browser's ~16 slot budget.
     current.renderer?.forceContextLoss()
     current.renderer?.dispose()
 
     current.geometry?.dispose()
     current.material?.dispose()
+
+    // pointer, rotation, and target are module scoped and outlive the scene.
+    // Without this reset the next mount would inherit the previous page's
+    // pose and ease visibly from it on arrival.
+    pointer.x = 0
+    pointer.y = 0
+    scrollProgress = 0
+    rotation.x = BASE_POSE.x
+    rotation.y = BASE_POSE.y
+    target.x = BASE_POSE.x
+    target.y = BASE_POSE.y
 
     current = null
   }

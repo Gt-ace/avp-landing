@@ -106,10 +106,10 @@ test('the unlit wireframe material gets no lights', async () => {
   assert.match(source, /LineBasicMaterial/)
 })
 
-test('phase 2 draws no intersection observer', async () => {
+test('the viewport observer belongs to the lifecycle phase', async () => {
   const source = await read('../src/components/HeroKnot.astro')
 
-  assert.doesNotMatch(source, /IntersectionObserver/)
+  assert.match(source, /IntersectionObserver/)
 })
 
 test('the hero renders the knot behind its existing content', async () => {
@@ -404,4 +404,49 @@ test('input attachment is symmetric so it can be detached and reattached', async
     assert.match(attach, new RegExp(`addEventListener\\('[a-z]+', ${handler}`))
     assert.match(detach, new RegExp(`removeEventListener\\('[a-z]+', ${handler}`))
   }
+})
+
+test('leaving the viewport detaches input and stops the loop', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(source, /new IntersectionObserver\(/)
+  assert.match(source, /isIntersecting/)
+  assert.match(source, /stopLoop\(\)/)
+  assert.match(source, /detachInput\(\)/)
+})
+
+test('re-entry refreshes stale scroll before easing', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const start = source.indexOf('new IntersectionObserver(')
+  const region = source.slice(start, start + 600)
+
+  assert.match(region, /attachInput\(\)/)
+  assert.ok(
+    region.indexOf('readScroll()') < region.indexOf('updateTarget()'),
+    'scroll progress went stale while detached; read it before setting the target'
+  )
+})
+
+test('teardown releases frames and listeners, not just GPU resources', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const teardown = source.slice(source.indexOf('function teardown'))
+
+  assert.match(teardown, /stopLoop\(\)/)
+  assert.match(teardown, /detachInput\(\)/)
+  assert.match(teardown, /viewport\?\.disconnect\(\)/)
+  assert.match(teardown, /observer\?\.disconnect\(\)/)
+  assert.match(teardown, /renderer\?\.forceContextLoss\(\)/)
+  assert.match(teardown, /current = null/)
+})
+
+test('a remount starts from the base pose, not the previous one', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const teardown = source.slice(source.indexOf('function teardown'))
+
+  assert.match(
+    teardown,
+    /rotation\.x = BASE_POSE\.x/,
+    'rotation and target are module scoped and outlive the swapped-out scene'
+  )
+  assert.match(teardown, /target\.x = BASE_POSE\.x/)
 })
