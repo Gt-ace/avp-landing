@@ -42,12 +42,11 @@ const MOBILE_SEGMENTS = Object.freeze({ tubular: 120, radial: 20 })
 
 const WIDE_PLACEMENT = Object.freeze({ x: 1.6, y: 0.2, cameraZ: 7.5 })
 
-// Provisional. Unlike every other constant in this file, these three are not
-// carried over from the approved prototype, which was desktop-width only.
-// Phase 4 confirms them on a real narrow viewport and may adjust them; the
-// requirement they must satisfy is that the knot clears the title's top edge
-// with visible margin.
-const NARROW_PLACEMENT = Object.freeze({ x: 0, y: 1.5, cameraZ: 9 })
+// Re-derived in phase 4 against the hero's centred copy. The copy sits at
+// top: 50%, so the knot has roughly the top third of the viewport, not the
+// top two thirds the original values assumed: it sits lower in world space
+// and further back than the provisional (1.5, 9).
+const NARROW_PLACEMENT = Object.freeze({ x: 0, y: 1.15, cameraZ: 10 })
 
 export function getScrollProgress(scrollY, viewportHeight) {
   return Math.max(0, Math.min(1, scrollY / (viewportHeight * SCROLL_RANGE_FACTOR)))

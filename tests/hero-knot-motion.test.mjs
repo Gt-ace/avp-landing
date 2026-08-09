@@ -145,7 +145,17 @@ test('wide viewports place the knot beside the reading zone', () => {
 test('narrow viewports lift the knot above the title and push it back', () => {
   const placement = getPlacement(390, 844)
 
-  assert.deepEqual(placement, { x: 0, y: 1.5, cameraZ: 9 })
+  assert.equal(placement.x, 0, 'centred horizontally')
+  assert.ok(placement.y > 0.2, 'lifted above the wide-layout position')
+  assert.ok(placement.cameraZ > 7.5, 'pushed back so it clears the title')
+})
+
+test('the narrow arrangement pins its re-derived values', () => {
+  // A change detector, deliberately. These three are the only numbers in the
+  // module that come from looking at a screen rather than from the spec, so
+  // an accidental edit has nothing else to catch it. Update this assertion
+  // together with the constant, never around it.
+  assert.deepEqual(getPlacement(390, 844), { x: 0, y: 1.15, cameraZ: 10 })
 })
 
 test('the placement switch happens at the breakpoint, not around it', () => {
@@ -172,7 +182,7 @@ test('placement calls return fresh objects', () => {
 
   assert.notStrictEqual(first, second)
   first.x = 99
-  assert.deepEqual(getPlacement(390, 844), { x: 0, y: 1.5, cameraZ: 9 })
+  assert.deepEqual(getPlacement(390, 844), { x: 0, y: 1.15, cameraZ: 10 })
 })
 
 test('segment count calls return fresh objects', () => {
