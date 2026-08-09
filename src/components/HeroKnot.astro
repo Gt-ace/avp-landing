@@ -23,6 +23,7 @@
   } from '../scripts/hero-knot-motion.mjs'
 
   const INK = 0x1a1a1f
+  const OPACITY = 0.55
 
   /** The live scene, or null. Phase 3 reads and extends this record. */
   let current = null
@@ -74,7 +75,7 @@
       WebGLRenderer,
       WireframeGeometry,
     } = three
-    const KnotGeometry = three[['Torus', 'KnotGeometry'].join('')]
+    const TorusKnotGeometry = three[['Torus', 'KnotGeometry'].join('')]
 
     // The page may have navigated away while the chunk was in flight.
     if (token.disposed) return
@@ -89,8 +90,7 @@
     const segments = getSegmentCounts(initialWidth)
     const placement = getPlacement(initialWidth, initialHeight)
 
-    // TorusKnotGeometry(1.4, 0.42, segments.tubular, segments.radial, 2, 3)
-    const knot = new KnotGeometry(
+    const knot = new TorusKnotGeometry(
       1.4,
       0.42,
       segments.tubular,
@@ -106,7 +106,7 @@
     const material = new LineBasicMaterial({
       color: INK,
       transparent: true,
-      opacity: 0.55,
+      opacity: OPACITY,
     })
 
     const lines = new LineSegments(geometry, material)

@@ -114,7 +114,8 @@ test('the scene is built once from the approved geometry values', async () => {
   assert.match(source, /TorusKnotGeometry\(\s*1\.4,\s*0\.42,/)
   assert.match(source, /2,\s*3\s*\)/, 'p = 2 and q = 3')
   assert.match(source, /0x1a1a1f/)
-  assert.match(source, /opacity:\s*0\.55/)
+  assert.match(source, /const OPACITY = 0\.55/)
+  assert.match(source, /opacity:\s*OPACITY/)
   assert.match(source, /transparent:\s*true/)
 })
 
