@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
 import BigTypeRoll from '../components/BigTypeRoll'
+import HeroKnot from '../components/HeroKnot.astro'
 
 const steps = [
   {
@@ -55,6 +56,8 @@ const faqs = [
 ---
 <BaseLayout title="AVP Software">
   <section class="hero">
+    <HeroKnot />
+
     <div class="hero-content">
       <h1 class="hero-title">AVP Software</h1>
       <p class="hero-tagline">
@@ -187,6 +190,34 @@ const faqs = [
     min-height: 100dvh;
     overflow: hidden;
     background: var(--color-bg);
+
+    /* MagicUI DotPattern defaults: 16px cell, 1px dot at (1, 1). */
+    --hero-dot-gap: 16px;
+    --hero-dot-size: 1px;
+    --hero-dot-color: oklch(70% 0.004 260 / 80%);
+  }
+
+  /* Dots sit at z-index 0: under the knot canvas (1) and the copy (2).
+     Their own element so the radial fade can be masked without touching
+     either. DotPattern is a React island that renders an SVG <pattern> of
+     circles; the same result needs no component and no dependency here. */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(
+      circle at var(--hero-dot-size) var(--hero-dot-size),
+      var(--hero-dot-color) var(--hero-dot-size),
+      transparent 0
+    );
+    background-size: var(--hero-dot-gap) var(--hero-dot-gap);
+    mask-image: radial-gradient(
+      ellipse 85% 70% at 35% 50%,
+      #000 30%,
+      transparent 100%
+    );
   }
 
   .hero-content,
@@ -196,8 +227,9 @@ const faqs = [
 
   .hero-content {
     position: absolute;
-    bottom: 14vh;
-    left: 10vw;
+    top: 50%;
+    translate: 0 -50%;
+    left: clamp(1.5rem, 5vw, 5rem);
     right: 10vw;
     max-width: 38rem;
   }
@@ -466,7 +498,8 @@ const faqs = [
 
   @media (max-width: 767px) {
     .hero-content {
-      bottom: max(5.5rem, 14vh);
+      left: 1.5rem;
+      right: 1.5rem;
     }
 
     .hero-scroll {

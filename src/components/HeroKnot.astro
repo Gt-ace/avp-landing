@@ -1,0 +1,328 @@
+---
+---
+<canvas class="hero-knot" data-hero-knot aria-hidden="true"></canvas>
+
+<style>
+  .hero-knot {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import {
+    BASE_POSE,
+    calculateRotationTarget,
+    dampToward,
+    getPlacement,
+    getScrollProgress,
+    getSegmentCounts,
+    isConverged,
+    shouldRender,
+  } from '../scripts/hero-knot-motion.mjs'
+
+  const INK = 0x1a1a1f
+  const OPACITY = 0.55
+
+  /** The live scene, or null. Phase 3 reads and extends this record. */
+  let current = null
+
+  const pointer = { x: 0, y: 0 }
+  const target = { x: BASE_POSE.x, y: BASE_POSE.y }
+  const rotation = { x: BASE_POSE.x, y: BASE_POSE.y }
+  let scrollProgress = 0
+
+  function updateTarget() {
+    const next = calculateRotationTarget(pointer.x, pointer.y, scrollProgress)
+    target.x = next.x
+    target.y = next.y
+    requestLoop()
+  }
+
+  function readScroll() {
+    // innerHeight is 0 before first layout and in some hidden frames. The
+    // resulting 0/0 is NaN, which would propagate into rotation and make the
+    // knot vanish with nothing thrown and nothing logged.
+    if (!innerHeight) return
+    scrollProgress = getScrollProgress(scrollY, innerHeight)
+  }
+
+  function onPointerMove(event) {
+    pointer.x = (event.clientX / innerWidth) * 2 - 1
+    pointer.y = (event.clientY / innerHeight) * 2 - 1
+    updateTarget()
+  }
+
+  function onScroll() {
+    readScroll()
+    updateTarget()
+  }
+
+  function attachInput() {
+    // A coarse pointer (touch) gets no cursor listener at all: the spec wants
+    // scroll alone to drive the knot there. Matched as `pointer: fine` rather
+    // than negated `pointer: coarse`, so a device reporting neither falls to
+    // the scroll-only side. Re-evaluated per attach, which happens on every
+    // viewport re-entry, so a hybrid device is picked up without a listener
+    // or cursor state left over from its previous input mode.
+    if (matchMedia('(pointer: fine)').matches) {
+      addEventListener('mousemove', onPointerMove, { passive: true })
+    } else {
+      pointer.x = 0
+      pointer.y = 0
+    }
+
+    addEventListener('scroll', onScroll, { passive: true })
+  }
+
+  function detachInput() {
+    removeEventListener('mousemove', onPointerMove)
+    removeEventListener('scroll', onScroll)
+  }
+
+  let frame = 0
+
+  function requestLoop() {
+    // Single-flight. A second in-flight frame would apply dampToward twice
+    // per displayed frame, silently halving the easing time.
+    if (frame) return
+    frame = requestAnimationFrame(tick)
+  }
+
+  function stopLoop() {
+    if (!frame) return
+    cancelAnimationFrame(frame)
+    frame = 0
+  }
+
+  function tick() {
+    if (!current || current.disposed) {
+      frame = 0
+      return
+    }
+
+    rotation.x = dampToward(rotation.x, target.x)
+    rotation.y = dampToward(rotation.y, target.y)
+
+    const settled =
+      isConverged(rotation.x, target.x) && isConverged(rotation.y, target.y)
+
+    if (settled) {
+      // Damping is asymptotic, so without this the pose would rest a
+      // fraction below target forever.
+      rotation.x = target.x
+      rotation.y = target.y
+    }
+
+    current.lines.rotation.x = rotation.x
+    current.lines.rotation.y = rotation.y
+    current.draw()
+
+    // Cleared only here, never at the top: an event that fired before this
+    // frame has already updated `target`, so the convergence test above saw
+    // it and this branch is not reached.
+    frame = settled ? 0 : requestAnimationFrame(tick)
+  }
+
+  function hasWebGL() {
+    try {
+      const probe = document.createElement('canvas')
+      const gl = probe.getContext('webgl2')
+      if (!gl) return false
+      // Release the probe's context immediately: it counts against the same
+      // per-browser context cap this detection exists to protect.
+      gl.getExtension('WEBGL_lose_context')?.loseContext()
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  async function mount() {
+    const canvas = document.querySelector('canvas[data-hero-knot]')
+    if (!canvas || canvas.dataset.knotMounted === 'true') return
+
+    // Set synchronously, before any await, so a double fire cannot race
+    // through the gate and construct two renderers.
+    canvas.dataset.knotMounted = 'true'
+
+    const prefersReducedMotion = matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches
+
+    if (shouldRender(prefersReducedMotion, hasWebGL()) === 'none') return
+
+    try {
+      await buildScene(canvas)
+    } catch {
+      // Spec fallback: a failed chunk fetch, a blocked script, or a renderer
+      // that throws because WebGL contexts are exhausted must render nothing
+      // and leave the hero untouched. Releasing here also drops the partially
+      // built record so a later teardown has nothing stale to walk.
+      teardown()
+    }
+  }
+
+  async function buildScene(canvas) {
+    const hero = canvas.parentElement
+    if (!hero) return
+
+    const token = { canvas, disposed: false }
+    current = token
+
+    const {
+      LineBasicMaterial,
+      LineSegments,
+      PerspectiveCamera,
+      Scene,
+      TorusKnotGeometry,
+      WebGLRenderer,
+      WireframeGeometry,
+    } = await import('three')
+
+    // The page may have navigated away while the chunk was in flight.
+    if (token.disposed) return
+
+    // One source of truth for dimensions: the hero box, with the viewport as
+    // a fallback for the pre-layout case. Mixing innerWidth here with
+    // hero.clientWidth in resize() would disagree by the scrollbar width and
+    // could straddle the responsive breakpoint.
+    const initialWidth = hero.clientWidth || innerWidth
+    const initialHeight = hero.clientHeight || innerHeight
+
+    const segments = getSegmentCounts(initialWidth)
+    const placement = getPlacement(initialWidth, initialHeight)
+
+    const knot = new TorusKnotGeometry(
+      1.4,
+      0.42,
+      segments.tubular,
+      segments.radial,
+      2,
+      3
+    )
+    const geometry = new WireframeGeometry(knot)
+    token.geometry = geometry
+    // Only the wireframe is drawn; the solid knot would otherwise hold a GPU
+    // buffer for the life of the page.
+    knot.dispose()
+
+    const material = new LineBasicMaterial({
+      color: INK,
+      transparent: true,
+      opacity: OPACITY,
+    })
+    token.material = material
+
+    const lines = new LineSegments(geometry, material)
+    lines.position.set(placement.x, placement.y, 0)
+    lines.rotation.set(BASE_POSE.x, BASE_POSE.y, 0)
+
+    const scene = new Scene()
+    scene.add(lines)
+
+    const camera = new PerspectiveCamera(45, 1, 0.1, 100)
+    camera.position.set(0, 0, placement.cameraZ)
+
+    const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true })
+    token.renderer = renderer
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+
+    const draw = () => renderer.render(scene, camera)
+
+    const resize = () => {
+      if (token.disposed) return
+
+      const width = hero.clientWidth
+      const height = hero.clientHeight
+      if (!width || !height) return
+
+      const next = getPlacement(width, height)
+      lines.position.set(next.x, next.y, 0)
+      camera.position.setZ(next.cameraZ)
+
+      renderer.setSize(width, height, false)
+      camera.aspect = width / height
+      camera.updateProjectionMatrix()
+      draw()
+    }
+
+    const observer = new ResizeObserver(resize)
+    token.observer = observer
+    observer.observe(hero)
+
+    const viewport = new IntersectionObserver(
+      ([entry]) => {
+        if (token.disposed) return
+
+        if (entry.isIntersecting) {
+          attachInput()
+          // Scroll moved while the listener was detached, so the stored
+          // progress is stale. Refresh it before easing anywhere.
+          readScroll()
+          updateTarget()
+        } else {
+          detachInput()
+          stopLoop()
+        }
+      },
+      { threshold: 0 }
+    )
+    token.viewport = viewport
+    viewport.observe(hero)
+
+    Object.assign(token, {
+      scene,
+      camera,
+      lines,
+      draw,
+    })
+
+  }
+
+  function teardown() {
+    if (!current) return
+
+    // Marked first so an in-flight buildScene bails after its await instead
+    // of attaching a renderer to a canvas that is about to be swapped out.
+    current.disposed = true
+
+    stopLoop()
+    detachInput()
+
+    current.viewport?.disconnect()
+    current.observer?.disconnect()
+
+    // dispose() frees the renderer's own caches and listeners but leaves the
+    // WebGL context alive (verified in three.module.js). Only
+    // forceContextLoss() calls WEBGL_lose_context.loseContext(), which is what
+    // actually returns the context to the browser's ~16 slot budget.
+    current.renderer?.forceContextLoss()
+    current.renderer?.dispose()
+
+    current.geometry?.dispose()
+    current.material?.dispose()
+
+    // pointer, rotation, and target are module scoped and outlive the scene.
+    // Without this reset the next mount would inherit the previous page's
+    // pose and ease visibly from it on arrival.
+    pointer.x = 0
+    pointer.y = 0
+    scrollProgress = 0
+    rotation.x = BASE_POSE.x
+    rotation.y = BASE_POSE.y
+    target.x = BASE_POSE.x
+    target.y = BASE_POSE.y
+
+    current = null
+  }
+
+  mount()
+  document.addEventListener('astro:page-load', mount)
+  document.addEventListener('astro:before-swap', teardown)
+</script>
