@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Hero knot prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@600&family=Geist:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --color-bg: oklch(98% 0.003 260);
+    --color-ink: oklch(10% 0.005 260);
+    --color-muted: oklch(42% 0.005 260);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--color-bg);
+    font-family: 'Geist', system-ui, sans-serif;
+    color: var(--color-ink);
+  }
+  .tabs {
+    position: fixed;
+    top: 1rem;
+    left: 50%;
+    translate: -50% 0;
+    z-index: 10;
+    display: flex;
+    gap: 0.5rem;
+    background: white;
+    padding: 0.4rem;
+    border-radius: 999px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .tabs button {
+    font-family: 'Geist', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+  }
+  .tabs button.active {
+    background: var(--color-ink);
+    color: white;
+  }
+  .scene {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: none;
+  }
+  .scene.active { display: block; }
+  .scene canvas { position: absolute; inset: 0; display: block; }
+  .hero-content {
+    position: absolute;
+    bottom: 14vh;
+    left: 10vw;
+    right: 10vw;
+    max-width: 38rem;
+    z-index: 2;
+  }
+  .hero-title {
+    font-family: 'Bodoni Moda', Georgia, serif;
+    font-size: clamp(3.5rem, 8vw, 8rem);
+    font-weight: 600;
+    line-height: 1;
+    color: var(--color-ink);
+  }
+  .hero-tagline {
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    font-weight: 500;
+    color: var(--color-muted);
+    line-height: 1.5;
+    margin-top: 1.5rem;
+    max-width: 32rem;
+  }
+  .label {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 10;
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    max-width: 20rem;
+    background: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <button data-scene="a" class="active">A — Offset, full opacity</button>
+  <button data-scene="b">B — Behind text, dimmed</button>
+  <button data-scene="c">C — Wireframe accent</button>
+</div>
+
+<div class="label" id="label">Move your mouse, scroll the page. Knot only reacts to input, no idle spin.</div>
+
+<div class="scene active" id="scene-a">
+  <div class="hero-content">
+    <h1 class="hero-title">AVP Software</h1>
+    <p class="hero-tagline">A small studio that designs and builds software end to end: interface, product, and the infrastructure underneath.</p>
+  </div>
+</div>
+<div class="scene" id="scene-b">
+  <div class="hero-content">
+    <h1 class="hero-title">AVP Software</h1>
+    <p class="hero-tagline">A small studio that designs and builds software end to end: interface, product, and the infrastructure underneath.</p>
+  </div>
+</div>
+<div class="scene" id="scene-c">
+  <div class="hero-content">
+    <h1 class="hero-title">AVP Software</h1>
+    <p class="hero-tagline">A small studio that designs and builds software end to end: interface, product, and the infrastructure underneath.</p>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://esm.sh/three@0.169.0"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const INK = 0x1a1a1f; // approx oklch(10% 0.005 260) in sRGB
+
+function makeScene(containerId, opts) {
+  const container = document.getElementById(containerId);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, opts.cameraZ ?? 7);
+
+  const geometry = new THREE.TorusKnotGeometry(1.4, 0.42, 220, 32, opts.p ?? 2, opts.q ?? 3);
+
+  let mesh;
+  if (opts.style === 'wireframe') {
+    const wire = new THREE.WireframeGeometry(geometry);
+    mesh = new THREE.LineSegments(wire, new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: opts.opacity ?? 0.5 }));
+  } else {
+    const material = new THREE.MeshStandardMaterial({
+      color: INK,
+      roughness: 1,
+      metalness: 0,
+      transparent: true,
+      opacity: opts.opacity ?? 1,
+    });
+    mesh = new THREE.Mesh(geometry, material);
+  }
+  mesh.position.set(opts.x ?? 0, opts.y ?? 0, 0);
+  mesh.rotation.set(0.4, 0.6, 0);
+  scene.add(mesh);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(3, 4, 5);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.4);
+  fill.position.set(-4, -2, 2);
+  scene.add(fill);
+
+  function resize() {
+    const w = container.clientWidth, h = container.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(container);
+  resize();
+
+  const base = { x: 0.4, y: 0.6 };
+  let target = { x: base.x, y: base.y };
+  let current = { x: base.x, y: base.y };
+
+  addEventListener('mousemove', (e) => {
+    const nx = (e.clientX / innerWidth) * 2 - 1;
+    const ny = (e.clientY / innerHeight) * 2 - 1;
+    target.x = base.x + ny * 0.35;
+    target.y = base.y + nx * 0.5;
+  });
+
+  addEventListener('scroll', () => {
+    const p = Math.min(1, scrollY / (innerHeight * 0.8));
+    target.y = base.y + p * 1.2;
+  });
+
+  function animate() {
+    current.x += (target.x - current.x) * 0.06;
+    current.y += (target.y - current.y) * 0.06;
+    mesh.rotation.x = current.x;
+    mesh.rotation.y = current.y;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+makeScene('scene-a', { style: 'solid', opacity: 1, x: 1.8, y: 0.3, cameraZ: 7.5 });
+makeScene('scene-b', { style: 'solid', opacity: 0.16, x: 0, y: -0.2, cameraZ: 6.5 });
+makeScene('scene-c', { style: 'wireframe', opacity: 0.55, x: 1.6, y: 0.2, cameraZ: 7.5 });
+
+document.querySelectorAll('.tabs button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('.scene').forEach((s) => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('scene-' + btn.dataset.scene).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
