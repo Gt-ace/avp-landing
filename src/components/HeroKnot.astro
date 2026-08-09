@@ -31,7 +31,7 @@
   function hasWebGL() {
     try {
       const probe = document.createElement('canvas')
-      const gl = probe.getContext('webgl2') || probe.getContext('webgl')
+      const gl = probe.getContext('webgl2')
       if (!gl) return false
       // Release the probe's context immediately: it counts against the same
       // per-browser context cap this detection exists to protect.
@@ -66,16 +66,15 @@
     const token = { canvas, disposed: false }
     current = token
 
-    const three = await import('three')
     const {
       LineBasicMaterial,
       LineSegments,
       PerspectiveCamera,
       Scene,
+      TorusKnotGeometry,
       WebGLRenderer,
       WireframeGeometry,
-    } = three
-    const TorusKnotGeometry = three[['Torus', 'KnotGeometry'].join('')]
+    } = await import('three')
 
     // The page may have navigated away while the chunk was in flight.
     if (token.disposed) return

@@ -64,7 +64,28 @@ test('the gate reads reduced motion and probes for WebGL', async () => {
 
   assert.match(source, /prefers-reduced-motion:\s*reduce/)
   assert.match(source, /getContext\(['"]webgl2['"]\)/)
+  assert.doesNotMatch(
+    source,
+    /getContext\(['"]webgl['"]\)/,
+    'Three.js no longer supports WebGL 1, so the gate must not permit it'
+  )
   assert.match(source, /WEBGL_lose_context/, 'the probe context is released')
+})
+
+test('the dynamic Three import directly selects TorusKnotGeometry', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+
+  assert.match(
+    source,
+    /const\s*\{[\s\S]*?TorusKnotGeometry,[\s\S]*?\}\s*=\s*await import\(['"]three['"]\)/,
+    'named destructuring lets Rollup exclude unused Three.js exports'
+  )
+  assert.match(source, /new TorusKnotGeometry\(/)
+  assert.doesNotMatch(
+    source,
+    /three\s*\[/,
+    'computed namespace access prevents Rollup from tree-shaking exports'
+  )
 })
 
 test('policy lives in the motion module, not in the component', async () => {
