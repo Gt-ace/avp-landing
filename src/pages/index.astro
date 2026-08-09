@@ -191,25 +191,31 @@ const faqs = [
     overflow: hidden;
     background: var(--color-bg);
 
-    --hero-grid-size: clamp(2.5rem, 5vw, 4.5rem);
-    --hero-grid-line: oklch(85% 0.003 260 / 55%);
+    /* MagicUI DotPattern defaults: 16px cell, 1px dot at (1, 1). */
+    --hero-dot-gap: 16px;
+    --hero-dot-size: 1px;
+    --hero-dot-color: oklch(70% 0.004 260 / 80%);
   }
 
-  /* Grid sits at z-index 0: under the knot canvas (1) and the copy (2).
-     Its own element so the edge fade can be masked without touching them. */
+  /* Dots sit at z-index 0: under the knot canvas (1) and the copy (2).
+     Their own element so the radial fade can be masked without touching
+     either. DotPattern is a React island that renders an SVG <pattern> of
+     circles; the same result needs no component and no dependency here. */
   .hero::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background-image:
-      linear-gradient(to right, var(--hero-grid-line) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--hero-grid-line) 1px, transparent 1px);
-    background-size: var(--hero-grid-size) var(--hero-grid-size);
+    background-image: radial-gradient(
+      circle at var(--hero-dot-size) var(--hero-dot-size),
+      var(--hero-dot-color) var(--hero-dot-size),
+      transparent 0
+    );
+    background-size: var(--hero-dot-gap) var(--hero-dot-gap);
     mask-image: radial-gradient(
-      ellipse 90% 75% at 50% 50%,
-      #000 45%,
+      ellipse 85% 70% at 35% 50%,
+      #000 30%,
       transparent 100%
     );
   }
@@ -223,7 +229,7 @@ const faqs = [
     position: absolute;
     top: 50%;
     translate: 0 -50%;
-    left: 10vw;
+    left: clamp(1.5rem, 5vw, 5rem);
     right: 10vw;
     max-width: 38rem;
   }
