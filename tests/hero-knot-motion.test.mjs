@@ -118,6 +118,10 @@ test('scroll progress is capped at 1 past the ceiling', () => {
   close(getScrollProgress(5000, 900), 1, 'far past the hero')
 })
 
+test('scroll progress clamps to zero before the hero', () => {
+  close(getScrollProgress(-120, 900), 0, 'negative scroll position')
+})
+
 test('desktop widths get the full-density knot', () => {
   assert.deepEqual(getSegmentCounts(1440), { tubular: 220, radial: 32 })
   assert.deepEqual(getSegmentCounts(NARROW_BREAKPOINT), {
@@ -141,9 +145,7 @@ test('wide viewports place the knot beside the reading zone', () => {
 test('narrow viewports lift the knot above the title and push it back', () => {
   const placement = getPlacement(390, 844)
 
-  assert.equal(placement.x, 0, 'centred horizontally')
-  assert.ok(placement.y > 0.2, 'lifted above the wide-layout position')
-  assert.ok(placement.cameraZ > 7.5, 'pushed back so it clears the title')
+  assert.deepEqual(placement, { x: 0, y: 1.5, cameraZ: 9 })
 })
 
 test('the placement switch happens at the breakpoint, not around it', () => {
@@ -162,6 +164,24 @@ test('the placement switch happens at the breakpoint, not around it', () => {
 test('placement does not vary with viewport height', () => {
   assert.deepEqual(getPlacement(1440, 900), getPlacement(1440, 1600))
   assert.deepEqual(getPlacement(390, 640), getPlacement(390, 844))
+})
+
+test('placement calls return fresh objects', () => {
+  const first = getPlacement(390, 844)
+  const second = getPlacement(390, 844)
+
+  assert.notStrictEqual(first, second)
+  first.x = 99
+  assert.deepEqual(getPlacement(390, 844), { x: 0, y: 1.5, cameraZ: 9 })
+})
+
+test('segment count calls return fresh objects', () => {
+  const first = getSegmentCounts(390)
+  const second = getSegmentCounts(390)
+
+  assert.notStrictEqual(first, second)
+  first.tubular = 99
+  assert.deepEqual(getSegmentCounts(390), { tubular: 120, radial: 20 })
 })
 
 test('the knot renders only with WebGL and no reduced-motion request', () => {

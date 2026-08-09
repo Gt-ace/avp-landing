@@ -50,7 +50,7 @@ const WIDE_PLACEMENT = Object.freeze({ x: 1.6, y: 0.2, cameraZ: 7.5 })
 const NARROW_PLACEMENT = Object.freeze({ x: 0, y: 1.5, cameraZ: 9 })
 
 export function getScrollProgress(scrollY, viewportHeight) {
-  return Math.min(1, scrollY / (viewportHeight * SCROLL_RANGE_FACTOR))
+  return Math.max(0, Math.min(1, scrollY / (viewportHeight * SCROLL_RANGE_FACTOR)))
 }
 
 export function getSegmentCounts(viewportWidth) {
