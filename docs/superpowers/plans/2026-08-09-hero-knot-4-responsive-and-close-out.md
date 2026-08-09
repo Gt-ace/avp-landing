@@ -38,7 +38,9 @@ Two calls belong to the owner, not the implementer, and both need a real browser
 - Crossing 768px by resizing is a desktop behaviour, and a desktop that crosses it keeps the *denser* `(220, 32)` geometry. Denser is never visually worse, only marginally more work to draw.
 - The genuine mobile case is orientation change, where a phone at 390×844 rotating to 844×390 keeps mobile density. That is correct: it is still the same device with the same GPU budget.
 
-If Task 3's decision is "render nothing on mobile", this rule is what makes it coherent: the render gate is evaluated once at mount, so a desktop window dragged narrow keeps its knot, and a phone never builds one.
+If Task 3's decision is "render nothing on mobile", this rule is what makes it coherent: the render gate is evaluated at mount rather than on resize, so dragging a desktop window narrow does not tear down a live knot, and a phone never builds one.
+
+**Be precise about what "at mount" means under branch B**, because `mount()` runs on every `astro:page-load`, not only on first load. A visitor with a 700px-wide window who navigates `/work` → `/` re-enters `mount()`, the gate sees `innerWidth` of 700, and the knot does not come back for the rest of that session. **That is intended and acceptable.** A 700px window is a narrow viewport, and a remount honouring the current width is more correct than one honouring the width at first paint. The knot returns as soon as the window is widened and the page is navigated or reloaded. Do not add resize-triggered mounting to smooth this over; that reopens the teardown and context-cap problems phase 2 closed.
 
 ---
 
@@ -79,9 +81,14 @@ test('a coarse pointer gets no cursor listeners at all', async () => {
     source.indexOf('function detachInput')
   )
 
-  assert.match(attach, /pointer:\s*coarse/)
+  assert.match(
+    attach,
+    /matchMedia\('\(pointer: fine\)'\)\.matches/,
+    'matched positively as fine, so a device reporting neither falls to scroll-only'
+  )
   assert.ok(
-    attach.indexOf('pointer: coarse') < attach.indexOf("addEventListener('mousemove'"),
+    attach.indexOf("matchMedia('(pointer: fine)')") <
+      attach.indexOf("addEventListener('mousemove'"),
     'the query gates the cursor listener rather than being read after it'
   )
   assert.match(
@@ -97,7 +104,7 @@ test('the coarse-pointer query is evaluated per attach, not once at module scope
 
   assert.doesNotMatch(
     beforeAttach,
-    /pointer:\s*coarse/,
+    /matchMedia\('\(pointer: fine\)'\)/,
     'attachInput runs on every viewport re-entry, so a hybrid device that switches input mode is handled for free'
   )
 })
@@ -199,9 +206,9 @@ How to derive them without guessing, using the running dev server:
 
 - [ ] **Step 1: Update the placement expectations**
 
-The phase 1 tests deliberately assert the narrow arrangement loosely (`y > 0.2`, `cameraZ > 7.5`) precisely so this re-derivation would not require rewriting them. Confirm they still hold, then tighten the one thing that changed.
+The phase 1 tests deliberately assert the narrow arrangement loosely (`y > 0.2`, `cameraZ > 7.5`) precisely so this re-derivation would not require rewriting them. Confirm they still hold, then pin the values that changed.
 
-In `tests/hero-knot-motion.test.mjs`, replace the narrow placement test with:
+In `tests/hero-knot-motion.test.mjs`: **delete the existing test named `narrow viewports lift the knot above the title and push it back`, then add both tests below.** The first is that test restored verbatim; the second is new. The net change is exactly one added test, and every count downstream in this plan assumes that. Appending without deleting gives 29 rather than 28 and puts every later number out by one.
 
 ```js
 test('narrow viewports lift the knot above the title and push it back', () => {
