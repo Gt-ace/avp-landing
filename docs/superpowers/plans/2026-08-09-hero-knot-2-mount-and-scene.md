@@ -480,14 +480,24 @@ Run:
 
 ```bash
 npm run build
-CHUNK=$(grep -rl "TorusKnotGeometry" dist/_astro/*.js | head -1 | xargs basename)
-echo "chunk: $CHUNK"
-grep -rl "$CHUNK" dist --include='*.html'
+ls dist/_astro/three.module.*.js
+grep -rl "three.module" dist --include='*.html'
 ```
 
-Expected: the build succeeds, `$CHUNK` names a real `dist/_astro/*.js` file, and the final `grep` prints **nothing** and exits non-zero. The Three.js chunk must not be referenced from any built HTML page, or it stops being a runtime-only fetch and the title stops being the LCP element.
+Expected: the build succeeds, `ls` names exactly one `dist/_astro/three.module.*.js` file (roughly 514 KB raw, 129 KB gzipped), and the `grep` prints **nothing** and exits non-zero. The Three.js chunk must not be referenced or preloaded from any built HTML page, or it stops being a runtime-only fetch and the title stops being the LCP element.
 
-Do **not** shortcut this to `grep -rl "three" dist/**/*.html`. That matches the English word "three" in ordinary page prose and fails for reasons that have nothing to do with the bundle.
+Two wrong ways to write this check, both of which have already produced a misleading result:
+
+- `grep -rl "three" dist/**/*.html` matches the English word "three" in ordinary page prose.
+- Grepping for `TorusKnotGeometry` to identify the chunk finds the **caller** — the component's own hoisted script, which contains that string as a destructured binding name and *is* correctly referenced from `index.html`. Match on the `three.module` chunk filename, which is the 514 KB payload that must stay unlinked.
+
+To confirm the chunk is reachable at runtime rather than dead, check that the hoisted script imports it:
+
+```bash
+grep -l "three.module" dist/_astro/*.js
+```
+
+Expected: one `hoisted.*.js` file, the component's mount script.
 
 - [ ] **Step 6: Commit**
 
@@ -663,11 +673,10 @@ apart from a genuine remount onto a freshly swapped-in canvas."
 - [ ] The Three.js chunk is bundled but unreferenced by any HTML page. Run:
 
   ```bash
-  CHUNK=$(grep -rl "TorusKnotGeometry" dist/_astro/*.js | head -1 | xargs basename)
-  test -n "$CHUNK" && ! grep -rl "$CHUNK" dist --include='*.html'
+  ls dist/_astro/three.module.*.js && ! grep -rl "three.module" dist --include='*.html'
   ```
 
-  Expected: succeeds. `$CHUNK` must be non-empty (the scene code is in the bundle) and unreferenced from HTML (it stays a runtime-only fetch, so the title remains the LCP element). Match on the chunk filename, never on the bare word `three`, which appears in ordinary page prose.
+  Expected: succeeds. The chunk exists (the scene code is bundled) and is unreferenced by any HTML page, so it stays a runtime-only fetch and the title remains the LCP element. Match on the `three.module` chunk filename — never on the bare word `three`, which appears in page prose, and never on `TorusKnotGeometry`, which also appears in the component's own hoisted script that *is* correctly linked from `index.html`.
 - [ ] `! grep -rE "^\s*import\s.*from\s+['\"]three['\"]" src/` succeeds. No static Three.js import exists anywhere in the source.
 - [ ] `git diff --stat <baseline>..HEAD` touches only `src/components/HeroKnot.astro`, `src/pages/index.astro`, and `tests/hero-knot-scene.test.mjs`. Record `<baseline>` with `git rev-parse HEAD` before the first commit. Do not use `main...HEAD`; this branch carries the plan document ahead of `main`.
 - [ ] `src/scripts/hero-knot-motion.mjs` is unmodified: `git diff <baseline>..HEAD -- src/scripts/` is empty.
@@ -687,6 +696,20 @@ Run `npm run dev` and open the homepage. The reviewer cannot check any of these.
 - [ ] Resize the window from wide to narrow. The knot re-places without distorting and never lands on top of the title.
 
 Narrow-viewport placement uses the provisional values from phase 1 and is **confirmed in phase 4**, not here. Report how it looks; do not tune it in this phase.
+
+---
+
+## Verification debt carried forward
+
+**Status as of the phase 2 merge into `feat/hero-knot-scene`: every machine-checkable item above passed. Not one needs-your-eyes item has been run.**
+
+Merging into the integration branch banks the code; it does not discharge that debt, and it deploys nothing. But three of the outstanding items are the *only* way to confirm the lifecycle work this phase was built around, and no automated check can substitute:
+
+- the eight-plus `/` → `/work` → `/` round trips, watching for WebGL context warnings
+- the `/work`-first hard reload followed by navigation to `/`, which exercises first-time module execution on swap-in
+- reduced motion emulated in devtools, confirming the `three.module` chunk is never requested
+
+These, plus the remaining visual items (knot visible and still, text readable, line weight, resize behaviour), must all be run and confirmed **before `feat/hero-knot-scene` merges to `main`**, since that merge is the one that deploys. Plan 4's acceptance block repeats this list so it cannot be lost.
 
 ---
 
