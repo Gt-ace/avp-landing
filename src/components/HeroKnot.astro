@@ -64,7 +64,15 @@
   }
 
   function attachInput() {
-    addEventListener('mousemove', onPointerMove, { passive: true })
+    // A coarse pointer (touch) gets no cursor listener at all: the spec wants
+    // scroll alone to drive the knot there. Matched as `pointer: fine` rather
+    // than negated `pointer: coarse`, so a device reporting neither falls to
+    // the scroll-only side. Re-evaluated per attach, which happens on every
+    // viewport re-entry, so a hybrid device is picked up without a listener.
+    if (matchMedia('(pointer: fine)').matches) {
+      addEventListener('mousemove', onPointerMove, { passive: true })
+    }
+
     addEventListener('scroll', onScroll, { passive: true })
   }
 
