@@ -77,6 +77,31 @@ const staticNavLinks = [
 </html>
 
 <style is:global>
+  /*
+   * One timing for every view transition on the site. `(*)` covers `root` as
+   * well as the named groups, so the page cross-fade and the /work card morph
+   * run to the same clock: naming only the groups left the outgoing page gone
+   * at the UA default 250ms while the morph still had 230ms to run.
+   *
+   * Astro only emits its own reduced-motion override on pages that use a
+   * transition directive, and these durations are site-wide, so carry the
+   * guard here rather than relying on that.
+   */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 480ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+
   .static-primary-nav {
     position: fixed;
     z-index: 50;
