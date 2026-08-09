@@ -76,7 +76,14 @@ export default function NavPill() {
   useEffect(() => {
     setPathname(window.location.pathname)
 
-    const handler = () => setPathname(window.location.pathname)
+    // Also collapse on every client-side navigation. Closing on link click
+    // alone is not enough: view transitions can carry this island across the
+    // swap with its state intact, which left the pill stuck open after a
+    // selection.
+    const handler = () => {
+      setPathname(window.location.pathname)
+      setIsOpen(false)
+    }
     document.addEventListener('astro:page-load', handler)
     return () => document.removeEventListener('astro:page-load', handler)
   }, [])
@@ -86,7 +93,13 @@ export default function NavPill() {
       ref={containerRef}
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
-      onClick={() => setIsOpen(true)}
+      // Hover owns the pill on desktop. Touch has no hover and the static nav
+      // is hidden whenever JS runs, so a tap is the only way in there: open on
+      // a non-mouse press, and only while closed, so tapping a link in an open
+      // pill navigates instead of re-opening it.
+      onPointerDown={(e) => {
+        if (e.pointerType !== 'mouse' && !isOpen) setIsOpen(true)
+      }}
       animate={{ width: isOpen ? 480 : 100 }}
       transition={{
         type: 'spring',
@@ -150,6 +163,7 @@ export default function NavPill() {
                   <motion.a
                     key={label}
                     href={href}
+                    onClick={() => setIsOpen(false)}
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 4 }}
