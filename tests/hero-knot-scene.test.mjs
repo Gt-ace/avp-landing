@@ -1,9 +1,167 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
+import * as motion from '../src/scripts/hero-knot-motion.mjs'
 
 const read = (relative) =>
   readFile(new URL(relative, import.meta.url), 'utf8')
+
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
+
+async function runFailedMount(failure) {
+  const source = await read('../src/components/HeroKnot.astro')
+  const script = source.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1]
+  assert.ok(script, 'the component has an executable client script')
+
+  const executable = script
+    .replace(
+      /import\s*\{([\s\S]*?)\}\s*from\s*['"]\.\.\/scripts\/hero-knot-motion\.mjs['"]/,
+      'const {$1} = motion'
+    )
+    .replace(/await import\(['"]three['"]\)/, 'await importThree()')
+
+  const events = []
+  const disposable = (name) => ({
+    dispose() {
+      events.push(`${name}:dispose`)
+    },
+  })
+
+  class TorusKnotGeometry {
+    dispose() {
+      events.push('knot:dispose')
+    }
+  }
+
+  class WireframeGeometry {
+    constructor() {
+      Object.assign(this, disposable('geometry'))
+    }
+  }
+
+  class LineBasicMaterial {
+    constructor() {
+      Object.assign(this, disposable('material'))
+    }
+  }
+
+  class LineSegments {
+    position = { set() {} }
+    rotation = { x: 0, y: 0, set() {} }
+  }
+
+  class Scene {
+    add() {}
+  }
+
+  class PerspectiveCamera {
+    position = { set() {}, setZ() {} }
+    updateProjectionMatrix() {}
+  }
+
+  class WebGLRenderer {
+    constructor() {
+      if (failure === 'renderer') throw new Error('renderer failed')
+    }
+    setPixelRatio() {}
+    render() {}
+    setSize() {}
+    forceContextLoss() {
+      events.push('renderer:forceContextLoss')
+    }
+    dispose() {
+      events.push('renderer:dispose')
+    }
+  }
+
+  class ResizeObserver {
+    observe() {
+      if (failure === 'resize-observe') throw new Error('resize observe failed')
+    }
+    disconnect() {
+      events.push('resize-observer:disconnect')
+    }
+  }
+
+  class IntersectionObserver {
+    observe() {
+      if (failure === 'viewport-observe') {
+        throw new Error('viewport observe failed')
+      }
+    }
+    disconnect() {
+      events.push('viewport-observer:disconnect')
+    }
+  }
+
+  const hero = { clientWidth: 1200, clientHeight: 700 }
+  const canvas = { dataset: {}, parentElement: hero }
+  let queries = 0
+  const document = {
+    querySelector() {
+      queries += 1
+      return queries === 1 ? null : canvas
+    },
+    createElement() {
+      return {
+        getContext() {
+          return {
+            getExtension() {
+              return { loseContext() {} }
+            },
+          }
+        },
+      }
+    },
+    addEventListener() {},
+  }
+
+  const makeComponent = new AsyncFunction(
+    'motion',
+    'importThree',
+    'document',
+    'matchMedia',
+    'ResizeObserver',
+    'IntersectionObserver',
+    'requestAnimationFrame',
+    'cancelAnimationFrame',
+    'addEventListener',
+    'removeEventListener',
+    'innerWidth',
+    'innerHeight',
+    'devicePixelRatio',
+    'scrollY',
+    `${executable}\nreturn { mount }`
+  )
+
+  const component = await makeComponent(
+    motion,
+    async () => ({
+      LineBasicMaterial,
+      LineSegments,
+      PerspectiveCamera,
+      Scene,
+      TorusKnotGeometry,
+      WebGLRenderer,
+      WireframeGeometry,
+    }),
+    document,
+    () => ({ matches: false }),
+    ResizeObserver,
+    IntersectionObserver,
+    () => 1,
+    () => {},
+    () => {},
+    () => {},
+    1200,
+    700,
+    2,
+    0
+  )
+
+  await component.mount()
+  return events
+}
 
 test('the knot canvas is decorative and unreachable by keyboard', async () => {
   const source = await read('../src/components/HeroKnot.astro')
@@ -245,6 +403,34 @@ test('a failed chunk fetch or renderer construction renders nothing quietly', as
   assert.match(mount, /teardown\(\)/, 'a partial build is released on failure')
 })
 
+test('a failed scene build releases every resource acquired before the failure', async () => {
+  const rendererFailure = await runFailedMount('renderer')
+  assert.ok(
+    rendererFailure.includes('geometry:dispose'),
+    'geometry acquired before renderer construction must belong to teardown'
+  )
+  assert.ok(
+    rendererFailure.includes('material:dispose'),
+    'material acquired before renderer construction must belong to teardown'
+  )
+
+  const resizeFailure = await runFailedMount('resize-observe')
+  assert.ok(resizeFailure.includes('renderer:forceContextLoss'))
+  assert.ok(resizeFailure.includes('renderer:dispose'))
+  assert.ok(
+    resizeFailure.includes('resize-observer:disconnect'),
+    'the resize observer must belong to teardown before observe() can throw'
+  )
+
+  const viewportFailure = await runFailedMount('viewport-observe')
+  assert.ok(viewportFailure.includes('renderer:dispose'))
+  assert.ok(viewportFailure.includes('resize-observer:disconnect'))
+  assert.ok(
+    viewportFailure.includes('viewport-observer:disconnect'),
+    'the viewport observer must belong to teardown before observe() can throw'
+  )
+})
+
 test('the observer is the only thing that triggers a resize', async () => {
   const source = await read('../src/components/HeroKnot.astro')
   const build = source.slice(
@@ -256,7 +442,7 @@ test('the observer is the only thing that triggers a resize', async () => {
   assert.equal(
     calls.length,
     0,
-    'ResizeObserver fires on observe(); an explicit call would double-fire a function that now restarts the loop'
+    'ResizeObserver delivers the initial measurement; an explicit call would duplicate the initial draw'
   )
   assert.match(build, /observer\.observe\(hero\)/)
 })

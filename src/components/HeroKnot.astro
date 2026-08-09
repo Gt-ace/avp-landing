@@ -195,6 +195,7 @@
       3
     )
     const geometry = new WireframeGeometry(knot)
+    token.geometry = geometry
     // Only the wireframe is drawn; the solid knot would otherwise hold a GPU
     // buffer for the life of the page.
     knot.dispose()
@@ -204,6 +205,7 @@
       transparent: true,
       opacity: OPACITY,
     })
+    token.material = material
 
     const lines = new LineSegments(geometry, material)
     lines.position.set(placement.x, placement.y, 0)
@@ -216,6 +218,7 @@
     camera.position.set(0, 0, placement.cameraZ)
 
     const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true })
+    token.renderer = renderer
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
 
     const draw = () => renderer.render(scene, camera)
@@ -238,6 +241,7 @@
     }
 
     const observer = new ResizeObserver(resize)
+    token.observer = observer
     observer.observe(hero)
 
     const viewport = new IntersectionObserver(
@@ -257,17 +261,13 @@
       },
       { threshold: 0 }
     )
+    token.viewport = viewport
     viewport.observe(hero)
 
     Object.assign(token, {
-      renderer,
-      geometry,
-      material,
       scene,
       camera,
       lines,
-      observer,
-      viewport,
       draw,
     })
 
