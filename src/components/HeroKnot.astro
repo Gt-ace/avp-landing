@@ -1,0 +1,79 @@
+---
+---
+<style>
+  .hero-knot {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  import {
+    BASE_POSE,
+    getPlacement,
+    getSegmentCounts,
+    shouldRender,
+  } from '../scripts/hero-knot-motion.mjs'
+
+  const INK = 0x1a1a1f
+  const OPACITY = 0.55
+
+  /** The live scene, or null. Phase 3 reads and extends this record. */
+  let current = null
+
+  function hasWebGL() {
+    try {
+      const probe = document.createElement('canvas')
+      const gl = probe.getContext('webgl2') || probe.getContext('webgl')
+      if (!gl) return false
+      // Release the probe's context immediately: it counts against the same
+      // per-browser context cap this detection exists to protect.
+      gl.getExtension('WEBGL_lose_context')?.loseContext()
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  async function mount() {
+    const canvas = document.querySelector('canvas[data-hero-knot]')
+    if (!canvas || canvas.dataset.knotMounted === 'true') return
+
+    // Set synchronously, before any await, so a double fire cannot race
+    // through the gate and construct two renderers.
+    canvas.dataset.knotMounted = 'true'
+
+    const prefersReducedMotion = matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches
+
+    if (shouldRender(prefersReducedMotion, hasWebGL()) === 'none') return
+
+    await buildScene(canvas)
+  }
+
+  async function buildScene(canvas) {
+    const { WireframeGeometry, LineSegments, LineBasicMaterial } =
+      await import('three')
+    const placement = getPlacement(innerWidth, innerHeight)
+    const segments = getSegmentCounts(innerWidth)
+    void canvas
+    void BASE_POSE
+    void placement
+    void segments
+    void WireframeGeometry
+    void LineSegments
+    void LineBasicMaterial
+    void INK
+    void OPACITY
+  }
+
+  mount()
+</script>
+
+<canvas class="hero-knot" data-hero-knot aria-hidden="true" />
