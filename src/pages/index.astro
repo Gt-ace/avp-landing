@@ -96,12 +96,12 @@ const faqs = [
   <section class="bigtype" aria-hidden="true">
     <div class="bigtype-line" data-speed="-0.35">
       <div class="bigtype-shift" data-bigtype-shift>
-        <BigTypeRoll text="DESIGN BUILD" client:visible />
+        <BigTypeRoll text="DESIGN BUILD" client:media="(hover: hover) and (pointer: fine)" />
       </div>
     </div>
     <div class="bigtype-line" data-speed="0.35">
       <div class="bigtype-shift" data-bigtype-shift>
-        <BigTypeRoll text="AUTOMATE RUN" center client:visible />
+        <BigTypeRoll text="AUTOMATE RUN" center client:media="(hover: hover) and (pointer: fine)" />
       </div>
     </div>
   </section>
@@ -156,6 +156,7 @@ const faqs = [
       document.querySelectorAll<HTMLElement>('.bigtype-line')
     )
     if (!lines.length) return
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     let ticking = false
     const update = () => {
@@ -165,9 +166,16 @@ const faqs = [
         const rect = line.getBoundingClientRect()
         const lineCenter = rect.top + rect.height / 2
         const speed = parseFloat(line.dataset.speed || '0')
-        const shift = calculateBigtypeShift(lineCenter, vh, innerWidth, speed)
         const shiftTarget = line.querySelector<HTMLElement>('[data-bigtype-shift]')
-        shiftTarget?.style.setProperty('--shift', `${shift}px`)
+        if (!shiftTarget) continue
+        const shift = calculateBigtypeShift(
+          lineCenter,
+          vh,
+          innerWidth,
+          speed,
+          shiftTarget.getBoundingClientRect().width
+        )
+        shiftTarget.style.setProperty('--shift', `${shift}px`)
       }
     }
     const onScroll = () => {
@@ -177,6 +185,9 @@ const faqs = [
     }
 
     addEventListener('scroll', onScroll, { passive: true })
+    // A resize changes the slack, so a shift parked from the last scroll can
+    // outgrow it. Re-clamp on resize rather than wait for the next scroll.
+    addEventListener('resize', onScroll, { passive: true })
     update()
   }
 
@@ -415,9 +426,32 @@ const faqs = [
     will-change: transform;
   }
 
+  /*
+   * The roll stacks an incoming copy of the word over the base one and relies
+   * on Framer's `initial` variant to hold it below the mask. That variant is
+   * not emitted server-side, so an unhydrated island paints both copies on top
+   * of each other. Since the islands deliberately never hydrate on touch, that
+   * is the permanent phone rendering: park the incoming layer in CSS instead.
+   * Framer writes inline transforms on these spans once it hydrates, which win
+   * over this rule.
+   */
+  :global(.bigtype-roll [data-roll-layer='incoming'] > span) {
+    transform: translateY(100%);
+  }
+
   :global(.bigtype-roll) {
     font-family: var(--font-display);
-    font-size: clamp(4.5rem, 16vw, 15rem);
+    /*
+     * Sized against the wider line: AUTOMATE RUN measures 8.49x its font size
+     * in Bodoni Moda 600 with per-character inline-blocks, so 90vw / 8.49
+     * lands it at 90% of the viewport, leaving a 5% gutter each side for the
+     * scroll drift to spend. The old 4.5rem floor outran the viewport below
+     * ~450px and held the line at its desktop width on a phone, which is what
+     * clipped both ends; this floor only engages under 264px, so the viewport
+     * term governs everywhere a real phone reaches and the line cannot
+     * overflow. The ceiling is set so it takes over at the same 90% span.
+     */
+    font-size: clamp(1.75rem, 10.6vw, 13rem);
     font-weight: 600;
     font-optical-sizing: none;
     line-height: 0.95;
