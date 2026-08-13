@@ -75,7 +75,7 @@ const TextRoll: React.FC<{
         .filter(Boolean)
         .join(" ")}
     >
-      <div>
+      <div data-roll-layer="base">
         {children.split("").map((l, i) => {
           const delay = center
             ? STAGGER * Math.abs(i - (children.length - 1) / 2)
@@ -95,7 +95,7 @@ const TextRoll: React.FC<{
                 ease: "easeInOut",
                 delay,
               }}
-              className="inline-block"
+              className="inline-block whitespace-pre"
               key={i}
             >
               {l}
@@ -103,7 +103,7 @@ const TextRoll: React.FC<{
           );
         })}
       </div>
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" data-roll-layer="incoming">
         {children.split("").map((l, i) => {
           const delay = center
             ? STAGGER * Math.abs(i - (children.length - 1) / 2)
@@ -123,7 +123,7 @@ const TextRoll: React.FC<{
                 ease: "easeInOut",
                 delay,
               }}
-              className="inline-block"
+              className="inline-block whitespace-pre"
               key={i}
             >
               {l}
