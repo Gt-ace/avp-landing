@@ -7,8 +7,26 @@ const read = (relative) => readFile(new URL(relative, import.meta.url), 'utf8')
 test('the pill opens on hover and closes when the pointer leaves', async () => {
   const source = await read('../src/components/NavPill.tsx')
 
-  assert.match(source, /onMouseEnter=\{\(\) => setIsOpen\(true\)\}/)
-  assert.match(source, /onMouseLeave=\{\(\) => setIsOpen\(false\)\}/)
+  assert.match(source, /onMouseEnter=\{\(\) => pointerIsMouse\.current && setIsOpen\(true\)\}/)
+  assert.match(source, /onMouseLeave=\{\(\) => pointerIsMouse\.current && setIsOpen\(false\)\}/)
+})
+
+test('an emulated hover from a tap cannot cancel the tap that caused it', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  // A touch screen fires mouseenter before click. Ungated, hover opened the
+  // pill and the button's click toggled it shut again on the same tap, so the
+  // menu never opened on a phone at all.
+  assert.match(
+    source,
+    /onPointerEnter=\{\(e\) => \(pointerIsMouse\.current = e\.pointerType === 'mouse'\)\}/,
+    'the real input type has to be recorded before the emulated mouse events land'
+  )
+  assert.match(
+    source,
+    /const pointerIsMouse = useRef\(true\)/,
+    'defaulting to true keeps hover working on a mouse that never fired a pointerenter'
+  )
 })
 
 test('a mouse click never opens the pill', async () => {
@@ -29,10 +47,22 @@ test('a mouse click never opens the pill', async () => {
 test('selecting a link collapses the pill', async () => {
   const source = await read('../src/components/NavPill.tsx')
 
+  // The row and the stacked panel render the same NavLink, so the close runs
+  // through one `onSelect` prop rather than an inline handler per link.
   assert.match(
     source,
-    /href=\{href\}\s*\n\s*onClick=\{\(\) => setIsOpen\(false\)\}/,
+    /href=\{href\}\s*\n\s*onClick=\{onSelect\}/,
     'each nav link closes the pill on click'
+  )
+  assert.match(
+    source,
+    /onSelect=\{\(\) => setIsOpen\(false\)\}/,
+    'and the only thing passed as onSelect is the close'
+  )
+  assert.doesNotMatch(
+    source,
+    /onSelect=\{[^}]*\}\s*\n[\s\S]*?onSelect=\{/,
+    'a second call site could pass something that does not close'
   )
 })
 
@@ -48,4 +78,123 @@ test('client-side navigation collapses the pill', async () => {
     /setIsOpen\(false\)/,
     'view transitions can carry this island across a swap with its state intact'
   )
+})
+
+test('tapping outside the pill closes it', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  assert.match(
+    source,
+    /containerRef\.current\?\.contains\(e\.target as Node\)\) setIsOpen\(false\)/,
+    'touch has no hover, so an outside tap is the only way back to closed'
+  )
+})
+
+test('the optical cap-height match between the A and the V or P survives', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  assert.match(source, /const A_HEIGHT = 15\b/)
+  assert.match(source, /const VP_HEIGHT = 28\b/)
+  assert.match(
+    source,
+    /fills ~92% of its frame height/,
+    'the reason these two numbers differ has to stay next to them'
+  )
+})
+
+test('a disclosure button announces the menu and its state', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+  const button = source.slice(source.indexOf('<button'), source.indexOf('</button>'))
+
+  assert.notEqual(button, '', 'the control has to be a real button, not a div')
+  assert.match(
+    button,
+    /aria-expanded=\{isOpen\}/,
+    'screen readers get the open state from the control, not from the animation'
+  )
+  assert.match(button, /aria-label=/, 'the button labels itself: its content is letterforms')
+  assert.doesNotMatch(
+    button,
+    /tabIndex=\{-1\}/,
+    'a native button is already tab-reachable; do not take that away'
+  )
+})
+
+test('the chevron marks the pill as openable and reports state', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  assert.match(
+    source,
+    /function Chevron/,
+    'an authored SVG, not a unicode glyph standing in for an icon'
+  )
+  assert.match(
+    source,
+    /rotate: isOpen \? 180 : 0/,
+    'the glyph has to move with the state it reports'
+  )
+})
+
+test('Escape closes the menu and hands focus back to the button', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  assert.match(source, /e\.key === 'Escape'/)
+  assert.match(
+    source,
+    /buttonRef\.current\?\.focus\(\)/,
+    'closing without moving focus strands the keyboard user inside a collapsed pill'
+  )
+})
+
+test('focus leaving the pill closes it', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  assert.match(
+    source,
+    /onBlur=\{\(e\) =>/,
+    'the keyboard counterpart of the outside-tap handler'
+  )
+  assert.match(source, /shouldCloseOnFocusOut\(/)
+})
+
+test('every interactive target clears the 44px floor', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  assert.match(source, /export const TOUCH_TARGET = 44\b/)
+  assert.match(
+    source,
+    /minWidth: TOUCH_TARGET,\s*\n\s*minHeight: TOUCH_TARGET,/,
+    'the A and P are home links, so they need the floor in both directions'
+  )
+  assert.match(
+    source,
+    /minHeight: stacked \? MOBILE_ROW_HEIGHT : TOUCH_TARGET,\s*\n\s*minWidth: TOUCH_TARGET,/,
+    'the nav links need the floor in both directions too, stacked or in a row'
+  )
+  assert.doesNotMatch(
+    source,
+    /padding: '0 1rem',\s*\n\s*display: 'block',/,
+    'the old link box was an 11px line box inside a 40px pill'
+  )
+})
+
+test('the links cannot overlap the letterforms on a narrow screen', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  assert.doesNotMatch(
+    source,
+    /animate=\{\{ width: isOpen \? 480 : 100 \}\}/,
+    'a hard 480 clamped to calc(100vw - 32px) collided with the A and P at 320px'
+  )
+  assert.match(
+    source,
+    /getPillGeometry\(\{/,
+    'one function owns width, height and radius for all three states'
+  )
+})
+
+test('motion is skipped for visitors who ask for less of it', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  assert.match(source, /useReducedMotion/, 'the pill now animates height as well as width')
 })
