@@ -25,6 +25,55 @@ const displayImages =
         { length: 3 },
         (_, i) => project.images[i % project.images.length]
       )
+
+// Video tier selection for the showcase video below. `media` on `<source>` left
+// the HTML spec in 2014 and only Safari still honours it, so Chrome and Firefox
+// ignored the old min-width queries and phones downloaded the 5.9MB desktop
+// encode. The markup now ships the mobile encode to everyone and this upgrades a
+// wide viewport, keeping the same 768px breakpoint as DESKTOP_VIDEO_QUERY in
+// `src/components/work-card-stack/WorkProjectCard.tsx`.
+//
+// Carried as a string through `set:html` because an `is:inline` script's body is
+// raw text: written as JSX children the surrounding backticks ship literally and
+// the whole block is a syntax error.
+const videoTierScript = `(function () {
+  var upgrade = function () {
+    var video = document.querySelector('[data-detail-video]')
+    // The tier marker also makes this idempotent, which matters because the
+    // view-transition swap can re-run this script against the same element.
+    if (!video || video.dataset.videoTier) return
+    if (!window.matchMedia('(min-width: 768px)').matches) {
+      video.dataset.videoTier = 'mobile'
+      return
+    }
+
+    var sources = []
+    if (video.dataset.desktopWebm) sources.push([video.dataset.desktopWebm, 'video/webm'])
+    if (video.dataset.desktopMp4) sources.push([video.dataset.desktopMp4, 'video/mp4'])
+    if (!sources.length) return
+
+    video.textContent = ''
+    sources.forEach(function (pair) {
+      var source = document.createElement('source')
+      source.src = pair[0]
+      source.type = pair[1]
+      video.appendChild(source)
+    })
+    video.dataset.videoTier = 'desktop'
+    // load() resets the element, and with it the autoplay the attribute would
+    // have granted, so playback is re-asked for. Muted, so it stays allowed.
+    video.load()
+    video.play().catch(function () {})
+  }
+
+  upgrade()
+  // /work morphs into this page through the view-transition router, which swaps
+  // the body instead of loading a document, so a swapped-in video needs this too.
+  if (!window.__avpDetailVideoTierHooked) {
+    window.__avpDetailVideoTierHooked = true
+    document.addEventListener('astro:page-load', upgrade)
+  }
+})()`
 ---
 <BaseLayout title={`${project.title} | AVP Software`}>
   <div class="detail-layout">
@@ -70,24 +119,34 @@ const displayImages =
 
     <div class="detail-right">
       {project.video && (
-        <video
-          class="detail-video"
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="metadata"
-          poster={project.video.poster}
-        >
-          {project.video.desktopWebm && (
-            <source src={project.video.desktopWebm} type="video/webm" media="(min-width: 768px)" />
-          )}
-          <source src={project.video.desktopMp4} type="video/mp4" media="(min-width: 768px)" />
-          {project.video.mobileWebm && (
-            <source src={project.video.mobileWebm} type="video/webm" />
-          )}
-          <source src={project.video.mobileMp4} type="video/mp4" />
-        </video>
+        <Fragment>
+          {/*
+            The markup ships the mobile encode to every client. `media` on
+            <source> left the HTML spec in 2014, so Chrome and Firefox ignored
+            the old min-width queries and phones downloaded the desktop file.
+            The script below upgrades a wide viewport, and it is `is:inline` on
+            purpose: a bundled script is deferred, so `autoplay` would already
+            be pulling the mobile body and desktop would pay for both files.
+          */}
+          <video
+            class="detail-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            poster={project.video.poster}
+            data-detail-video
+            data-desktop-webm={project.video.desktopWebm}
+            data-desktop-mp4={project.video.desktopMp4}
+          >
+            {project.video.mobileWebm && (
+              <source src={project.video.mobileWebm} type="video/webm" />
+            )}
+            <source src={project.video.mobileMp4} type="video/mp4" />
+          </video>
+          <script is:inline set:html={videoTierScript} />
+        </Fragment>
       )}
       {displayImages.map((src, i) => (
         <img

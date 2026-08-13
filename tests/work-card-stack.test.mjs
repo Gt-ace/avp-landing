@@ -19,7 +19,11 @@ test('work project card keeps its playback control outside the semantic link', a
   assert.match(source, /card\.media\.kind === ['"]image['"] /)
   assert.match(source, /<video/)
   assert.match(source, /poster=\{card\.media\.poster\}/)
-  assert.match(source, /mobileMp4[\s\S]*fallbackWebm/)
+  // Sources used to be one flat list ending in `fallbackWebm` (which is the
+  // *desktop* webm), so a phone that fell past the mp4 landed on 5.9MB. The
+  // list is resolved per tier now, so the card must not reach for that field.
+  assert.match(source, /resolveWorkVideoSources\(card\.media, wideViewport\)/)
+  assert.doesNotMatch(source, /fallbackWebm/)
   assert.match(source, /aria-hidden="true"[\s\S]*\{card\.title\}/)
   assert.match(source, /data-work-video-toggle/)
   assert.match(source, /Pause preview/)
@@ -354,5 +358,125 @@ test('the video is excluded from the morph entirely, on both sides', async () =>
     detail,
     /<div transition:name=\{`image-\$\{project\.slug\}`\}/,
     'the detail video must not be wrapped in a named div either',
+  )
+})
+
+test('no video call site uses the dead `media` attribute to pick a file', async () => {
+  const [card, detail] = await Promise.all(
+    [
+      '../src/components/work-card-stack/WorkProjectCard.tsx',
+      '../src/pages/work/[slug].astro',
+    ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')),
+  )
+
+  // `media` on <source> inside <video> left the HTML spec in 2014. Chrome and
+  // Firefox ignore it and fall through to the first playable `type`, which is
+  // how phones ended up downloading the 5.9MB desktop encode. Only Safari
+  // still honours it, which is why the bug stayed invisible on iOS.
+  for (const [name, source] of [['work card', card], ['detail page', detail]]) {
+    assert.doesNotMatch(
+      source,
+      /<source\b[^>]*\bmedia=/,
+      `${name} must not select a video source with the \`media\` attribute`,
+    )
+    assert.doesNotMatch(
+      source,
+      /media="\(min-width/,
+      `${name} must not carry a leftover min-width source query`,
+    )
+  }
+})
+
+test('both video call sites resolve their tier from the same matchMedia query', async () => {
+  const [card, detail] = await Promise.all(
+    [
+      '../src/components/work-card-stack/WorkProjectCard.tsx',
+      '../src/pages/work/[slug].astro',
+    ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')),
+  )
+
+  // Two call sites, one breakpoint. If they drift, a viewport width exists
+  // where the listing and the detail page disagree about which file to serve.
+  assert.match(
+    card,
+    /export const DESKTOP_VIDEO_QUERY = '\(min-width: 768px\)'/,
+    'the card owns the canonical query',
+  )
+  assert.match(card, /matchMedia\(DESKTOP_VIDEO_QUERY\)/)
+  assert.match(
+    detail,
+    /matchMedia\('\(min-width: 768px\)'\)/,
+    'the detail page script must use the same breakpoint',
+  )
+})
+
+test('the markup default is the mobile encode, and desktop is the JS upgrade', async () => {
+  const [card, detail] = await Promise.all(
+    [
+      '../src/components/work-card-stack/WorkProjectCard.tsx',
+      '../src/pages/work/[slug].astro',
+    ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')),
+  )
+
+  // Pre-hydration, and for clients with JS off, whatever the markup names is
+  // what gets fetched. Naming the mobile encode there makes the failure mode
+  // "a desktop visitor sees a 720p preview" instead of "a phone eats 5.9MB".
+  assert.match(
+    card,
+    /export function resolveWorkVideoSources/,
+    'tier resolution must be a named, testable function',
+  )
+  assert.match(card, /useState\(false\)/)
+  assert.doesNotMatch(
+    detail,
+    /<source[^>]*project\.video\.desktop(Webm|Mp4)/,
+    'the detail markup must not render a desktop <source>',
+  )
+  assert.match(detail, /<source src=\{project\.video\.mobileMp4\}/)
+  assert.match(
+    detail,
+    /data-desktop-mp4=\{project\.video\.desktopMp4\}/,
+    'the desktop encode reaches the client as data, for the script to opt into',
+  )
+})
+
+test('the detail video keeps autoplaying inline and muted after the tier swap', async () => {
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  // Swapping <source> children does nothing until the element re-runs its
+  // resource selection algorithm, and an explicit load() clears the autoplay
+  // the attribute would have given us, so playback has to be re-asked for.
+  assert.match(detail, /\bautoplay\b/)
+  assert.match(detail, /\bmuted\b/)
+  assert.match(detail, /\bplaysinline\b/)
+  assert.match(detail, /video\.load\(\)/)
+  assert.match(detail, /video\.play\(\)/)
+  // A bundled Astro <script> is deferred, so `autoplay` would already be
+  // pulling the mobile body before the swap and desktop would pay for both
+  // files. `is:inline` runs the moment the parser passes the video.
+  assert.match(detail, /<script is:inline\b/)
+  // An is:inline body is raw text, so the script has to arrive as a string:
+  // written as JSX children the backticks ship literally and it never parses.
+  assert.match(detail, /set:html=\{videoTierScript\}/)
+  assert.match(detail, /const videoTierScript = `/)
+})
+
+test('the tier swap survives an Astro view-transition navigation', async () => {
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  // /work morphs into this page through the view-transition router, which
+  // swaps the body rather than loading a document. Without astro:page-load the
+  // swapped-in video keeps whatever tier the markup shipped.
+  assert.match(detail, /astro:page-load/)
+  assert.match(
+    detail,
+    /dataset\.videoTier/,
+    'the swap must be idempotent, since the script may run again per navigation',
   )
 })

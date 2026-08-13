@@ -1,6 +1,39 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { RefObject } from 'react'
-import type { WorkCard } from './work-card-model'
+import type { WorkCard, WorkVideoMedia } from './work-card-model'
+
+/**
+ * `media` on the `<source>` children of a video element left the HTML spec in
+ * 2014. Chrome and Firefox ignore it and fall through to the first source whose
+ * `type` they can play, so a desktop-first list handed phones 5.9MB. Only
+ * Safari still honours the query, which is why the waste stayed invisible on
+ * iOS. The tier is JS work now, off this one query, shared with the detail
+ * page at `src/pages/work/[slug].astro`.
+ */
+export const DESKTOP_VIDEO_QUERY = '(min-width: 768px)'
+
+export interface WorkVideoSource {
+  src: string
+  type: string
+}
+
+/**
+ * One tier's sources, in `type` preference order. Never mixes tiers: the old
+ * flat list ended in the model's last-resort webm, which is the desktop encode,
+ * so a phone that fell past the mp4 paid the full desktop cost anyway.
+ */
+export function resolveWorkVideoSources(
+  media: WorkVideoMedia,
+  wideViewport: boolean,
+): WorkVideoSource[] {
+  const webm = wideViewport ? media.desktopWebm : media.mobileWebm
+  const mp4 = wideViewport ? media.desktopMp4 : media.mobileMp4
+
+  return [
+    ...(webm ? [{ src: webm, type: 'video/webm' }] : []),
+    { src: mp4, type: 'video/mp4' },
+  ]
+}
 
 interface WorkProjectCardProps {
   card: WorkCard
@@ -16,6 +49,27 @@ export default function WorkProjectCard({
   videoRef,
 }: WorkProjectCardProps) {
   const [videoPlaying, setVideoPlaying] = useState(false)
+  // Starts narrow so the server markup, and any client without JS, names the
+  // cheap encode. Resolved once on mount rather than tracked: re-picking on
+  // every resize past 768px would re-download megabytes and restart playback
+  // mid-scroll, which nobody asked for.
+  const [wideViewport, setWideViewport] = useState(false)
+
+  useEffect(() => {
+    setWideViewport(window.matchMedia(DESKTOP_VIDEO_QUERY).matches)
+  }, [])
+
+  // Swapping <source> children is inert until the element re-runs its resource
+  // selection algorithm, so the upgrade has to ask for it. Only ever fires
+  // going narrow -> wide, i.e. once, on a desktop client.
+  useEffect(() => {
+    const video = videoRef?.current
+    if (!wideViewport || !video) return
+
+    const wasPlaying = !video.paused
+    video.load()
+    if (wasPlaying) video.play().catch(() => video.pause())
+  }, [wideViewport, videoRef])
 
   const toggleVideoPlayback = () => {
     const video = videoRef?.current
@@ -57,24 +111,10 @@ export default function WorkProjectCard({
             onPlay={() => setVideoPlaying(true)}
             onPause={() => setVideoPlaying(false)}
           >
-            {card.media.desktopWebm && (
-              <source
-                src={card.media.desktopWebm}
-                type="video/webm"
-                media="(min-width: 768px)"
-              />
-            )}
-            <source
-              src={card.media.desktopMp4}
-              type="video/mp4"
-              media="(min-width: 768px)"
-            />
-            {card.media.mobileWebm && (
-              <source src={card.media.mobileWebm} type="video/webm" />
-            )}
-            <source src={card.media.mobileMp4} type="video/mp4" />
-            {card.media.fallbackWebm && (
-              <source src={card.media.fallbackWebm} type="video/webm" />
+            {resolveWorkVideoSources(card.media, wideViewport).map(
+              ({ src, type }) => (
+                <source key={src} src={src} type={type} />
+              ),
             )}
           </video>
         )}

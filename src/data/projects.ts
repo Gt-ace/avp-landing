@@ -15,9 +15,14 @@ export interface Project {
   previewImages?: string[]
   /**
    * Optional showcase video. Renders above the screenshots on the detail page.
-   * Each source is optional so we can add a webm only once it's actually
-   * smaller than its mp4 sibling (webm-first ordering means the browser eats
-   * the first match, so a bloated webm would defeat the purpose).
+   *
+   * The desktop/mobile split is chosen in JS off `matchMedia`, never by `media`
+   * on `<source>`: that attribute left the HTML spec in 2014 and only Safari
+   * still honours it, so leaning on it shipped the desktop encode to every
+   * Chrome and Firefox phone. Within one tier, ordering does still matter,
+   * because the browser takes the first source whose `type` it can play. That
+   * is why each webm is optional: add one only once it is genuinely smaller
+   * than its mp4 sibling, or listing it first makes the transfer worse.
    */
   video?: {
     desktopWebm?: string
