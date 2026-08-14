@@ -198,3 +198,44 @@ test('motion is skipped for visitors who ask for less of it', async () => {
 
   assert.match(source, /useReducedMotion/, 'the pill now animates height as well as width')
 })
+
+test('the letterform frames still carry the cap-height match', async () => {
+  // A_HEIGHT and VP_HEIGHT are set against how much of its own frame each file
+  // fills: the A is cropped to its ink, while the V and P sit inside a 2048
+  // square and fill about half of it. Changing a frame silently changes the
+  // rendered cap height, so the frames are part of the pill's contract.
+  const a = await read('../public/logo-mark.svg')
+  assert.match(a, /viewBox="467 502 1114 1042"/)
+
+  for (const file of ['../public/v.svg', '../public/p.svg']) {
+    const source = await read(file)
+    assert.match(source, /width="2048px" height="2048px"/, `${file} left its square frame`)
+    assert.match(source, /viewBox="0 0 2048 2048"/, `${file} left its square frame`)
+  }
+})
+
+test('the ink inside each frame still sits where it was traced', async () => {
+  // The frames above only hold if the ink keeps its place inside them: the
+  // pill centres frames, not glyphs. These are the traced extents; the
+  // tolerance is 4 of the frame's 1024-odd units, which is 0.06px of the 15px
+  // the A is drawn at and 0.11px of the V and P's 28.
+  const extents = [
+    ['../public/logo-mark.svg', 476, 510, 1572, 1536],
+    ['../public/v.svg', 511, 511, 1537, 1536],
+    ['../public/p.svg', 632, 510, 1416, 1536],
+  ]
+
+  for (const [file, x0, y0, x1, y1] of extents) {
+    const source = await read(file)
+    const coords = [...source.matchAll(/d="([^"]*)"/g)].flatMap(([, d]) =>
+      d.match(/-?\d+/g).map(Number)
+    )
+    const xs = coords.filter((_, i) => i % 2 === 0)
+    const ys = coords.filter((_, i) => i % 2 === 1)
+
+    assert.ok(Math.abs(Math.min(...xs) - x0) <= 4, `${file} left edge moved`)
+    assert.ok(Math.abs(Math.min(...ys) - y0) <= 4, `${file} top edge moved`)
+    assert.ok(Math.abs(Math.max(...xs) - x1) <= 4, `${file} right edge moved`)
+    assert.ok(Math.abs(Math.max(...ys) - y1) <= 4, `${file} bottom edge moved`)
+  }
+})

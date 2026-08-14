@@ -586,3 +586,117 @@ test('/work names itself, visibly on a phone and to assistive tech everywhere', 
     /@media \(min-width: 640px\)[\s\S]*?\.work-page-label \{[\s\S]*?clip-path: inset\(50%\)/,
   )
 })
+
+test('the credits list stops being two columns on a phone', async () => {
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  // `1fr 1fr` at every width squeezes an uppercase letterspaced role and its
+  // name into half of a 320px screen, so both wrap to ragged fragments.
+  assert.match(
+    detail,
+    /\.credits-list \{[\s\S]*?grid-template-columns: 1fr 1fr;/,
+    'the wide layout still pairs role and name side by side',
+  )
+
+  const mobileBlock = detail.match(/@media \(max-width: 767px\) \{[\s\S]*$/)?.[0]
+  assert.ok(mobileBlock, 'the mobile breakpoint block must exist')
+  assert.match(
+    mobileBlock,
+    /\.credits-list \{[\s\S]*?grid-template-columns: 1fr;/,
+    'credits must collapse to one column below the layout breakpoint',
+  )
+})
+
+test('the mobile screenshot is the largest image on a phone', async () => {
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  // `min(280px, 50%)` paints a phone screenshot at 195px on a 390px screen:
+  // the one asset that is *about* phones rendered smallest on a phone.
+  const mobileBlock = detail.match(/@media \(max-width: 767px\) \{[\s\S]*$/)?.[0]
+  assert.ok(mobileBlock, 'the mobile breakpoint block must exist')
+
+  const rule = mobileBlock
+    .match(/\.detail-image-mobile \{([\s\S]*?)\}/)?.[1]
+    // Strip comments: the rule is allowed to quote the old sizing in prose.
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+  assert.ok(rule, '.detail-image-mobile must be re-sized at the phone breakpoint')
+
+  const percent = Number(rule.match(/(\d+)%/)?.[1])
+  assert.ok(
+    percent >= 75,
+    `the phone screenshot must claim most of the width, got ${percent}%`,
+  )
+  assert.doesNotMatch(
+    rule,
+    /\b50%/,
+    'the half-width desktop sizing must not survive into the phone block',
+  )
+})
+
+test('a single-image project ships that image once, not three times', async () => {
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  // The old placeholder repeat emitted `Array.from({length: 3}, ...)` of the
+  // same src, so a phone paid three decodes of one desktop-sized asset for no
+  // extra information.
+  assert.doesNotMatch(
+    detail,
+    /Array\.from\(\s*\{\s*length:\s*3/,
+    'no placeholder repeat may re-emit the same image',
+  )
+  assert.doesNotMatch(detail, /displayImages/)
+  assert.match(
+    detail,
+    /\{project\.images\.map\(/,
+    'the detail page renders exactly the images the project declares',
+  )
+})
+
+test('the detail page offers a visible way back to /work', async () => {
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  // The nav pill is the only other route out, and on touch it is small and
+  // easy to miss, so a detail page was a dead end on a phone.
+  assert.match(
+    detail,
+    /<a\s+href="\/work"[\s\S]*?class="detail-back label"/,
+    'a plain link back to the listing must exist in the markup',
+  )
+  assert.match(detail, /\.detail-back \{[\s\S]*?min-height: 44px;/, 'the back link must clear the 44px touch target')
+  assert.doesNotMatch(
+    detail,
+    /\.detail-back[^{]*\{[^}]*display:\s*none/,
+    'the back link must not be hidden at any width',
+  )
+})
+
+test('the mobile detail work keeps the card morph and the nav clearance', async () => {
+  const detail = await readFile(
+    new URL('../src/pages/work/[slug].astro', import.meta.url),
+    'utf8',
+  )
+
+  // Guard rails for the layout work above: the /work card to detail morph from
+  // PR #13 and the fixed-nav clearance both live in this file and are easy to
+  // knock out while moving rules around.
+  assert.match(detail, /transition:name=\{`title-\$\{project\.slug\}`\}/)
+  assert.match(detail, /transition:name=\{i === 0 && !project\.video \? `image-\$\{project\.slug\}` : undefined\}/)
+  assert.match(detail, /transition:animate=\{morph\}/)
+  assert.match(
+    detail,
+    /\.detail-right \{[\s\S]*?padding-top: clamp\(5rem, 10vh, 7rem\);/,
+    'the wide layout must keep clearing the fixed nav pill',
+  )
+})

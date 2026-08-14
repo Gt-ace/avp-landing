@@ -16,15 +16,10 @@ if (!project) {
 
 const morph = fade({ duration: 480 })
 
-// Repeat the single image 3 times for visual richness
-// (placeholder until real screenshots are added to project.images).
-const displayImages =
-  project.video || project.images.length > 1
-    ? project.images
-    : Array.from(
-        { length: 3 },
-        (_, i) => project.images[i % project.images.length]
-      )
+// The gallery used to pad a single-image project out to three copies of that
+// one image "for visual richness". It bought no information and cost a phone
+// three decodes of a desktop-sized asset, so the page now renders exactly what
+// the project declares. A project that wants three screenshots lists three.
 
 // Video tier selection for the showcase video below. `media` on `<source>` left
 // the HTML spec in 2014 and only Safari still honours it, so Chrome and Firefox
@@ -78,6 +73,13 @@ const videoTierScript = `(function () {
 <BaseLayout title={`${project.title} | AVP Software`}>
   <div class="detail-layout">
     <aside class="detail-left">
+      {/*
+        The nav pill was the only route off this page, and on touch it is small
+        and easy to miss, so a detail page read as a dead end on a phone. This
+        sits at the top of the flow, below the fixed pill, at every width.
+      */}
+      <a href="/work" class="detail-back label">&#8592; All work</a>
+
       <span class="label">{project.client}</span>
 
       <h1
@@ -148,7 +150,7 @@ const videoTierScript = `(function () {
           <script is:inline set:html={videoTierScript} />
         </Fragment>
       )}
-      {displayImages.map((src, i) => (
+      {project.images.map((src, i) => (
         <img
           src={src}
           alt={project.title}
@@ -178,6 +180,28 @@ const videoTierScript = `(function () {
     display: flex;
     flex-direction: column;
     gap: 0;
+  }
+
+  .detail-back {
+    /* inline-flex, not inline-block: the label is one short line, so only a
+       box with its own height clears the 44px touch target. */
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 44px;
+    margin-bottom: 0.5rem;
+    color: var(--color-muted);
+    transition: opacity 200ms, color 200ms;
+  }
+
+  .detail-back:hover {
+    color: var(--color-ink);
+    opacity: 0.6;
+  }
+
+  .detail-back:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 4px;
   }
 
   .detail-title {
@@ -295,6 +319,26 @@ const videoTierScript = `(function () {
 
     .detail-credits {
       margin-top: 3rem;
+    }
+
+    .credits-list {
+      /* Two columns put an uppercase letterspaced role and its name into half
+         of a 320px screen, and both wrap to ragged fragments. Stacked, the
+         pair reads as the definition list it already is. */
+      grid-template-columns: 1fr;
+      gap: 0.15rem 0;
+    }
+
+    .credits-list dt:not(:first-of-type) {
+      /* The row gap is gone, so the pairs need their own separation. */
+      margin-top: 0.75rem;
+    }
+
+    .detail-image-mobile {
+      /* min(280px, 50%) painted this at 195px on a 390px screen: the one asset
+         that is about phones, rendered smallest on a phone. */
+      width: min(360px, 86%);
+      margin: 2rem auto;
     }
   }
 </style>
