@@ -31,11 +31,18 @@ const logos: Logo[] = [
   <span class="logo-marquee-label">{label}</span>
   <div class="logo-marquee">
     <div class="logo-track">
+      {/*
+        The second set is the animation's wrap-around copy, so it is hidden
+        from assistive tech and shares its URLs with the first set: 26 tags
+        only ever cost 13 requests. Those requests are deferred because the
+        marquee sits well below the fold on both pages that mount it, and the
+        boxes are fixed-size, so nothing reflows when a logo arrives.
+      */}
       {[0, 1].map((setIndex) => (
         <div class="logo-set" aria-hidden={setIndex === 1 ? 'true' : undefined}>
           {logos.map((logo) => (
             <span class="logo-item" style={logo.w ? `width:${logo.w}px` : undefined}>
-              <img src={logo.src} alt={logo.alt} loading="eager" decoding="async" />
+              <img src={logo.src} alt={logo.alt} loading="lazy" decoding="async" />
             </span>
           ))}
         </div>
@@ -61,10 +68,14 @@ const logos: Logo[] = [
     margin-bottom: 1.5rem;
   }
 
+  /*
+   * The fade is an inset, not a share of the width: at 8% each side it ate
+   * 62px of a 390px phone, which is half a logo box at either end.
+   */
   .logo-marquee {
     overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
   }
 
   .logo-track {
@@ -103,6 +114,16 @@ const logos: Logo[] = [
     }
     to {
       transform: translateX(-50%);
+    }
+  }
+
+  /*
+   * Stopped, the track shows the first set from its start; the wrap-around
+   * copy simply never comes into view.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .logo-track {
+      animation: none;
     }
   }
 </style>

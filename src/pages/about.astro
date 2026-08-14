@@ -19,35 +19,43 @@ import LogoMarquee from '../components/LogoMarquee.astro'
       </p>
     </div>
 
-      <ul class="about-focus">
-        <li><span class="label">Focus</span>Web platforms</li>
-        <li><span class="label">Focus</span>Process automations</li>
-        <li><span class="label">Focus</span>AI-assisted products</li>
+    <div class="about-focus">
+      <span class="label">Focus</span>
+      <ul>
+        <li>Web platforms</li>
+        <li>Process automations</li>
+        <li>AI-assisted products</li>
       </ul>
+    </div>
   </main>
   <LogoMarquee />
 </BaseLayout>
 
 <style>
+  /*
+   * One heading for the list, not one per row: the word was the same on all
+   * three and its fixed 4rem column plus the gap spent 88px of a phone's
+   * width repeating it.
+   */
   .about-focus {
-    list-style: none;
     margin-top: 2.5rem;
+  }
+
+  .about-focus .label {
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .about-focus ul {
+    list-style: none;
     border-top: 1px solid var(--color-border);
   }
 
   .about-focus li {
-    display: flex;
-    align-items: baseline;
-    gap: 1.5rem;
     padding: 1rem 0;
     border-bottom: 1px solid var(--color-border);
     font-family: var(--font-body);
     font-size: 1rem;
     color: var(--color-ink);
-  }
-
-  .about-focus .label {
-    width: 4rem;
-    flex-shrink: 0;
   }
 </style>
