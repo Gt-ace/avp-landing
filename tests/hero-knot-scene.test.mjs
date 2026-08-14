@@ -146,7 +146,9 @@ async function runFailedMount(failure) {
       WireframeGeometry,
     }),
     document,
-    () => ({ matches: false }),
+    // A desktop visitor: no reduced-motion request, and the fine pointer the
+    // render gate requires before it builds anything at all.
+    (query) => ({ matches: query.includes('pointer: fine') }),
     ResizeObserver,
     IntersectionObserver,
     () => 1,
@@ -215,6 +217,25 @@ test('the render gate is consulted before three is fetched', async () => {
     'shouldRender must be called before import(three), or a reduced-motion visitor downloads 129 KB for nothing'
   )
   assert.match(source, /=== 'none'\)\s*return/)
+})
+
+test('the gate is told whether the device has a cursor to follow', async () => {
+  const source = await read('../src/components/HeroKnot.astro')
+  const mount = source.slice(
+    source.indexOf('async function mount'),
+    source.indexOf('async function buildScene')
+  )
+
+  assert.match(
+    mount,
+    /matchMedia\('\(pointer: fine\)'\)\.matches/,
+    'matched positively as fine, like attachInput, so a device reporting neither is read as cursorless'
+  )
+  assert.match(
+    mount,
+    /shouldRender\(prefersReducedMotion, hasWebGL\(\), hasFinePointer\)/,
+    'all three terms reach the gate, which is the only place the policy lives'
+  )
 })
 
 test('the gate reads reduced motion and probes for WebGL', async () => {
