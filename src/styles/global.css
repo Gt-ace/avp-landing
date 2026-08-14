@@ -107,9 +107,67 @@ a {
   font-optical-sizing: none;
 }
 
+.work-stack {
+  position: relative;
+}
+
+/*
+ * The box the cards animate inside. Sizing lives here rather than in an inline
+ * style so the ratio itself can change at the breakpoint: a 4:3 frame on a
+ * 390x844 phone resolves to about 350x262, a third of the screen, which is the
+ * wrong shape for a portrait viewport. Under 640px the frame is 4:5 and fills
+ * roughly half the screen, leaving room for the label above and the hint below.
+ *
+ * The width caps against svh, the small viewport, which is the height that does
+ * not move when the mobile URL bar collapses.
+ */
+.work-stack-frame {
+  aspect-ratio: 4 / 5;
+  width: min(100%, calc((100svh - 7rem) * 4 / 5));
+}
+
+@media (min-width: 640px) {
+  .work-stack-frame {
+    aspect-ratio: 4 / 3;
+    width: min(64rem, 100%, calc((100svh - 10rem) * 4 / 3));
+  }
+}
+
+/*
+ * Absolute, not in flow: flow content above the pinned h-svh scene would push
+ * the pin start below the top of the viewport and the first card would open
+ * half-scrolled. Sits under the nav pill, and scrolls away with the top of the
+ * section once the stack takes over.
+ */
+.work-page-label {
+  position: absolute;
+  top: calc(5.25rem + env(safe-area-inset-top, 0px));
+  left: 1rem;
+  z-index: 10;
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* From 640px the card is large enough to speak for itself, so the heading stays
+ * in the accessibility tree and out of the layout. */
+@media (min-width: 640px) {
+  .work-page-label {
+    clip-path: inset(50%);
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
 .work-scroll-hint {
   position: fixed;
-  bottom: clamp(1rem, 3vh, 2rem);
+  /* Without the inset, the hint sits under the iOS home indicator. */
+  bottom: calc(clamp(1rem, 3vh, 2rem) + env(safe-area-inset-bottom, 0px));
   left: 50%;
   translate: -50% 0;
   z-index: 20;

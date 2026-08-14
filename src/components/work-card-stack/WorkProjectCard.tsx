@@ -38,6 +38,13 @@ export function resolveWorkVideoSources(
 interface WorkProjectCardProps {
   card: WorkCard
   eager?: boolean
+  /**
+   * Stack mode. The pinned frame owns the aspect ratio there, and it is portrait
+   * under 640px, so a card that kept its own 4:3 would sit letterboxed inside
+   * the box the stack scales and rotates. In list mode there is no frame height
+   * to fill, so the card keeps the ratio itself.
+   */
+  fill?: boolean
   videoControlsEnabled?: boolean
   videoRef?: RefObject<HTMLVideoElement>
 }
@@ -45,6 +52,7 @@ interface WorkProjectCardProps {
 export default function WorkProjectCard({
   card,
   eager = false,
+  fill = false,
   videoControlsEnabled = false,
   videoRef,
 }: WorkProjectCardProps) {
@@ -84,7 +92,10 @@ export default function WorkProjectCard({
   }
 
   return (
-    <div className="relative aspect-[4/3] w-full" data-work-card={card.id}>
+    <div
+      className={fill ? 'relative h-full w-full' : 'relative aspect-[4/3] w-full'}
+      data-work-card={card.id}
+    >
       <a
         href={card.href}
         aria-label={card.title}

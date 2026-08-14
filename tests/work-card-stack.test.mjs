@@ -80,14 +80,85 @@ test('adapted Skiper17 scopes its trigger and cleanup', async () => {
   assert.match(source, /Free to use and modify/)
 })
 
-test('adapted Skiper17 reuses the stack frame sizing helper for the enabled frame', async () => {
+test('the pinned frame is sized in CSS, so it can turn portrait on a phone', async () => {
+  const [skiper, css] = await Promise.all(
+    [
+      '../src/components/ui/skiper-ui/skiper17.tsx',
+      '../src/styles/global.css',
+    ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')),
+  )
+
+  // The frame used to carry an inline width from a JS helper, which can only
+  // ever describe one viewport. A 4:3 frame on a 390x844 phone resolves to
+  // about 350x262, roughly a third of the screen. Sizing lives in CSS now so
+  // the ratio itself can change at the breakpoint.
+  assert.match(skiper, /work-stack-frame/)
+  assert.doesNotMatch(
+    skiper,
+    /getStackFrameStyle/,
+    'the inline width helper is gone; CSS owns frame sizing',
+  )
+  assert.doesNotMatch(
+    skiper,
+    /aspect-\[4\/3\]/,
+    'a hardcoded landscape ratio in the class list would defeat the media query',
+  )
+
+  assert.match(css, /\.work-stack-frame \{/)
+  assert.match(css, /aspect-ratio: 4 \/ 5/)
+  assert.match(css, /100svh - 7rem\) \* 4 \/ 5/)
+  assert.match(css, /@media \(min-width: 640px\)[\s\S]*?aspect-ratio: 4 \/ 3/)
+  assert.match(css, /min\(64rem, 100%, calc\(\(100svh - 10rem\) \* 4 \/ 3\)\)/)
+})
+
+test('the card fills the pinned frame instead of imposing its own ratio', async () => {
+  const [card, stack] = await Promise.all(
+    [
+      '../src/components/work-card-stack/WorkProjectCard.tsx',
+      '../src/components/WorkCardStack.tsx',
+    ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')),
+  )
+
+  // With a portrait frame, a card that keeps its own aspect-[4/3] is shorter
+  // than the box it sits in, so the stack scales and rotates a letterboxed
+  // card. In stack mode the frame owns the ratio and the card just fills it;
+  // in list mode there is no frame height to fill, so the ratio stays.
+  assert.match(card, /fill\b/)
+  assert.match(card, /h-full w-full/)
+  assert.match(card, /aspect-\[4\/3\]/, 'list mode still needs the ratio')
+  assert.match(stack, /fill=\{enhanced\}/)
+})
+
+test('the pin ignores the collapsing mobile toolbar', async () => {
   const source = await readFile(
     new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
     'utf8',
   )
 
-  assert.match(source, /export function getStackFrameStyle/)
-  assert.match(source, /style=\{getStackFrameStyle\(enabled\)\}/)
+  // Two separate paths recomputed the pin when iOS Safari collapsed its URL
+  // bar mid-scroll: ScrollTrigger's own resize handling, and our
+  // ResizeObserver firing on the height change. Both are width-gated now.
+  assert.match(source, /ScrollTrigger\.config\(\{[\s\S]*?ignoreMobileResize: true/)
+  assert.match(
+    source,
+    /new ResizeObserver\(\(\) => \{[\s\S]*?clientWidth[\s\S]*?refresh\(\)/,
+    'the observer must compare widths before refreshing',
+  )
+})
+
+test('the pinned stack costs less scroll per card on a phone', async () => {
+  const source = await readFile(
+    new URL('../src/components/ui/skiper-ui/skiper17.tsx', import.meta.url),
+    'utf8',
+  )
+
+  // The factor's arithmetic is covered in
+  // tests/work-card-stack/skiper17-frame-style.test.ts; what matters here is
+  // that the trigger actually passes it, off the same 640px breakpoint the
+  // frame ratio uses.
+  assert.match(source, /NARROW_VIEWPORT_WIDTH = 640/)
+  assert.match(source, /NARROW_SCROLL_FACTOR = 0\.7/)
+  assert.match(source, /clientWidth[\s\S]*?NARROW_SCROLL_FACTOR/)
 })
 
 test('adapted Skiper17 limits stack focusability to the active desktop card', async () => {
@@ -119,12 +190,13 @@ test('pinned stack clips its cards and owns the full viewport', async () => {
 
   // Without overflow clipping on the frame, the queued cards sitting at
   // yPercent 110 spill down the page instead of waiting behind the active one.
-  assert.match(skiper, /aspect-\[4\/3\][^"']*overflow-hidden/)
+  assert.match(skiper, /work-stack-frame[^"']*overflow-hidden/)
   // The pinned section uses a stable viewport height and mobile-first padding,
-  // while list mode still clears the fixed nav pill itself.
+  // while list mode still clears the fixed nav pill itself. svh is the small
+  // viewport, which is the one that does not move when the URL bar collapses.
   assert.doesNotMatch(page, /padding-top/)
   assert.match(skiper, /h-svh/)
-  assert.match(skiper, /px-5/)
+  assert.match(skiper, /px-4/)
   assert.match(skiper, /sm:px-10/)
   assert.match(skiper, /getStackScrollDistance\([\s\S]*stack\.current\?\.clientHeight/)
 })
@@ -478,6 +550,40 @@ test('the tier swap survives an Astro view-transition navigation', async () => {
     detail,
     /dataset\.videoTier/,
     'the swap must be idempotent, since the script may run again per navigation',
+  )
+})
+
+test('the scroll hint clears the iOS home indicator', async () => {
+  const css = await readFile(
+    new URL('../src/styles/global.css', import.meta.url),
+    'utf8',
+  )
+
+  // A fixed element at bottom: 1rem sits under the home indicator on an
+  // iPhone, which is exactly where the hint was.
+  assert.match(
+    css,
+    /\.work-scroll-hint \{[\s\S]*?bottom: calc\(clamp\(1rem, 3vh, 2rem\) \+ env\(safe-area-inset-bottom, 0px\)\)/,
+  )
+})
+
+test('/work names itself, visibly on a phone and to assistive tech everywhere', async () => {
+  const [stack, css] = await Promise.all(
+    ['../src/components/WorkCardStack.tsx', '../src/styles/global.css'].map(
+      (path) => readFile(new URL(path, import.meta.url), 'utf8'),
+    ),
+  )
+
+  // The page used to render cards and nothing else, so a phone screen carried
+  // no clue about what it was looking at, and the document had no h1 at all.
+  assert.match(stack, /<h1[\s\S]*?work-page-label/)
+  assert.match(stack, /Selected work/)
+  // Kept out of flow on purpose: real flow content above an h-svh scene pushes
+  // the pin start below the top of the viewport.
+  assert.match(css, /\.work-page-label \{[\s\S]*?position: absolute/)
+  assert.match(
+    css,
+    /@media \(min-width: 640px\)[\s\S]*?\.work-page-label \{[\s\S]*?clip-path: inset\(50%\)/,
   )
 })
 
