@@ -206,3 +206,28 @@ test('missing WebGL renders nothing', () => {
   assert.equal(shouldRender(false, false), 'none')
   assert.equal(shouldRender(true, false), 'none')
 })
+
+test('a device with no cursor renders nothing, however capable it is', () => {
+  // The knot's whole payoff is following the cursor. Without one it is a full
+  // viewport WebGL canvas turning one axis on scroll.
+  assert.equal(shouldRender(false, true, false), 'none')
+})
+
+test('a cursor below the narrow breakpoint still gets the knot', () => {
+  // The gate asks about the pointer, not the width: a desktop window dragged
+  // narrow keeps the input the knot exists for, which is also what keeps the
+  // narrow placement and segment counts reachable.
+  assert.equal(shouldRender(false, true, true), 'animated')
+})
+
+test('a cursor cannot revive a knot the other two gates refused', () => {
+  assert.equal(shouldRender(true, true, true), 'none')
+  assert.equal(shouldRender(false, false, true), 'none')
+})
+
+test('an unstated pointer renders, so only a known-cursorless device loses it', () => {
+  // The default keeps the gate subtractive: it takes the knot away only when
+  // it has been told the pointer is not fine.
+  assert.equal(shouldRender(false, true), 'animated')
+  assert.equal(shouldRender(false, true, undefined), 'animated')
+})

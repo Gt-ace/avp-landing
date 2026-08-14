@@ -198,7 +198,11 @@ const faqs = [
 <style>
   .hero {
     position: relative;
-    min-height: 100dvh;
+    /* svh, the height that does not move when the mobile URL bar collapses,
+       and the height the viewport already has at first paint. dvh tracked the
+       bar instead, so the hero re-laid out mid-scroll: the centred copy shifted
+       and the bottom anchored scroll cue slid with it. */
+    min-height: 100svh;
     overflow: hidden;
     background: var(--color-bg);
 
@@ -206,6 +210,10 @@ const faqs = [
     --hero-dot-gap: 16px;
     --hero-dot-size: 1px;
     --hero-dot-color: oklch(70% 0.004 260 / 80%);
+    /* The fade frames the copy, so it is a variable: the copy arrangement
+       changes at the breakpoint and the fade has to move with it. Here the
+       copy is a 38rem column against the left edge. */
+    --hero-dot-mask: ellipse 85% 70% at 35% 50%;
   }
 
   /* Dots sit at z-index 0: under the knot canvas (1) and the copy (2).
@@ -225,7 +233,7 @@ const faqs = [
     );
     background-size: var(--hero-dot-gap) var(--hero-dot-gap);
     mask-image: radial-gradient(
-      ellipse 85% 70% at 35% 50%,
+      var(--hero-dot-mask),
       #000 30%,
       transparent 100%
     );
@@ -543,6 +551,16 @@ const faqs = [
   }
 
   @media (max-width: 767px) {
+    .hero {
+      /* The copy below runs gutter to gutter and stays vertically centred, so
+         the fade centres with it and flattens to the band it occupies. The
+         desktop 35% offset put the bright side of the fade beside copy that no
+         longer sits there. Wider than the viewport on purpose: the dots reach
+         both gutters and only fade out past them, since on touch, where the
+         knot no longer renders, they are the hero's only texture. */
+      --hero-dot-mask: ellipse 120% 42% at 50% 50%;
+    }
+
     .hero-content {
       left: 1.5rem;
       right: 1.5rem;

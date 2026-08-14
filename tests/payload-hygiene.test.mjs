@@ -94,6 +94,43 @@ test('the marquee fade is a fixed inset, not a share of a phone width', async ()
   }
 })
 
+test('the hero dot fade moves with the copy it frames', async () => {
+  const source = await read('../src/pages/index.astro')
+  const masks = [...source.matchAll(/--hero-dot-mask:\s*([^;]+);/g)].map(
+    (match) => match[1]
+  )
+
+  assert.equal(masks.length, 2, 'one fade geometry per copy arrangement')
+  assert.match(masks[0], /at 35% 50%/, 'the wide fade sits over the left column')
+  assert.match(
+    masks[1],
+    /at 50% 50%/,
+    'narrow copy runs gutter to gutter, so a 35% offset frames nothing'
+  )
+  assert.match(
+    source,
+    /mask-image: radial-gradient\(\s*var\(--hero-dot-mask\)/,
+    'one gradient reading the variable, not a second copy of the gradient'
+  )
+})
+
+test('the hero holds its height as the mobile toolbar collapses', async () => {
+  const source = await read('../src/pages/index.astro')
+  const hero = source.match(/\n  \.hero \{([\s\S]*?)\n  \}/)
+
+  assert.ok(hero, 'index.astro has no .hero rule')
+  assert.match(
+    hero[1],
+    /min-height: 100svh/,
+    'svh is the toolbar-visible height, which is also the height at first paint'
+  )
+  assert.doesNotMatch(
+    source,
+    /100dvh/,
+    'dvh re-lays out the hero mid-scroll: the centred copy and the scroll cue move with the toolbar'
+  )
+})
+
 test('the font request carries only the axes the site renders', async () => {
   const source = await read('../src/layouts/BaseLayout.astro')
   const href = source.match(/fonts\.googleapis\.com\/css2\?[^"]*/)[0]

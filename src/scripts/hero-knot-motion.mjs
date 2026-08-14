@@ -66,8 +66,33 @@ export function getPlacement(viewportWidth, viewportHeight) {
   return { x: source.x, y: source.y, cameraZ: source.cameraZ }
 }
 
-export function shouldRender(prefersReducedMotion, hasWebGL) {
+/*
+ * The knot exists to follow the cursor, so a device without one gets nothing.
+ * `attachInput` already refuses to give a coarse pointer a cursor listener,
+ * which leaves scroll as the only input and one slowly turning axis as the
+ * whole effect: the smallest payoff it has anywhere, paid for with a full
+ * viewport WebGL canvas at devicePixelRatio 2 and a 129 KB Three.js chunk, on
+ * the devices least able to afford either.
+ *
+ * The discriminator is the pointer rather than the width the audit asked
+ * about, for two reasons. A desktop window dragged under 768px still has the
+ * cursor the knot is for, so it keeps the knot and the narrow placement and
+ * segment counts above stay live code. And a phone rotated to landscape is
+ * wider than 768px while having gained nothing to offer the knot, so a width
+ * test would hand it the canvas anyway.
+ *
+ * hasFinePointer defaults to true so this gate only ever takes the knot away
+ * when it has been told the pointer is not fine. The caller does the matching
+ * positively as `pointer: fine`, like attachInput, so a device that reports
+ * neither fine nor coarse is read as having no cursor to follow.
+ */
+export function shouldRender(
+  prefersReducedMotion,
+  hasWebGL,
+  hasFinePointer = true
+) {
   if (prefersReducedMotion) return 'none'
   if (!hasWebGL) return 'none'
+  if (!hasFinePointer) return 'none'
   return 'animated'
 }

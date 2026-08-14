@@ -155,7 +155,13 @@
       '(prefers-reduced-motion: reduce)'
     ).matches
 
-    if (shouldRender(prefersReducedMotion, hasWebGL()) === 'none') return
+    // Matched positively as fine, the same way attachInput does, so a device
+    // reporting neither fine nor coarse is treated as cursorless and the knot
+    // stays off rather than running for scroll input alone.
+    const hasFinePointer = matchMedia('(pointer: fine)').matches
+
+    const gate = shouldRender(prefersReducedMotion, hasWebGL(), hasFinePointer)
+    if (gate === 'none') return
 
     try {
       await buildScene(canvas)
