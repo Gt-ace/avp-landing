@@ -51,8 +51,15 @@ const staticNavLinks = [
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Bodoni is only ever set upright at 600, and every rule that uses it sets
+      `font-optical-sizing: none`, which falls back to the family's default
+      optical size of 11. Asking for that one instance instead of the italic
+      plus both axis ranges takes the Latin file from 46K to 15K and the
+      stylesheet from 7.6K to 3.9K.
+    -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Geist:wght@400..600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@11,600&family=Geist:wght@400..600&display=swap"
       rel="stylesheet"
     />
 

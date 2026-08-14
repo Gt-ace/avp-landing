@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-08-14T13:13:10.038Z",
+        "reason": "Geist is the established body face from the design phase; confirmed intentional by the user"
+      }
+    ]
+  }
+}
