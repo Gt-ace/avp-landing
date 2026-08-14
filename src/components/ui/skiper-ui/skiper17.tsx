@@ -30,19 +30,23 @@ function classes(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
-export function getStackFrameStyle(enabled: boolean) {
-  return enabled
-    ? {
-        width: "min(64rem, 100%, calc((100svh - 10rem) * 4 / 3))",
-      }
-    : undefined;
-}
+/**
+ * Below this scene width the frame is portrait (see `.work-stack-frame`) and a
+ * full screen of scrolling per card is a lot of thumb, so the stack costs less
+ * scroll per card. Matches Tailwind's `sm` breakpoint, which is where the frame
+ * ratio flips.
+ */
+const NARROW_VIEWPORT_WIDTH = 640;
+const NARROW_SCROLL_FACTOR = 0.7;
 
 export function getStackScrollDistance(
   sceneHeight: number,
   cardCount: number,
+  factor = 1,
 ) {
-  return Math.max(0, sceneHeight) * Math.max(0, cardCount - 1);
+  return (
+    Math.max(0, sceneHeight) * Math.max(0, cardCount - 1) * Math.max(0, factor)
+  );
 }
 
 function clampActiveCardIndex(index: number, cardCount: number) {
@@ -97,6 +101,10 @@ function StickyCard002<T extends IdentifiedCard>({
       if (!enabled || !stack.current) return;
 
       gsap.registerPlugin(ScrollTrigger);
+      // iOS Safari fires a resize every time its URL bar collapses or expands,
+      // which lands mid-scroll through the pinned stack and recomputes the pin
+      // under the visitor. This is GSAP's own switch for that.
+      ScrollTrigger.config({ ignoreMobileResize: true });
       const cardElements = cardRefs.current.filter(
         (card): card is HTMLDivElement => card !== null,
       );
@@ -140,11 +148,19 @@ function StickyCard002<T extends IdentifiedCard>({
         trigger: stack.current,
         pin: stack.current,
         start: "top top",
-        end: () =>
-          `+=${getStackScrollDistance(
+        // The scene is full width, so its width stands in for the viewport's.
+        // Read here rather than at hydration: `end` runs on refresh, so it can
+        // measure without the server and client disagreeing about the markup.
+        end: () => {
+          const sceneWidth = stack.current?.clientWidth ?? 0;
+          const narrow = sceneWidth > 0 && sceneWidth < NARROW_VIEWPORT_WIDTH;
+
+          return `+=${getStackScrollDistance(
             stack.current?.clientHeight ?? 0,
             cardElements.length,
-          )}`,
+            narrow ? NARROW_SCROLL_FACTOR : 1,
+          )}`;
+        },
         scrub: 0.5,
         pinSpacing: true,
         invalidateOnRefresh: true,
@@ -156,7 +172,18 @@ function StickyCard002<T extends IdentifiedCard>({
         },
       });
 
-      const resizeObserver = new ResizeObserver(() => trigger.refresh());
+      // Width changes are the ones that matter: they change the frame ratio and
+      // the scroll distance. Height changes on a phone are mostly the URL bar
+      // moving, and refreshing on those is what made the pin jump mid-scroll,
+      // so the observer only reacts once the width has actually moved.
+      let lastWidth = stack.current.clientWidth;
+      const resizeObserver = new ResizeObserver(() => {
+        const width = stack.current?.clientWidth ?? lastWidth;
+        if (width === lastWidth) return;
+
+        lastWidth = width;
+        trigger.refresh();
+      });
       resizeObserver.observe(stack.current);
 
       return () => {
@@ -187,18 +214,17 @@ function StickyCard002<T extends IdentifiedCard>({
         ref={stack}
         className={
           enabled
-            ? "relative flex h-svh w-full items-center justify-center overflow-hidden px-5 py-16 sm:px-10 sm:py-20"
+            ? "relative flex h-svh w-full items-center justify-center overflow-hidden px-4 py-10 sm:px-10 sm:py-20"
             : "mx-auto grid w-full max-w-6xl gap-6 px-5 pb-16 pt-28 md:gap-10 md:px-10 md:pb-24 md:pt-32"
         }
       >
         <div
           className={classes(
             enabled
-              ? "relative aspect-[4/3] w-full max-w-5xl overflow-hidden rounded-lg"
+              ? "work-stack-frame relative overflow-hidden rounded-lg"
               : "contents",
             containerClassName,
           )}
-          style={getStackFrameStyle(enabled)}
         >
           {cards.map((card, index) => (
             <div

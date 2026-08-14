@@ -94,6 +94,14 @@ export default function WorkCardStack({ cards }: WorkCardStackProps) {
       aria-label="Selected work"
       data-work-stack-ready={enhanced ? '' : undefined}
     >
+      {/*
+        On a phone the card no longer fills the screen and nothing around it
+        says what the page is, so the heading shows there and stays screen-reader
+        only from 640px up. It is positioned out of flow (see .work-page-label)
+        because flow content above the h-svh scene pushes the pin start down.
+      */}
+      <h1 className="work-page-label">Selected work</h1>
+
       <StickyCard002
         cards={cards}
         enabled={enhanced}
@@ -101,6 +109,7 @@ export default function WorkCardStack({ cards }: WorkCardStackProps) {
           <WorkProjectCard
             card={card}
             eager={index === 0}
+            fill={enhanced}
             videoControlsEnabled={enhanced}
             videoRef={card.media.kind === 'video' ? videoRef : undefined}
           />
