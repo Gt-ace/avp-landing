@@ -56,23 +56,23 @@ test('the one easing curve is not forked', async () => {
   )
 })
 
-test('the layout records which way the visitor is going', async () => {
+test('the direction comes off an attribute that survives the swap', async () => {
   const layout = await read('../src/layouts/BaseLayout.astro')
 
-  assert.match(
+  // Astro's `swapRootAttributes` strips every attribute off <html> mid-swap
+  // and puts back only the incoming document's plus the `data-astro-*` ones,
+  // and it does that inside the startViewTransition callback, before the
+  // pseudo-elements are styled. Recording the direction ourselves under any
+  // other name is therefore erased before it can be read.
+  assert.doesNotMatch(
+    layout,
+    /data-nav-direction|navDirection|__avpNavDirectionHooked/,
+    'a hand-rolled direction attribute does not survive the root attribute swap'
+  )
+  assert.doesNotMatch(
     layout,
     /astro:before-preparation/,
-    'the attribute has to land before startViewTransition, which is what this event is awaited for'
-  )
-  assert.match(
-    layout,
-    /dataset\.navDirection = /,
-    'the direction is read back from CSS, so it lives on the document element'
-  )
-  assert.match(
-    layout,
-    /__avpNavDirectionHooked/,
-    'the swap re-runs inline scripts; the listener must only be added once'
+    'nothing here needs to run before the transition any more'
   )
 })
 
@@ -81,19 +81,19 @@ test('back reverses the direction instead of cross-fading', async () => {
 
   assert.match(
     layout,
-    /\[data-nav-direction='back'\]::view-transition-old\(root\)/,
+    /\[data-astro-transition='back'\]::view-transition-old\(root\)/,
     'the outgoing page needs its own rule, scoped by an attribute so it beats the (*) default'
   )
   assert.match(
     layout,
-    /\[data-nav-direction='back'\]::view-transition-new\(root\)/
+    /\[data-astro-transition='back'\]::view-transition-new\(root\)/
   )
 
   const out = layout.match(
-    /\[data-nav-direction='back'\]::view-transition-old\(root\)\s*\{([^}]*)\}/
+    /\[data-astro-transition='back'\]::view-transition-old\(root\)\s*\{([^}]*)\}/
   )[1]
   const into = layout.match(
-    /\[data-nav-direction='back'\]::view-transition-new\(root\)\s*\{([^}]*)\}/
+    /\[data-astro-transition='back'\]::view-transition-new\(root\)\s*\{([^}]*)\}/
   )[1]
 
   assert.match(out, /200ms/, 'the outgoing page leaves faster than the new one arrives')
@@ -123,10 +123,10 @@ test('reduced motion still wins over the directional rules', async () => {
   // important and the cascade would fall through to source order, where
   // reduced motion is not guaranteed to win.
   const out = layout.match(
-    /\[data-nav-direction='back'\]::view-transition-old\(root\)\s*\{([^}]*)\}/
+    /\[data-astro-transition='back'\]::view-transition-old\(root\)\s*\{([^}]*)\}/
   )[1]
   const into = layout.match(
-    /\[data-nav-direction='back'\]::view-transition-new\(root\)\s*\{([^}]*)\}/
+    /\[data-astro-transition='back'\]::view-transition-new\(root\)\s*\{([^}]*)\}/
   )[1]
 
   assert.doesNotMatch(out, /!important/, 'source order, not !important, must decide this')

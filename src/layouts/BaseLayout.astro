@@ -68,22 +68,6 @@ const staticNavLinks = [
       document.documentElement.classList.add('js')
     </script>
 
-    <!--
-      CSS below picks the back animation off this attribute. It has to be set
-      before `document.startViewTransition` runs, which `astro:before-preparation`
-      guarantees: Astro awaits that event before starting the transition. Inline
-      and guarded because the swap re-runs inline scripts against a document
-      that already has the listener.
-    -->
-    <script is:inline>
-      if (!window.__avpNavDirectionHooked) {
-        window.__avpNavDirectionHooked = true
-        document.addEventListener('astro:before-preparation', (event) => {
-          document.documentElement.dataset.navDirection = event.direction
-        })
-      }
-    </script>
-
     <ViewTransitions />
   </head>
   <body>
@@ -123,6 +107,17 @@ const staticNavLinks = [
    * morph would animate toward the un-pinned list geometry (see the comment
    * in WorkCardStack.tsx). This gets the feeling of reversal without it.
    *
+   * The attribute has to be one Astro owns, and it has to start `data-astro-`.
+   * `swapRootAttributes` (astro/dist/transitions/swap-functions.js) strips
+   * every attribute off <html> during the swap and restores only the incoming
+   * document's plus the ones whose name starts with `data-astro-`; that swap
+   * runs inside the `startViewTransition` update callback, before the
+   * pseudo-element tree is built. Any hand-rolled attribute is therefore gone
+   * by the time these rules are matched, and back silently falls back to the
+   * plain cross-fade. `data-astro-transition` is set to the literal
+   * 'forward'/'back' in router.js immediately before the transition starts and
+   * removed when it finishes, so it survives exactly as long as it is needed.
+   *
    * Scoped by attribute so it outranks the (*) rule above regardless of source
    * order, and targeted at `root` so the named card groups are untouched.
    *
@@ -130,11 +125,11 @@ const staticNavLinks = [
    * matched durations leave both pages half-transparent through the middle of
    * the swap, which reads as a smear rather than a reversal.
    */
-  html[data-nav-direction='back']::view-transition-old(root) {
+  html[data-astro-transition='back']::view-transition-old(root) {
     animation: avp-back-out 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  html[data-nav-direction='back']::view-transition-new(root) {
+  html[data-astro-transition='back']::view-transition-new(root) {
     animation: avp-back-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
