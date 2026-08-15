@@ -51,6 +51,11 @@
     display: inline-flex;
     align-items: center;
     color: var(--color-muted);
+    transition: color 200ms;
+  }
+
+  .focus-icon:hover {
+    color: var(--color-accent);
   }
 
   /* The other half of the reduced-motion guard — the one that stops a hover

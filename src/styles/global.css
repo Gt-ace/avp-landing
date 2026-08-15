@@ -6,6 +6,7 @@
   --color-muted:   oklch(42% 0.005 260);
   --color-border:  oklch(85% 0.003 260);
   --color-overlay: oklch(0% 0 0 / 20%);
+  --color-accent:  oklch(58% 0.15 35);
 
   --font-display: 'Bodoni Moda', Georgia, serif;
   --font-body:    'Geist', system-ui, -apple-system, sans-serif;
