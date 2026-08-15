@@ -120,18 +120,42 @@ test('a disclosure button announces the menu and its state', async () => {
   )
 })
 
-test('the chevron marks the pill as openable and reports state', async () => {
+test('the disclosure control is the V alone, with no glyph beside it', async () => {
   const source = await read('../src/components/NavPill.tsx')
 
-  assert.match(
+  assert.doesNotMatch(
     source,
     /function Chevron/,
-    'an authored SVG, not a unicode glyph standing in for an icon'
+    'the chevron was removed on purpose; the V is the whole control now'
+  )
+  assert.doesNotMatch(
+    source,
+    /CHEVRON_GAP/,
+    'the gap only existed to separate the V from the chevron'
+  )
+})
+
+test('the collapsing V takes its touch box with it', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+  const button = source.slice(
+    source.indexOf('<button'),
+    source.indexOf('</button>')
+  )
+
+  assert.doesNotMatch(
+    button,
+    /minWidth: TOUCH_TARGET/,
+    'a 44px floor on the button leaves an empty box between the A and the links once the V collapses'
+  )
+  assert.match(
+    button,
+    /minHeight: TOUCH_TARGET/,
+    'the vertical floor still applies: the button is 44px tall in both states'
   )
   assert.match(
     source,
-    /rotate: isOpen \? 180 : 0/,
-    'the glyph has to move with the state it reports'
+    /width: isOpen \? 0 : TOUCH_TARGET/,
+    'the span that holds the V owns the horizontal floor, and collapses it to nothing when open'
   )
 })
 

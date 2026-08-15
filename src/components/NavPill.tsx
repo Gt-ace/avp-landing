@@ -42,7 +42,13 @@ export const MOBILE_ROW_HEIGHT = 48
  * which is a worse failure than a small target because the wrong one wins.
  */
 export const CLOSED_WIDTH = 140
-export const DESKTOP_OPEN_WIDTH = 480
+
+/**
+ * Open width holds the three links between the A and the P. The disclosure
+ * box collapses to nothing when the pill opens, so nothing but the links and
+ * the two letterforms is inside this.
+ */
+export const DESKTOP_OPEN_WIDTH = 436
 
 /**
  * The mobile panel is capped again in CSS by `calc(100vw - 32px)`, which is
@@ -55,7 +61,6 @@ export const DESKTOP_QUERY = '(min-width: 768px)'
 
 const PILL_RADIUS = 9999
 const PANEL_RADIUS = 24
-const CHEVRON_GAP = 5
 
 /**
  * Left edge of the stacked labels, measured to land on the A's ink rather than
@@ -176,36 +181,6 @@ function Letter({
     >
       {img}
     </a>
-  )
-}
-
-/**
- * The affordance. The closed pill used to show only the letter V, which reads
- * as a wordmark rather than a control, so nothing told a first-time visitor
- * the pill opens. Drawn rather than borrowed from a unicode arrow so its
- * stroke matches the hairline border.
- */
-function Chevron({ isOpen, instant }: { isOpen: boolean; instant: boolean }) {
-  return (
-    <motion.svg
-      width="9"
-      height="6"
-      viewBox="0 0 9 6"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-      animate={{ rotate: isOpen ? 180 : 0 }}
-      transition={instant ? { duration: 0 } : { duration: 0.32, ease: EASE_OUT_QUART }}
-      style={{ display: 'block', flexShrink: 0, color: 'var(--color-muted)' }}
-    >
-      <path
-        d="M1 1.25 4.5 4.75 8 1.25"
-        stroke="currentColor"
-        strokeWidth="1.25"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </motion.svg>
   )
 }
 
@@ -428,7 +403,6 @@ export default function NavPill() {
             className="navpill-target"
             onClick={() => setIsOpen((open) => !open)}
             style={{
-              minWidth: TOUCH_TARGET,
               minHeight: TOUCH_TARGET,
               display: 'flex',
               alignItems: 'center',
@@ -443,27 +417,28 @@ export default function NavPill() {
             }}
           >
             {/* The V collapses to nothing rather than unmounting, so the
-                button keeps a stable identity for focus across the toggle. */}
+                button keeps a stable identity for focus across the toggle.
+                It carries the 44px horizontal floor rather than the button,
+                so the whole box goes with it: a floor on the button would
+                leave an empty 44px gap before the first link once open. */}
             <motion.span
               aria-hidden="true"
               animate={{
-                width: isOpen ? 0 : VP_HEIGHT,
+                width: isOpen ? 0 : TOUCH_TARGET,
                 opacity: isOpen ? 0 : 1,
-                marginRight: isOpen ? 0 : CHEVRON_GAP,
               }}
               initial={false}
               transition={shapeTransition}
               style={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 overflow: 'hidden',
                 flexShrink: 0,
               }}
             >
               <Letter src="/v.svg" height={VP_HEIGHT} />
             </motion.span>
-
-            <Chevron isOpen={isOpen} instant={instant} />
           </button>
 
           {isDesktop && (
