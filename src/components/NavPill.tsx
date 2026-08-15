@@ -242,7 +242,7 @@ function NavLink({
         fontSize: '0.6875rem',
         letterSpacing: '0.15em',
         textTransform: 'uppercase',
-        color: isActive ? 'var(--color-ink)' : 'var(--color-muted)',
+        color: isActive ? 'var(--color-accent)' : 'var(--color-muted)',
         textDecoration: 'none',
       }}
     >
@@ -387,7 +387,7 @@ export default function NavPill() {
           outline-offset: -3px;
           border-radius: 9999px;
         }
-        .navpill-link:hover { color: var(--color-ink); }
+        .navpill-link:hover { color: var(--color-accent); }
       `}</style>
 
       {/* Header row: fixed height so the panel below it cannot shift the
