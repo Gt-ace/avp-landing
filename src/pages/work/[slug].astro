@@ -78,7 +78,11 @@ const videoTierScript = `(function () {
         and easy to miss, so a detail page read as a dead end on a phone. This
         sits at the top of the flow, below the fixed pill, at every width.
       */}
-      <a href="/work" class="detail-back label">&#8592; All work</a>
+      <a
+        href="/work"
+        class="detail-back label"
+        data-transition-direction="back"
+      >&#8592; All work</a>
 
       <span class="label">{project.client}</span>
 

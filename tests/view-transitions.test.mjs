@@ -69,11 +69,33 @@ test('the direction comes off an attribute that survives the swap', async () => 
     /data-nav-direction|navDirection|__avpNavDirectionHooked/,
     'a hand-rolled direction attribute does not survive the root attribute swap'
   )
-  assert.doesNotMatch(
+})
+
+test('a link can opt into the reverse direction Astro would not otherwise give it', async () => {
+  // Astro's router hardcodes 'forward' for every link click; only the
+  // browser back/forward gesture produces 'back'. astro:before-preparation
+  // fires synchronously and its event.direction is read by router.js only
+  // after the listener returns, so a listener here can still override it in
+  // time -- this does not touch the data-astro-transition attribute itself,
+  // Astro still sets that from the (possibly overridden) direction.
+  const layout = await read('../src/layouts/BaseLayout.astro')
+
+  assert.match(layout, /astro:before-preparation/)
+  assert.match(
     layout,
-    /astro:before-preparation/,
-    'nothing here needs to run before the transition any more'
+    /event\.sourceElement\?\.dataset\.transitionDirection/,
+    'the override reads an explicit opt-in off the clicked element, not a /work/* URL pattern'
   )
+  assert.match(layout, /event\.direction = forced/)
+})
+
+test('the "All work" link is the one that opts in', async () => {
+  // The nav pill's WORK link can be clicked from any page, not only a detail
+  // page, so it stays plain forward navigation. Only this link is a same-site
+  // back affordance.
+  const detail = await read('../src/pages/work/[slug].astro')
+
+  assert.match(detail, /data-transition-direction="back"/)
 })
 
 test('back reverses the direction instead of cross-fading', async () => {
