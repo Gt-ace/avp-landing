@@ -55,3 +55,66 @@ test('the one easing curve is not forked', async () => {
     'the site has one easing curve; a second one anywhere in src/ is a fork'
   )
 })
+
+test('the layout records which way the visitor is going', async () => {
+  const layout = await read('../src/layouts/BaseLayout.astro')
+
+  assert.match(
+    layout,
+    /astro:before-preparation/,
+    'the attribute has to land before startViewTransition, which is what this event is awaited for'
+  )
+  assert.match(
+    layout,
+    /dataset\.navDirection = /,
+    'the direction is read back from CSS, so it lives on the document element'
+  )
+  assert.match(
+    layout,
+    /__avpNavDirectionHooked/,
+    'the swap re-runs inline scripts; the listener must only be added once'
+  )
+})
+
+test('back reverses the direction instead of cross-fading', async () => {
+  const layout = await read('../src/layouts/BaseLayout.astro')
+
+  assert.match(
+    layout,
+    /\[data-nav-direction='back'\]::view-transition-old\(root\)/,
+    'the outgoing page needs its own rule, scoped by an attribute so it beats the (*) default'
+  )
+  assert.match(
+    layout,
+    /\[data-nav-direction='back'\]::view-transition-new\(root\)/
+  )
+
+  const out = layout.match(
+    /\[data-nav-direction='back'\]::view-transition-old\(root\)\s*\{([^}]*)\}/
+  )[1]
+  const into = layout.match(
+    /\[data-nav-direction='back'\]::view-transition-new\(root\)\s*\{([^}]*)\}/
+  )[1]
+
+  assert.match(out, /200ms/, 'the outgoing page leaves faster than the new one arrives')
+  assert.match(into, /300ms/)
+  assert.doesNotMatch(
+    out,
+    /ease-in\b/,
+    'ease-in delays the exact frames the visitor is watching'
+  )
+})
+
+test('reduced motion still wins over the directional rules', async () => {
+  const layout = await read('../src/layouts/BaseLayout.astro')
+  const guard = layout.match(
+    /@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n  \}/
+  )
+
+  assert.ok(guard, 'the layout has no reduced-motion block')
+  assert.match(
+    guard[1],
+    /animation: none !important/,
+    'only !important beats an attribute-scoped rule'
+  )
+})
