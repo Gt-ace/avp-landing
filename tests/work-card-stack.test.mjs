@@ -344,7 +344,7 @@ test('detail page eases its named transitions with the shared morph config', asy
   )
 
   assert.match(detail, /import \{ fade \} from ['"]astro:transitions['"]/)
-  assert.match(detail, /const morph = fade\(\{ duration: 480 \}\)/)
+  assert.match(detail, /const morph = fade\(\{ duration: 300 \}\)/)
   const morphOccurrences = detail.match(/transition:animate=\{morph\}/g) ?? []
   assert.equal(morphOccurrences.length, 1, 'only the title uses the shared morph config directly; video is excluded (see below)')
   assert.match(detail, /transition:animate=\{i === 0 && !project\.video \? morph : undefined\}/)
@@ -365,7 +365,7 @@ test('transition timing is defined once, in the layout, and covers the root fade
   assert.match(layout, /::view-transition-group\(\*\)/)
   assert.match(layout, /::view-transition-old\(\*\)/)
   assert.match(layout, /::view-transition-new\(\*\)/)
-  assert.match(layout, /animation-duration: 480ms/)
+  assert.match(layout, /animation-duration: 300ms/)
   assert.match(layout, /cubic-bezier\(0\.16, 1, 0\.3, 1\)/)
 
   // Astro only ships its own reduced-motion override on pages that use a
