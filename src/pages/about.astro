@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro'
 import LogoMarquee from '../components/LogoMarquee.astro'
+import FocusIcon from '../components/focus/FocusIcon.svelte'
 ---
 <BaseLayout title="About | AVP Software">
   <main class="page-container">
@@ -22,9 +23,18 @@ import LogoMarquee from '../components/LogoMarquee.astro'
     <div class="about-focus">
       <span class="label">Focus</span>
       <ul>
-        <li>Web platforms</li>
-        <li>Process automations</li>
-        <li>AI-assisted products</li>
+        <li>
+          <FocusIcon icon="layout-panel-left" delay={0} client:visible />
+          Web platforms
+        </li>
+        <li>
+          <FocusIcon icon="route" delay={80} client:visible />
+          Process automations
+        </li>
+        <li>
+          <FocusIcon icon="cpu" delay={160} client:visible />
+          AI-assisted products
+        </li>
       </ul>
     </div>
   </main>
@@ -51,7 +61,16 @@ import LogoMarquee from '../components/LogoMarquee.astro'
     border-top: 1px solid var(--color-border);
   }
 
+  /*
+   * The icon sits in its own column so a long label wraps against the text
+   * column rather than under the glyph. `auto` rather than a fixed width: the
+   * icon is 20px today and the column should follow it if that changes.
+   */
   .about-focus li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 1rem;
     padding: 1rem 0;
     border-bottom: 1px solid var(--color-border);
     font-family: var(--font-body);

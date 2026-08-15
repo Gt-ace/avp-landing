@@ -227,4 +227,18 @@ html.js [data-reveal].in-view {
   .work-scroll-hint-arrow {
     animation: none;
   }
+
+  /*
+   * @jis3r/icons ships no prefers-reduced-motion handling in any of its 555
+   * components, and its keyframes live in styles this project does not own.
+   * FocusIcon's script guard stops the scroll reveal; this stops the run a
+   * hover would start. !important because it has to reach inside a scoped
+   * Svelte component's own rules.
+   */
+  .focus-icon *,
+  .focus-icon *::before,
+  .focus-icon *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
