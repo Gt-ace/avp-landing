@@ -120,18 +120,93 @@ test('a disclosure button announces the menu and its state', async () => {
   )
 })
 
-test('the chevron marks the pill as openable and reports state', async () => {
+test('the disclosure control is the V alone, with no glyph beside it', async () => {
   const source = await read('../src/components/NavPill.tsx')
 
-  assert.match(
+  assert.doesNotMatch(
     source,
     /function Chevron/,
-    'an authored SVG, not a unicode glyph standing in for an icon'
+    'the chevron was removed on purpose; the V is the whole control now'
+  )
+  assert.doesNotMatch(
+    source,
+    /CHEVRON_GAP/,
+    'the gap only existed to separate the V from the chevron'
+  )
+})
+
+test('the collapsing V takes its touch box with it', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+  const button = source.slice(
+    source.indexOf('<button'),
+    source.indexOf('</button>')
+  )
+
+  assert.doesNotMatch(
+    button,
+    /minWidth: TOUCH_TARGET/,
+    'a 44px floor on the button leaves an empty box between the A and the links once the V collapses'
+  )
+  assert.match(
+    button,
+    /minHeight: TOUCH_TARGET/,
+    'the vertical floor still applies: the button is 44px tall in both states'
   )
   assert.match(
     source,
-    /rotate: isOpen \? 180 : 0/,
-    'the glyph has to move with the state it reports'
+    /width: isOpen && isDesktop && !isRingShowing \? 0 : TOUCH_TARGET/,
+    'the span that holds the V owns the horizontal floor, and collapses it to nothing when open'
+  )
+})
+
+test('the collapse gives way to the focus ring', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  // A collapsed button is 0px wide, and the ring's offset is negative, so
+  // there is no box left to draw it on: opening the pill from the keyboard
+  // used to erase the ring from under a control that was still focused and
+  // still activatable. The box has to come back for as long as the ring is
+  // showing, which is what makes this a WCAG 2.4.7 fix and not a nicety.
+  assert.match(
+    source,
+    /width: isOpen && isDesktop && !isRingShowing \? 0 : TOUCH_TARGET/,
+    'the button keeps its 44px box whenever the focus ring is on it'
+  )
+  assert.match(
+    source,
+    /onFocus=\{\(e\) => setIsRingShowing\(isRingVisible\(e\.currentTarget\)\)\}/,
+    'a mouse click focuses the button in Chrome, so this tracks :focus-visible, not focus'
+  )
+  assert.match(
+    source,
+    /onBlur=\{\(\) => setIsRingShowing\(false\)\}/,
+    'the box collapses again the moment the ring leaves'
+  )
+  assert.match(
+    source,
+    /el\.matches\(':focus-visible'\)/,
+    'the state must agree with the CSS rule that draws the ring'
+  )
+})
+
+test('the V never collapses on touch, where it is the only way to close', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  // Desktop collapses the box to hand its 44px to the link row. Below the
+  // breakpoint the links stack into the panel instead, so the collapse frees
+  // nothing and takes away the whole "Close menu" target: a 0px-wide button
+  // cannot be tapped, and touch has no hover to fall back on. Tapping outside
+  // still dismisses the pill, but the labelled control has to work too
+  // (WCAG 2.5.8 target size).
+  assert.match(
+    source,
+    /width: isOpen && isDesktop && !isRingShowing \? 0 : TOUCH_TARGET/,
+    'the collapse is desktop-only, so the phone keeps a 44px close target'
+  )
+  assert.match(
+    source,
+    /opacity: isOpen && isDesktop \? 0 : 1/,
+    'and the target is visible there, not an invisible 44px hole'
   )
 })
 

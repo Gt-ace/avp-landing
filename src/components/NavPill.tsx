@@ -42,7 +42,13 @@ export const MOBILE_ROW_HEIGHT = 48
  * which is a worse failure than a small target because the wrong one wins.
  */
 export const CLOSED_WIDTH = 140
-export const DESKTOP_OPEN_WIDTH = 480
+
+/**
+ * Open width holds the three links between the A and the P. The disclosure
+ * box collapses to nothing when the pill opens, so nothing but the links and
+ * the two letterforms is inside this.
+ */
+export const DESKTOP_OPEN_WIDTH = 436
 
 /**
  * The mobile panel is capped again in CSS by `calc(100vw - 32px)`, which is
@@ -55,7 +61,6 @@ export const DESKTOP_QUERY = '(min-width: 768px)'
 
 const PILL_RADIUS = 9999
 const PANEL_RADIUS = 24
-const CHEVRON_GAP = 5
 
 /**
  * Left edge of the stacked labels, measured to land on the A's ink rather than
@@ -113,6 +118,22 @@ export function shouldCloseOnFocusOut(
 ): boolean {
   if (!container) return false
   return !nextFocus || !container.contains(nextFocus)
+}
+
+/**
+ * Whether the focus ring is actually being drawn on this element, rather than
+ * whether it merely holds focus. Chrome and Firefox focus a button element on
+ * a mouse click; keying the disclosure button's box off plain focus would
+ * leave a 44px hole in an open pill for the rest of a mouse user's hover.
+ * Engines that cannot answer the query get the benefit of the doubt, because
+ * a ring with no box to draw on is the failure worth avoiding.
+ */
+function isRingVisible(el: HTMLElement): boolean {
+  try {
+    return el.matches(':focus-visible')
+  } catch {
+    return true
+  }
 }
 
 function subscribeToViewport(onChange: () => void) {
@@ -179,36 +200,6 @@ function Letter({
   )
 }
 
-/**
- * The affordance. The closed pill used to show only the letter V, which reads
- * as a wordmark rather than a control, so nothing told a first-time visitor
- * the pill opens. Drawn rather than borrowed from a unicode arrow so its
- * stroke matches the hairline border.
- */
-function Chevron({ isOpen, instant }: { isOpen: boolean; instant: boolean }) {
-  return (
-    <motion.svg
-      width="9"
-      height="6"
-      viewBox="0 0 9 6"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-      animate={{ rotate: isOpen ? 180 : 0 }}
-      transition={instant ? { duration: 0 } : { duration: 0.32, ease: EASE_OUT_QUART }}
-      style={{ display: 'block', flexShrink: 0, color: 'var(--color-muted)' }}
-    >
-      <path
-        d="M1 1.25 4.5 4.75 8 1.25"
-        stroke="currentColor"
-        strokeWidth="1.25"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </motion.svg>
-  )
-}
-
 function NavLink({
   label,
   href,
@@ -263,6 +254,14 @@ function NavLink({
 export default function NavPill() {
   const [isOpen, setIsOpen] = useState(false)
   const [pathname, setPathname] = useState('/')
+
+  // The open pill's disclosure button has no ink of its own: the V collapses
+  // to nothing and takes the button's width with it. A 0px-wide box cannot
+  // show a focus ring — the ring's offset is negative, so there is nothing
+  // left to paint — which stranded a keyboard user on a button that was still
+  // focused, still named "Close menu", and no longer marked. Hold the 44px box
+  // open while the ring is showing, and only then.
+  const [isRingShowing, setIsRingShowing] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -427,8 +426,11 @@ export default function NavPill() {
             aria-label={isOpen ? 'Close menu' : 'Open menu'}
             className="navpill-target"
             onClick={() => setIsOpen((open) => !open)}
+            // These bubble, so the container's own onBlur still gets its turn
+            // and focus-out still closes the pill.
+            onFocus={(e) => setIsRingShowing(isRingVisible(e.currentTarget))}
+            onBlur={() => setIsRingShowing(false)}
             style={{
-              minWidth: TOUCH_TARGET,
               minHeight: TOUCH_TARGET,
               display: 'flex',
               alignItems: 'center',
@@ -443,27 +445,38 @@ export default function NavPill() {
             }}
           >
             {/* The V collapses to nothing rather than unmounting, so the
-                button keeps a stable identity for focus across the toggle. */}
+                button keeps a stable identity for focus across the toggle.
+                It carries the 44px horizontal floor rather than the button,
+                so the whole box goes with it: a floor on the button would
+                leave an empty 44px gap before the first link once open.
+
+                Two exceptions hold the box open. A visible focus ring needs
+                something to be drawn on; the gap that costs is a fair trade
+                against an unmarked focused control, and it is itself feedback.
+                And below the breakpoint the links stack into the panel rather
+                than sitting in this row, so collapsing buys no room at all and
+                costs the only way to close the pill from the control: there is
+                no hover on touch, and a 0px-wide "Close menu" cannot be
+                tapped. The V stays put there, visible and 44px, which is also
+                the one state where it has room to. */}
             <motion.span
               aria-hidden="true"
               animate={{
-                width: isOpen ? 0 : VP_HEIGHT,
-                opacity: isOpen ? 0 : 1,
-                marginRight: isOpen ? 0 : CHEVRON_GAP,
+                width: isOpen && isDesktop && !isRingShowing ? 0 : TOUCH_TARGET,
+                opacity: isOpen && isDesktop ? 0 : 1,
               }}
               initial={false}
               transition={shapeTransition}
               style={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 overflow: 'hidden',
                 flexShrink: 0,
               }}
             >
               <Letter src="/v.svg" height={VP_HEIGHT} />
             </motion.span>
-
-            <Chevron isOpen={isOpen} instant={instant} />
           </button>
 
           {isDesktop && (

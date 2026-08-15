@@ -88,7 +88,7 @@ const staticNavLinks = [
    * One timing for every view transition on the site. `(*)` covers `root` as
    * well as the named groups, so the page cross-fade and the /work card morph
    * run to the same clock: naming only the groups left the outgoing page gone
-   * at the UA default 250ms while the morph still had 230ms to run.
+   * at the UA default 250ms while the morph still had 50ms to run.
    *
    * Astro only emits its own reduced-motion override on pages that use a
    * transition directive, and these durations are site-wide, so carry the
@@ -97,8 +97,59 @@ const staticNavLinks = [
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
-    animation-duration: 480ms;
+    animation-duration: 300ms;
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /*
+   * Back is not the forward morph played backwards. The incoming /work
+   * document is snapshotted before the card stack hydrates and pins, so a
+   * morph would animate toward the un-pinned list geometry (see the comment
+   * in WorkCardStack.tsx). This gets the feeling of reversal without it.
+   *
+   * The attribute has to be one Astro owns, and it has to start `data-astro-`.
+   * `swapRootAttributes` (astro/dist/transitions/swap-functions.js) strips
+   * every attribute off <html> during the swap and restores only the incoming
+   * document's plus the ones whose name starts with `data-astro-`; that swap
+   * runs inside the `startViewTransition` update callback, before the
+   * pseudo-element tree is built. Any hand-rolled attribute is therefore gone
+   * by the time these rules are matched, and back silently falls back to the
+   * plain cross-fade. `data-astro-transition` is set to the literal
+   * 'forward'/'back' in router.js immediately before the transition starts and
+   * removed when it finishes, so it survives exactly as long as it is needed.
+   *
+   * Scoped by attribute so it outranks the (*) rule above regardless of source
+   * order, and applied to `(*)` rather than `(root)` so every outgoing group
+   * takes the same slide. /work/[slug] names its title and its hero image, and
+   * naming lifts those elements out of the root snapshot; on the way back
+   * nothing on the incoming /work document carries those names, so the groups
+   * are unpaired and fall back to a plain fade. At `(root)` that left the
+   * title and hero standing still while the page slid out from under them.
+   *
+   * The outgoing page runs 100ms shorter than the incoming one on purpose:
+   * matched durations leave both pages half-transparent through the middle of
+   * the swap, which reads as a smear rather than a reversal.
+   */
+  html[data-astro-transition='back']::view-transition-old(*) {
+    animation: avp-back-out 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  html[data-astro-transition='back']::view-transition-new(*) {
+    animation: avp-back-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes avp-back-out {
+    to {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+
+  @keyframes avp-back-in {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

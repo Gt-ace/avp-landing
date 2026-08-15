@@ -29,6 +29,13 @@ describe('NavPill geometry', () => {
     expect(open.borderRadius).toBe(9999)
   })
 
+  it('recovers the width the collapsed disclosure box no longer needs', () => {
+    // The button used to hold a 44px floor even while open, because it still
+    // showed a chevron. With the chevron gone the whole box collapses, so the
+    // open pill is 44px narrower than it was.
+    expect(DESKTOP_OPEN_WIDTH).toBe(436)
+  })
+
   it('opens downward into a panel on mobile', () => {
     const open = getPillGeometry({ isOpen: true, isDesktop: false, linkCount: 3 })
 
