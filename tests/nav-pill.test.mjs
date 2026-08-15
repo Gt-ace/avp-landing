@@ -154,8 +154,38 @@ test('the collapsing V takes its touch box with it', async () => {
   )
   assert.match(
     source,
-    /width: isOpen \? 0 : TOUCH_TARGET/,
+    /width: isOpen && !isRingShowing \? 0 : TOUCH_TARGET/,
     'the span that holds the V owns the horizontal floor, and collapses it to nothing when open'
+  )
+})
+
+test('the collapse gives way to the focus ring', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  // A collapsed button is 0px wide, and the ring's offset is negative, so
+  // there is no box left to draw it on: opening the pill from the keyboard
+  // used to erase the ring from under a control that was still focused and
+  // still activatable. The box has to come back for as long as the ring is
+  // showing, which is what makes this a WCAG 2.4.7 fix and not a nicety.
+  assert.match(
+    source,
+    /width: isOpen && !isRingShowing \? 0 : TOUCH_TARGET/,
+    'the button keeps its 44px box whenever the focus ring is on it'
+  )
+  assert.match(
+    source,
+    /onFocus=\{\(e\) => setIsRingShowing\(isRingVisible\(e\.currentTarget\)\)\}/,
+    'a mouse click focuses the button in Chrome, so this tracks :focus-visible, not focus'
+  )
+  assert.match(
+    source,
+    /onBlur=\{\(\) => setIsRingShowing\(false\)\}/,
+    'the box collapses again the moment the ring leaves'
+  )
+  assert.match(
+    source,
+    /el\.matches\(':focus-visible'\)/,
+    'the state must agree with the CSS rule that draws the ring'
   )
 })
 

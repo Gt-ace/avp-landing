@@ -120,6 +120,22 @@ export function shouldCloseOnFocusOut(
   return !nextFocus || !container.contains(nextFocus)
 }
 
+/**
+ * Whether the focus ring is actually being drawn on this element, rather than
+ * whether it merely holds focus. Chrome and Firefox focus a button element on
+ * a mouse click; keying the disclosure button's box off plain focus would
+ * leave a 44px hole in an open pill for the rest of a mouse user's hover.
+ * Engines that cannot answer the query get the benefit of the doubt, because
+ * a ring with no box to draw on is the failure worth avoiding.
+ */
+function isRingVisible(el: HTMLElement): boolean {
+  try {
+    return el.matches(':focus-visible')
+  } catch {
+    return true
+  }
+}
+
 function subscribeToViewport(onChange: () => void) {
   const query = window.matchMedia(DESKTOP_QUERY)
   query.addEventListener('change', onChange)
@@ -238,6 +254,14 @@ function NavLink({
 export default function NavPill() {
   const [isOpen, setIsOpen] = useState(false)
   const [pathname, setPathname] = useState('/')
+
+  // The open pill's disclosure button has no ink of its own: the V collapses
+  // to nothing and takes the button's width with it. A 0px-wide box cannot
+  // show a focus ring — the ring's offset is negative, so there is nothing
+  // left to paint — which stranded a keyboard user on a button that was still
+  // focused, still named "Close menu", and no longer marked. Hold the 44px box
+  // open while the ring is showing, and only then.
+  const [isRingShowing, setIsRingShowing] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -402,6 +426,10 @@ export default function NavPill() {
             aria-label={isOpen ? 'Close menu' : 'Open menu'}
             className="navpill-target"
             onClick={() => setIsOpen((open) => !open)}
+            // These bubble, so the container's own onBlur still gets its turn
+            // and focus-out still closes the pill.
+            onFocus={(e) => setIsRingShowing(isRingVisible(e.currentTarget))}
+            onBlur={() => setIsRingShowing(false)}
             style={{
               minHeight: TOUCH_TARGET,
               display: 'flex',
@@ -420,11 +448,15 @@ export default function NavPill() {
                 button keeps a stable identity for focus across the toggle.
                 It carries the 44px horizontal floor rather than the button,
                 so the whole box goes with it: a floor on the button would
-                leave an empty 44px gap before the first link once open. */}
+                leave an empty 44px gap before the first link once open.
+
+                The exception is a visible focus ring, which needs a box to be
+                drawn on. The gap that costs is a fair trade against an
+                unmarked focused control, and it is itself feedback. */}
             <motion.span
               aria-hidden="true"
               animate={{
-                width: isOpen ? 0 : TOUCH_TARGET,
+                width: isOpen && !isRingShowing ? 0 : TOUCH_TARGET,
                 opacity: isOpen ? 0 : 1,
               }}
               initial={false}
