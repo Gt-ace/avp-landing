@@ -68,6 +68,24 @@ const staticNavLinks = [
       document.documentElement.classList.add('js')
     </script>
 
+    <!--
+      Astro's router hardcodes 'forward' for every link click; only the
+      browser back/forward gesture produces 'back'. The detail page's
+      "← All work" link is a same-site back affordance and wants the reverse
+      slide too, so it opts in with data-transition-direction rather than
+      this listener guessing at URL shape. astro:before-preparation fires
+      synchronously (events.js dispatchEvent) before router.js reads
+      event.direction to set data-astro-transition, so the override lands in
+      time. document survives the swap, so one registration covers every
+      navigation.
+    -->
+    <script is:inline>
+      document.addEventListener('astro:before-preparation', (event) => {
+        const forced = event.sourceElement?.dataset.transitionDirection
+        if (forced) event.direction = forced
+      })
+    </script>
+
     <ViewTransitions />
   </head>
   <body>
