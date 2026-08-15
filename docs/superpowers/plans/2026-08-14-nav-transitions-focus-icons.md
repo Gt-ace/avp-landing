@@ -763,13 +763,16 @@ test('a hover cannot start a run that reduced motion asked not to happen', async
   // component starts its own run on mouseenter, inside styles this project
   // cannot edit, so the neutraliser has to be global and !important.
   const css = await read('../src/styles/global.css')
-  const guard = css.match(
-    /@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/
-  )
+  // global.css has exactly one reduced-motion block and the new rule goes
+  // inside it, so a first-match regex is the right assertion. A second
+  // @media block would make this pass or fail on source order.
+  const blocks = [
+    ...css.matchAll(/@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/g),
+  ]
 
-  assert.ok(guard, 'global.css has no reduced-motion block')
-  assert.match(guard[1], /\.focus-icon \*/)
-  assert.match(guard[1], /animation: none !important/)
+  assert.equal(blocks.length, 1, 'one reduced-motion block, not two')
+  assert.match(blocks[0][1], /\.focus-icon \*/)
+  assert.match(blocks[0][1], /animation: none !important/)
 })
 ```
 
@@ -833,24 +836,26 @@ In `src/pages/about.astro`'s `<style>` block, replace the existing `.about-focus
   }
 ```
 
-Then append to `src/styles/global.css`:
+`src/styles/global.css` already ends with a
+`@media (prefers-reduced-motion: reduce)` block (line 220). Add the rule
+**inside that existing block**, as its last rule. Do not append a second
+`@media (prefers-reduced-motion: reduce)` block — one media query, one block,
+and the test asserts exactly that.
 
 ```css
-/*
- * @jis3r/icons ships no prefers-reduced-motion handling in any of its 555
- * components, and its keyframes live in styles this project does not own.
- * FocusIcon's script guard stops the scroll reveal; this stops the run a
- * hover would start. Global and !important because it has to reach inside a
- * scoped Svelte component.
- */
-@media (prefers-reduced-motion: reduce) {
+  /*
+   * @jis3r/icons ships no prefers-reduced-motion handling in any of its 555
+   * components, and its keyframes live in styles this project does not own.
+   * FocusIcon's script guard stops the scroll reveal; this stops the run a
+   * hover would start. !important because it has to reach inside a scoped
+   * Svelte component's own rules.
+   */
   .focus-icon *,
   .focus-icon *::before,
   .focus-icon *::after {
     animation: none !important;
     transition: none !important;
   }
-}
 ```
 
 - [ ] **Step 5: Run the tests to verify they pass**
