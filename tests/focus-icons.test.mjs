@@ -124,3 +124,20 @@ test('a hover cannot start a run that reduced motion asked not to happen', async
   assert.match(blocks[0][1], /\.focus-icon \*/)
   assert.match(blocks[0][1], /animation: none !important/)
 })
+
+test('stopping the run does not leave the icon invisible', async () => {
+  // layout-panel-left draws its three panels at opacity 0 and lets
+  // `animation-fill-mode: forwards` carry them to 1. Cancelling the animation
+  // strands them at 0, so under reduced motion a hover — which upstream starts
+  // regardless of the media query — blanked the icon for a second rather than
+  // holding it still. Pin the end state the animation would have reached.
+  const css = await read('../src/styles/global.css')
+  const block = css.match(/\.focus-icon \*,[\s\S]*?\n  \}/)
+
+  assert.ok(block, 'global.css has no .focus-icon neutraliser block')
+  assert.match(
+    block[0],
+    /opacity: 1 !important/,
+    'the icon has to stay drawn, not just stop moving'
+  )
+})

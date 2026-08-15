@@ -240,5 +240,14 @@ html.js [data-reveal].in-view {
   .focus-icon *::after {
     animation: none !important;
     transition: none !important;
+    /*
+     * `layout-panel-left` starts its three panels at `opacity: 0` and relies
+     * on `animation-fill-mode: forwards` to land them back at 1. Killing the
+     * animation without this leaves them at 0, so a hover — which upstream
+     * still honours under reduced motion — made the icon disappear for a
+     * second instead of holding still. All three of our icons draw at full
+     * opacity when they are not mid-run, so pinning it is safe.
+     */
+    opacity: 1 !important;
   }
 }
