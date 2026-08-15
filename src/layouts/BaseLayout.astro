@@ -119,17 +119,22 @@ const staticNavLinks = [
    * removed when it finishes, so it survives exactly as long as it is needed.
    *
    * Scoped by attribute so it outranks the (*) rule above regardless of source
-   * order, and targeted at `root` so the named card groups are untouched.
+   * order, and applied to `(*)` rather than `(root)` so every outgoing group
+   * takes the same slide. /work/[slug] names its title and its hero image, and
+   * naming lifts those elements out of the root snapshot; on the way back
+   * nothing on the incoming /work document carries those names, so the groups
+   * are unpaired and fall back to a plain fade. At `(root)` that left the
+   * title and hero standing still while the page slid out from under them.
    *
    * The outgoing page runs 100ms shorter than the incoming one on purpose:
    * matched durations leave both pages half-transparent through the middle of
    * the swap, which reads as a smear rather than a reversal.
    */
-  html[data-astro-transition='back']::view-transition-old(root) {
+  html[data-astro-transition='back']::view-transition-old(*) {
     animation: avp-back-out 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  html[data-astro-transition='back']::view-transition-new(root) {
+  html[data-astro-transition='back']::view-transition-new(*) {
     animation: avp-back-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 

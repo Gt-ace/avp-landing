@@ -79,21 +79,25 @@ test('the direction comes off an attribute that survives the swap', async () => 
 test('back reverses the direction instead of cross-fading', async () => {
   const layout = await read('../src/layouts/BaseLayout.astro')
 
+  // `(*)` and not `(root)`: /work/[slug] names its title and hero image, which
+  // lifts them out of the root snapshot, and on the way back nothing on /work
+  // carries those names. Scoped to root they were left fading in place while
+  // the page slid away underneath them.
   assert.match(
     layout,
-    /\[data-astro-transition='back'\]::view-transition-old\(root\)/,
+    /\[data-astro-transition='back'\]::view-transition-old\(\*\)/,
     'the outgoing page needs its own rule, scoped by an attribute so it beats the (*) default'
   )
   assert.match(
     layout,
-    /\[data-astro-transition='back'\]::view-transition-new\(root\)/
+    /\[data-astro-transition='back'\]::view-transition-new\(\*\)/
   )
 
   const out = layout.match(
-    /\[data-astro-transition='back'\]::view-transition-old\(root\)\s*\{([^}]*)\}/
+    /\[data-astro-transition='back'\]::view-transition-old\(\*\)\s*\{([^}]*)\}/
   )[1]
   const into = layout.match(
-    /\[data-astro-transition='back'\]::view-transition-new\(root\)\s*\{([^}]*)\}/
+    /\[data-astro-transition='back'\]::view-transition-new\(\*\)\s*\{([^}]*)\}/
   )[1]
 
   assert.match(out, /200ms/, 'the outgoing page leaves faster than the new one arrives')
@@ -123,10 +127,10 @@ test('reduced motion still wins over the directional rules', async () => {
   // important and the cascade would fall through to source order, where
   // reduced motion is not guaranteed to win.
   const out = layout.match(
-    /\[data-astro-transition='back'\]::view-transition-old\(root\)\s*\{([^}]*)\}/
+    /\[data-astro-transition='back'\]::view-transition-old\(\*\)\s*\{([^}]*)\}/
   )[1]
   const into = layout.match(
-    /\[data-astro-transition='back'\]::view-transition-new\(root\)\s*\{([^}]*)\}/
+    /\[data-astro-transition='back'\]::view-transition-new\(\*\)\s*\{([^}]*)\}/
   )[1]
 
   assert.doesNotMatch(out, /!important/, 'source order, not !important, must decide this')
