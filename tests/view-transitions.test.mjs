@@ -117,4 +117,18 @@ test('reduced motion still wins over the directional rules', async () => {
     /animation: none !important/,
     'only !important beats an attribute-scoped rule'
   )
+
+  // The other half of the relationship: this only holds because the back
+  // rules carry no !important of their own. If one did, both sides would be
+  // important and the cascade would fall through to source order, where
+  // reduced motion is not guaranteed to win.
+  const out = layout.match(
+    /\[data-nav-direction='back'\]::view-transition-old\(root\)\s*\{([^}]*)\}/
+  )[1]
+  const into = layout.match(
+    /\[data-nav-direction='back'\]::view-transition-new\(root\)\s*\{([^}]*)\}/
+  )[1]
+
+  assert.doesNotMatch(out, /!important/, 'source order, not !important, must decide this')
+  assert.doesNotMatch(into, /!important/, 'source order, not !important, must decide this')
 })
