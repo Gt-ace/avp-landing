@@ -450,14 +450,20 @@ export default function NavPill() {
                 so the whole box goes with it: a floor on the button would
                 leave an empty 44px gap before the first link once open.
 
-                The exception is a visible focus ring, which needs a box to be
-                drawn on. The gap that costs is a fair trade against an
-                unmarked focused control, and it is itself feedback. */}
+                Two exceptions hold the box open. A visible focus ring needs
+                something to be drawn on; the gap that costs is a fair trade
+                against an unmarked focused control, and it is itself feedback.
+                And below the breakpoint the links stack into the panel rather
+                than sitting in this row, so collapsing buys no room at all and
+                costs the only way to close the pill from the control: there is
+                no hover on touch, and a 0px-wide "Close menu" cannot be
+                tapped. The V stays put there, visible and 44px, which is also
+                the one state where it has room to. */}
             <motion.span
               aria-hidden="true"
               animate={{
-                width: isOpen && !isRingShowing ? 0 : TOUCH_TARGET,
-                opacity: isOpen ? 0 : 1,
+                width: isOpen && isDesktop && !isRingShowing ? 0 : TOUCH_TARGET,
+                opacity: isOpen && isDesktop ? 0 : 1,
               }}
               initial={false}
               transition={shapeTransition}

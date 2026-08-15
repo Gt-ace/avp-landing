@@ -154,7 +154,7 @@ test('the collapsing V takes its touch box with it', async () => {
   )
   assert.match(
     source,
-    /width: isOpen && !isRingShowing \? 0 : TOUCH_TARGET/,
+    /width: isOpen && isDesktop && !isRingShowing \? 0 : TOUCH_TARGET/,
     'the span that holds the V owns the horizontal floor, and collapses it to nothing when open'
   )
 })
@@ -169,7 +169,7 @@ test('the collapse gives way to the focus ring', async () => {
   // showing, which is what makes this a WCAG 2.4.7 fix and not a nicety.
   assert.match(
     source,
-    /width: isOpen && !isRingShowing \? 0 : TOUCH_TARGET/,
+    /width: isOpen && isDesktop && !isRingShowing \? 0 : TOUCH_TARGET/,
     'the button keeps its 44px box whenever the focus ring is on it'
   )
   assert.match(
@@ -186,6 +186,27 @@ test('the collapse gives way to the focus ring', async () => {
     source,
     /el\.matches\(':focus-visible'\)/,
     'the state must agree with the CSS rule that draws the ring'
+  )
+})
+
+test('the V never collapses on touch, where it is the only way to close', async () => {
+  const source = await read('../src/components/NavPill.tsx')
+
+  // Desktop collapses the box to hand its 44px to the link row. Below the
+  // breakpoint the links stack into the panel instead, so the collapse frees
+  // nothing and takes away the whole "Close menu" target: a 0px-wide button
+  // cannot be tapped, and touch has no hover to fall back on. Tapping outside
+  // still dismisses the pill, but the labelled control has to work too
+  // (WCAG 2.5.8 target size).
+  assert.match(
+    source,
+    /width: isOpen && isDesktop && !isRingShowing \? 0 : TOUCH_TARGET/,
+    'the collapse is desktop-only, so the phone keeps a 44px close target'
+  )
+  assert.match(
+    source,
+    /opacity: isOpen && isDesktop \? 0 : 1/,
+    'and the target is visible there, not an invisible 44px hole'
   )
 })
 
