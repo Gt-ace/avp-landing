@@ -51,6 +51,12 @@ The spec says the disclosure **button** animates its own `minWidth` to 0. The pl
 
 436 is still comfortable: the open centre slot holds three links at roughly 234px total, inside 436 − 88 (the A and P) = 348px of clear width.
 
+### Two further deviations, in part 3
+
+**Icon size is 20, not the spec's 24.** `FocusIcon.svelte` passes `size={20}` to the upstream glyph. At 24 the icon out-weighted the 11px uppercase label beside it and read as the row's subject rather than its marker; 20 sits under the label's cap height and lets the text lead. The 24px left column the spec sizes the layout around is unchanged, so nothing reflows.
+
+**`animate` is released after 1100ms, not left true.** The spec says the wrapper sets `animate` true once and leaves it. Doing that would break the spec's own requirement one paragraph later, that hover stays available as a replay: upstream's `handleMouseEnter` early-returns while `animate` is true, so a held flag means the icon animates exactly once, on entry, and never again. The wrapper therefore clears the flag 1100ms after it sets it, a little past the longest of the three runs (cpu's two-beat pulse at 1.0s), which leaves the entry animation intact and hands the control back to hover.
+
 ---
 
 ## Task 1: Remove the nav pill chevron

@@ -55,5 +55,5 @@
 
   /* The other half of the reduced-motion guard — the one that stops a hover
      starting a run — is in global.css, because it has to reach inside the
-     upstream component's own scoped styles. Task 5 adds it. */
+     upstream component's own scoped styles. */
 </style>

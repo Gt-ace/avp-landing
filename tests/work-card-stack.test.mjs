@@ -360,7 +360,7 @@ test('transition timing is defined once, in the layout, and covers the root fade
   )
 
   // Timing the groups alone left the page cross-fade on the UA default 250ms
-  // while the named morph ran the full 480ms, so the outgoing page vanished
+  // while the named morph ran the full duration, so the outgoing page vanished
   // partway through the morph. old/new carry the same clock as the group.
   assert.match(layout, /::view-transition-group\(\*\)/)
   assert.match(layout, /::view-transition-old\(\*\)/)
