@@ -51,4 +51,7 @@ docs/superpowers/plans/2026-07-26-bigtype-desktop-scroll.md
 docs/superpowers/plans/2026-07-29-pr-5-scroll-polish.md
 docs/superpowers/plans/2026-07-29-tuesday-board-hero.md
 docs/superpowers/specs/2026-07-29-tuesday-board-hero-design.md
+
+# local-only audit, kept in this checkout but not tracked
+docs/superpowers/specs/2026-08-12-mobile-experience-audit.md
 .codex/
