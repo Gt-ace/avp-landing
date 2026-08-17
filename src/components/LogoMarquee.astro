@@ -89,19 +89,21 @@ const logos: Logo[] = [
   }
 
   /*
-   * The fade is an inset, not a share of the width: at 8% each side it ate
-   * 62px of a 390px phone, which is half a logo box at either end.
+   * The fade is clamped, not a share of the width: at 8% each side it ate 62px
+   * of a 390px phone, which is half a logo at either end. It still has to grow
+   * with the viewport, though — a 24px fade against a 66px logo on a desktop
+   * reads as a hard cut rather than a belt running past the edge.
    */
   .logo-marquee {
+    --fade: clamp(24px, 5vw, 80px);
     overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
-    mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black var(--fade), black calc(100% - var(--fade)), transparent);
+    mask-image: linear-gradient(to right, transparent, black var(--fade), black calc(100% - var(--fade)), transparent);
   }
 
   .logo-track {
     display: flex;
     width: max-content;
-    will-change: transform;
     /*
      * The CSS keyframes are the no-JS and reduced-motion baseline. The script
      * below cancels them and drives the same movement from rAF so page-scroll
@@ -154,43 +156,46 @@ const logos: Logo[] = [
 
 <script>
   /*
-   * Scroll-reactive marquee. The belt has a slow idle speed; page-scroll
-   * velocity adds a boost on top. The boost is eased in and, crucially, eased
-   * back out with a longer release than attack, so letting go of the wheel
+   * Scroll-reactive marquee. The belt itself is a Web Animations API loop, so
+   * the movement lives on the compositor; scroll velocity only nudges its
+   * playbackRate. That split matters here, because the main thread is busiest
+   * during exactly the gesture this reacts to: a rAF that wrote transforms by
+   * hand would stutter under the same scroll that is meant to speed it up.
+   *
+   * The boost eases in fast and releases slowly, so letting go of the wheel
    * coasts the belt down instead of snapping it back to idle.
    */
-  // Idle speed as time for one full set: ~53px/s here, a shade under the belt's
-  // old pace. Keep it in step with the CSS keyframe duration above.
+  // Time for one full set: ~53px/s, a shade under the belt's old pace. Keep it
+  // in step with the CSS keyframe duration above, which is the no-JS baseline.
   const SECONDS_PER_SET = 25
-  const GAIN = 0.42 // px/s of belt speed per px/s of page scroll
-  const MAX_BOOST = 900 // px/s ceiling, so a flick cannot smear the logos
+  const GAIN = 0.008 // extra playback rate per px/s of page scroll
+  const MAX_BOOST = 16 // rate ceiling, so a flick cannot smear the logos
   const TARGET_DECAY = 6 // how fast the scroll reading falls off once events stop
   const ATTACK = 9 // ramp toward a rising boost
   const RELEASE = 1.7 // ramp back down: slower, this is the coast
+  const SETTLED = 0.01 // below this the boost is invisible, so stop the loop
 
   const setupMarquee = (track: HTMLElement) => {
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    // Reduced motion keeps the CSS baseline, which is already `animation: none`.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    // Hand over from the CSS keyframes immediately, not at first intersection:
+    // the marquee sits below the fold, so waiting would let them wind the belt
+    // forward and then snap it back to zero on takeover.
+    track.style.animation = 'none'
+    const belt = track.animate(
+      [{ transform: 'translate3d(0, 0, 0)' }, { transform: 'translate3d(-50%, 0, 0)' }],
+      { duration: SECONDS_PER_SET * 1000, iterations: Infinity, easing: 'linear' },
+    )
+
     let frame = 0
-    let visible = true
-    // Position and boost live out here so pausing off-screen and resuming
-    // picks up where the belt left off instead of jumping back to the start.
-    let x = 0
+    let onScreen = false
+    let running = false
     let boost = 0
     let target = 0
     let last = 0
-    let lastScrollY = 0
-    let lastScrollAt = 0
-
-    const onScroll = () => {
-      const now = performance.now()
-      // Floor the interval: two scroll events in the same millisecond would
-      // otherwise divide out to an absurd velocity.
-      const dt = Math.max(now - lastScrollAt, 8) / 1000
-      const velocity = Math.abs(window.scrollY - lastScrollY) / dt
-      lastScrollY = window.scrollY
-      lastScrollAt = now
-      target = Math.min(velocity * GAIN, MAX_BOOST)
-    }
+    let lastScrollY = window.scrollY
+    let lastScrollAt = performance.now()
 
     const step = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.05)
@@ -198,61 +203,74 @@ const logos: Logo[] = [
 
       // No scroll events means no fresh reading, so the target bleeds off.
       target *= Math.exp(-TARGET_DECAY * dt)
-      const rate = target > boost ? ATTACK : RELEASE
-      boost += (target - boost) * (1 - Math.exp(-rate * dt))
+      boost += (target - boost) * (1 - Math.exp(-(target > boost ? ATTACK : RELEASE) * dt))
 
-      const setWidth = track.scrollWidth / 2
-      if (setWidth > 0) {
-        x = (x + (setWidth / SECONDS_PER_SET + boost) * dt) % setWidth
-        track.style.transform = `translate3d(${-x}px, 0, 0)`
+      if (boost > SETTLED || target > SETTLED) {
+        belt.playbackRate = 1 + boost
+        frame = requestAnimationFrame(step)
+      } else {
+        // Settled: park it exactly on idle and hand the belt back to the
+        // compositor. A marquee nobody is pushing costs no main-thread work.
+        boost = 0
+        belt.playbackRate = 1
+        frame = 0
       }
-      frame = requestAnimationFrame(step)
     }
 
-    const stop = () => {
-      if (!frame) return
-      cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', onScroll)
-      frame = 0
-      // Drop the scroll reading: it is whatever was happening when the belt
-      // left the screen, and resuming on it would fire off a phantom burst.
-      // `boost` stays, so a belt that comes back into view coasts down.
-      target = 0
-    }
-
-    const start = () => {
-      if (frame || media.matches) return
+    const drive = () => {
+      if (frame || !running) return
       last = performance.now()
-      lastScrollY = window.scrollY
-      lastScrollAt = last
-      window.addEventListener('scroll', onScroll, { passive: true })
       frame = requestAnimationFrame(step)
     }
 
-    if (!media.matches) {
-      // Hand over from the CSS baseline immediately, not at first intersection:
-      // the marquee sits below the fold, so waiting would let the keyframes
-      // wind the belt forward and then snap it back to zero on takeover.
-      track.style.animation = 'none'
-      track.style.transform = 'translate3d(0, 0, 0)'
+    const onScroll = () => {
+      const now = performance.now()
+      const travelled = Math.abs(window.scrollY - lastScrollY)
+      const since = lastScrollAt
+      lastScrollY = window.scrollY
+      lastScrollAt = now
+      // Off-screen the belt is parked, so keep the reading current without
+      // waking the loop; resuming on a stale delta would fire a phantom burst.
+      if (!running) return
+      // Floor the interval: two scroll events in the same millisecond would
+      // otherwise divide out to an absurd velocity.
+      const dt = Math.max(now - since, 8) / 1000
+      target = Math.min((travelled / dt) * GAIN, MAX_BOOST)
+      drive()
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+
+    // Intersection and tab visibility are tracked apart, then reconciled: a tab
+    // switch fires no intersection change, so folding them into one flag would
+    // leave the belt parked for good after the user comes back.
+    const sync = () => {
+      const next = onScreen && !document.hidden
+      if (next === running) return
+      running = next
+      if (running) {
+        belt.play()
+        drive()
+      } else {
+        belt.pause()
+        cancelAnimationFrame(frame)
+        frame = 0
+        boost = 0
+        target = 0
+        belt.playbackRate = 1
+      }
     }
 
-    // Off-screen the belt is pure waste, and the tab being hidden pauses rAF
-    // anyway; unhooking the scroll listener with it keeps that honest.
-    const observer = new IntersectionObserver(
+    // Off-screen or on a hidden tab the belt is pure waste, and pausing rather
+    // than letting it run blind also spares the jump-cut on tab return.
+    new IntersectionObserver(
       ([entry]) => {
-        visible = entry.isIntersecting
-        if (visible && !document.hidden) start()
-        else stop()
+        onScreen = entry.isIntersecting
+        sync()
       },
       { rootMargin: '100px' },
-    )
-    observer.observe(track)
+    ).observe(track)
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) stop()
-      else if (visible) start()
-    })
+    document.addEventListener('visibilitychange', sync)
   }
 
   document
