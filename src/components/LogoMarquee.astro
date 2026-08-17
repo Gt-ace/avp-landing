@@ -7,42 +7,62 @@ const { label = 'Built with' } = Astro.props
 interface Logo {
   src: string
   alt: string
-  /** Optional box width override in px for wide wordmarks. Defaults to 132. */
-  w?: number
+  /**
+   * Rendered height in px. Equal heights would not read as equal sizes: a 1:1
+   * icon and a 4:1 wordmark drawn 44px tall differ by four times the ink. Each
+   * height here is 44 / sqrt(aspect) of the mark's measured ink box, which
+   * lands every logo on roughly the same drawn area. Two source files were
+   * cropped to their ink (claude-code, cloudflare) so the ratio is honest.
+   */
+  h: number
+  /**
+   * Width in px at that height, i.e. h times the file's own aspect ratio.
+   * Stated rather than inferred so the boxes are sized before the lazy SVGs
+   * arrive: nothing reflows, and the belt's loop length is right on frame one.
+   */
+  w: number
 }
 
 const logos: Logo[] = [
-  { src: '/logos/claude-code.svg', alt: 'Claude Code' },
-  { src: '/logos/ts-logo-512.svg', alt: 'TypeScript' },
-  { src: '/logos/Svelte_Logo.svg', alt: 'Svelte' },
-  { src: '/logos/docker-svgrepo-com.svg', alt: 'Docker' },
-  { src: '/logos/cloudflare-icon.svg', alt: 'Cloudflare' },
-  { src: '/logos/hetzner-h.svg', alt: 'Hetzner' },
-  { src: '/logos/drizzle-mono.svg', alt: 'Drizzle', w: 168 },
-  { src: '/logos/opencode-wordmark-dark.svg', alt: 'opencode', w: 168 },
-  { src: '/logos/n8n.svg', alt: 'n8n', w: 168 },
-  { src: '/logos/better-auth.svg', alt: 'Better Auth', w: 168 },
-  { src: '/logos/git.svg', alt: 'Git' },
-  { src: '/logos/github.svg', alt: 'GitHub' },
-  { src: '/logos/supabase.svg', alt: 'Supabase' },
+  { src: '/logos/claude-code.svg', alt: 'Claude Code', h: 35, w: 56 },
+  { src: '/logos/ts-logo-512.svg', alt: 'TypeScript', h: 44, w: 44 },
+  { src: '/logos/Svelte_Logo.svg', alt: 'Svelte', h: 48, w: 40 },
+  { src: '/logos/tailwind.svg', alt: 'Tailwind CSS', h: 34, w: 56 },
+  { src: '/logos/docker-svgrepo-com.svg', alt: 'Docker', h: 44, w: 44 },
+  { src: '/logos/cloudflare-icon.svg', alt: 'Cloudflare', h: 30, w: 66 },
+  { src: '/logos/hetzner-h.svg', alt: 'Hetzner', h: 44, w: 44 },
+  // Drizzle's file carries its own padding, so the box is taller than the ink.
+  { src: '/logos/drizzle-mono.svg', alt: 'Drizzle', h: 24, w: 128 },
+  { src: '/logos/n8n.svg', alt: 'n8n', h: 31, w: 62 },
+  { src: '/logos/better-auth.svg', alt: 'Better Auth', h: 22, w: 88 },
+  { src: '/logos/git.svg', alt: 'Git', h: 44, w: 44 },
+  { src: '/logos/github.svg', alt: 'GitHub', h: 44, w: 44 },
+  { src: '/logos/supabase.svg', alt: 'Supabase', h: 45, w: 43 },
 ]
 ---
 <section class="logo-marquee-wrap" aria-label={label}>
   <span class="logo-marquee-label">{label}</span>
   <div class="logo-marquee">
-    <div class="logo-track">
+    <div class="logo-track" data-logo-track>
       {/*
         The second set is the animation's wrap-around copy, so it is hidden
         from assistive tech and shares its URLs with the first set: 26 tags
         only ever cost 13 requests. Those requests are deferred because the
-        marquee sits well below the fold on both pages that mount it, and the
-        boxes are fixed-size, so nothing reflows when a logo arrives.
+        marquee sits well below the fold on the page that mounts it.
       */}
       {[0, 1].map((setIndex) => (
         <div class="logo-set" aria-hidden={setIndex === 1 ? 'true' : undefined}>
           {logos.map((logo) => (
-            <span class="logo-item" style={logo.w ? `width:${logo.w}px` : undefined}>
-              <img src={logo.src} alt={logo.alt} loading="lazy" decoding="async" />
+            <span class="logo-item">
+              <img
+                src={logo.src}
+                alt={logo.alt}
+                width={logo.w}
+                height={logo.h}
+                style={`width:${logo.w}px;height:${logo.h}px`}
+                loading="lazy"
+                decoding="async"
+              />
             </span>
           ))}
         </div>
@@ -81,19 +101,25 @@ const logos: Logo[] = [
   .logo-track {
     display: flex;
     width: max-content;
-    animation: logo-scroll 32s linear infinite;
+    will-change: transform;
+    /*
+     * The CSS keyframes are the no-JS and reduced-motion baseline. The script
+     * below cancels them and drives the same movement from rAF so page-scroll
+     * velocity can push the speed around.
+     */
+    animation: logo-scroll 25s linear infinite;
   }
 
   .logo-set {
     display: flex;
+    align-items: center;
     flex: 0 0 auto;
-    gap: 1.5rem;
-    padding-right: 1.5rem;
+    gap: 2.75rem;
+    padding-right: 2.75rem;
   }
 
   .logo-item {
     flex: 0 0 auto;
-    width: 132px;
     height: 64px;
     display: flex;
     align-items: center;
@@ -101,10 +127,8 @@ const logos: Logo[] = [
   }
 
   .logo-item img {
-    max-width: 85%;
-    max-height: 80%;
     width: auto;
-    height: auto;
+    max-width: none;
     object-fit: contain;
   }
 
@@ -127,3 +151,111 @@ const logos: Logo[] = [
     }
   }
 </style>
+
+<script>
+  /*
+   * Scroll-reactive marquee. The belt has a slow idle speed; page-scroll
+   * velocity adds a boost on top. The boost is eased in and, crucially, eased
+   * back out with a longer release than attack, so letting go of the wheel
+   * coasts the belt down instead of snapping it back to idle.
+   */
+  // Idle speed as time for one full set: ~53px/s here, a shade under the belt's
+  // old pace. Keep it in step with the CSS keyframe duration above.
+  const SECONDS_PER_SET = 25
+  const GAIN = 0.42 // px/s of belt speed per px/s of page scroll
+  const MAX_BOOST = 900 // px/s ceiling, so a flick cannot smear the logos
+  const TARGET_DECAY = 6 // how fast the scroll reading falls off once events stop
+  const ATTACK = 9 // ramp toward a rising boost
+  const RELEASE = 1.7 // ramp back down: slower, this is the coast
+
+  const setupMarquee = (track: HTMLElement) => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let frame = 0
+    let visible = true
+    // Position and boost live out here so pausing off-screen and resuming
+    // picks up where the belt left off instead of jumping back to the start.
+    let x = 0
+    let boost = 0
+    let target = 0
+    let last = 0
+    let lastScrollY = 0
+    let lastScrollAt = 0
+
+    const onScroll = () => {
+      const now = performance.now()
+      // Floor the interval: two scroll events in the same millisecond would
+      // otherwise divide out to an absurd velocity.
+      const dt = Math.max(now - lastScrollAt, 8) / 1000
+      const velocity = Math.abs(window.scrollY - lastScrollY) / dt
+      lastScrollY = window.scrollY
+      lastScrollAt = now
+      target = Math.min(velocity * GAIN, MAX_BOOST)
+    }
+
+    const step = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05)
+      last = now
+
+      // No scroll events means no fresh reading, so the target bleeds off.
+      target *= Math.exp(-TARGET_DECAY * dt)
+      const rate = target > boost ? ATTACK : RELEASE
+      boost += (target - boost) * (1 - Math.exp(-rate * dt))
+
+      const setWidth = track.scrollWidth / 2
+      if (setWidth > 0) {
+        x = (x + (setWidth / SECONDS_PER_SET + boost) * dt) % setWidth
+        track.style.transform = `translate3d(${-x}px, 0, 0)`
+      }
+      frame = requestAnimationFrame(step)
+    }
+
+    const stop = () => {
+      if (!frame) return
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', onScroll)
+      frame = 0
+      // Drop the scroll reading: it is whatever was happening when the belt
+      // left the screen, and resuming on it would fire off a phantom burst.
+      // `boost` stays, so a belt that comes back into view coasts down.
+      target = 0
+    }
+
+    const start = () => {
+      if (frame || media.matches) return
+      last = performance.now()
+      lastScrollY = window.scrollY
+      lastScrollAt = last
+      window.addEventListener('scroll', onScroll, { passive: true })
+      frame = requestAnimationFrame(step)
+    }
+
+    if (!media.matches) {
+      // Hand over from the CSS baseline immediately, not at first intersection:
+      // the marquee sits below the fold, so waiting would let the keyframes
+      // wind the belt forward and then snap it back to zero on takeover.
+      track.style.animation = 'none'
+      track.style.transform = 'translate3d(0, 0, 0)'
+    }
+
+    // Off-screen the belt is pure waste, and the tab being hidden pauses rAF
+    // anyway; unhooking the scroll listener with it keeps that honest.
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting
+        if (visible && !document.hidden) start()
+        else stop()
+      },
+      { rootMargin: '100px' },
+    )
+    observer.observe(track)
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop()
+      else if (visible) start()
+    })
+  }
+
+  document
+    .querySelectorAll<HTMLElement>('[data-logo-track]')
+    .forEach(setupMarquee)
+</script>
