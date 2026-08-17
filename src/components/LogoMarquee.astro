@@ -47,8 +47,9 @@ const logos: Logo[] = [
       {/*
         The second set is the animation's wrap-around copy, so it is hidden
         from assistive tech and shares its URLs with the first set: 26 tags
-        only ever cost 13 requests. Those requests are deferred because the
-        marquee sits well below the fold on the page that mounts it.
+        only ever cost 13 requests. They stay lazy for the narrow viewports
+        that push the strip down the page; on a laptop it sits right at the
+        fold and loads at once, which is why every box states its own size.
       */}
       {[0, 1].map((setIndex) => (
         <div class="logo-set" aria-hidden={setIndex === 1 ? 'true' : undefined}>
@@ -106,18 +107,22 @@ const logos: Logo[] = [
     width: max-content;
     /*
      * The CSS keyframes are the no-JS and reduced-motion baseline. The script
-     * below cancels them and drives the same movement from rAF so page-scroll
-     * velocity can push the speed around.
+     * below cancels them and restates the same movement as a Web Animations
+     * loop, whose playbackRate the scroll gesture can push around.
      */
-    animation: logo-scroll 25s linear infinite;
+    animation: logo-scroll 31s linear infinite;
   }
 
   .logo-set {
     display: flex;
     align-items: center;
     flex: 0 0 auto;
-    gap: 2.75rem;
-    padding-right: 2.75rem;
+    /*
+     * The trailing pad has to equal the gap, or the seam where the set repeats
+     * shows up as one wrong-sized space every lap.
+     */
+    gap: 4.25rem;
+    padding-right: 4.25rem;
   }
 
   .logo-item {
@@ -157,23 +162,33 @@ const logos: Logo[] = [
 <script>
   /*
    * Scroll-reactive marquee. The belt itself is a Web Animations API loop, so
-   * the movement lives on the compositor; scroll velocity only nudges its
+   * the movement lives on the compositor; the scroll gesture only nudges its
    * playbackRate. That split matters here, because the main thread is busiest
    * during exactly the gesture this reacts to: a rAF that wrote transforms by
    * hand would stutter under the same scroll that is meant to speed it up.
    *
    * The boost eases in fast and releases slowly, so letting go of the wheel
    * coasts the belt down instead of snapping it back to idle.
+   *
+   * Three inputs feed it, because scroll position alone is not the gesture.
+   * This marquee is the last thing on a page barely taller than the viewport,
+   * so a reader looking at it is pinned to the document end, where the browser
+   * has nothing left to scroll and fires no scroll event at all. Wheel and
+   * touchmove still report the hand, so the belt answers a push that the page
+   * itself cannot absorb.
    */
-  // Time for one full set: ~53px/s, a shade under the belt's old pace. Keep it
-  // in step with the CSS keyframe duration above, which is the no-JS baseline.
-  const SECONDS_PER_SET = 25
-  const GAIN = 0.008 // extra playback rate per px/s of page scroll
+  // Time for one full set. The set is 1643px wide, so this holds the idle pace
+  // at ~53px/s, a shade under the belt's old speed; widening the gaps length-
+  // ened the lap and would otherwise have sped it back up. Keep it in step with
+  // the CSS keyframe duration above, which is the no-JS baseline.
+  const SECONDS_PER_SET = 31
+  const GAIN = 0.008 // extra playback rate per px/s of gesture
   const MAX_BOOST = 16 // rate ceiling, so a flick cannot smear the logos
-  const TARGET_DECAY = 6 // how fast the scroll reading falls off once events stop
+  const TARGET_DECAY = 6 // how fast the reading falls off once events stop
   const ATTACK = 9 // ramp toward a rising boost
   const RELEASE = 1.7 // ramp back down: slower, this is the coast
   const SETTLED = 0.01 // below this the boost is invisible, so stop the loop
+  const LINE_HEIGHT = 16 // px per line, for wheel events reported in lines
 
   const setupMarquee = (track: HTMLElement) => {
     // Reduced motion keeps the CSS baseline, which is already `animation: none`.
@@ -194,8 +209,12 @@ const logos: Logo[] = [
     let boost = 0
     let target = 0
     let last = 0
+    // One timestamp per input, since the three fire on their own cadences.
     let lastScrollY = window.scrollY
     let lastScrollAt = performance.now()
+    let lastWheelAt = lastScrollAt
+    let lastTouchY = 0
+    let lastTouchAt = lastScrollAt
 
     const step = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.05)
@@ -223,22 +242,67 @@ const logos: Logo[] = [
       frame = requestAnimationFrame(step)
     }
 
-    const onScroll = () => {
-      const now = performance.now()
-      const travelled = Math.abs(window.scrollY - lastScrollY)
-      const since = lastScrollAt
-      lastScrollY = window.scrollY
-      lastScrollAt = now
-      // Off-screen the belt is parked, so keep the reading current without
-      // waking the loop; resuming on a stale delta would fire a phantom burst.
+    /**
+     * Take the strongest of the live readings rather than their sum: a wheel
+     * that does move the page reports through both listeners, and it is one
+     * hand either way.
+     */
+    const push = (travelled: number, since: number, now: number) => {
       if (!running) return
-      // Floor the interval: two scroll events in the same millisecond would
-      // otherwise divide out to an absurd velocity.
+      // Floor the interval: two events in the same millisecond would otherwise
+      // divide out to an absurd velocity.
       const dt = Math.max(now - since, 8) / 1000
-      target = Math.min((travelled / dt) * GAIN, MAX_BOOST)
+      target = Math.min(Math.max(target, (travelled / dt) * GAIN), MAX_BOOST)
       drive()
     }
-    window.addEventListener('scroll', onScroll, { passive: true })
+
+    // Position deltas: covers the scrollbar, the keyboard, and the inertial
+    // tail of a trackpad flick, which keeps scrolling after the wheel is done.
+    window.addEventListener(
+      'scroll',
+      () => {
+        const now = performance.now()
+        const travelled = Math.abs(window.scrollY - lastScrollY)
+        const since = lastScrollAt
+        lastScrollY = window.scrollY
+        lastScrollAt = now
+        push(travelled, since, now)
+      },
+      { passive: true },
+    )
+
+    // The gesture itself, which arrives whether or not the page can move.
+    window.addEventListener(
+      'wheel',
+      (event) => {
+        const now = performance.now()
+        const since = lastWheelAt
+        lastWheelAt = now
+        const unit =
+          event.deltaMode === 1 ? LINE_HEIGHT : event.deltaMode === 2 ? window.innerHeight : 1
+        push(Math.abs(event.deltaY) * unit, since, now)
+      },
+      { passive: true },
+    )
+
+    window.addEventListener('touchstart', (event) => {
+      lastTouchY = event.touches[0].clientY
+      lastTouchAt = performance.now()
+    }, { passive: true })
+
+    window.addEventListener(
+      'touchmove',
+      (event) => {
+        const now = performance.now()
+        const y = event.touches[0].clientY
+        const since = lastTouchAt
+        const travelled = Math.abs(y - lastTouchY)
+        lastTouchY = y
+        lastTouchAt = now
+        push(travelled, since, now)
+      },
+      { passive: true },
+    )
 
     // Intersection and tab visibility are tracked apart, then reconciled: a tab
     // switch fires no intersection change, so folding them into one flag would
