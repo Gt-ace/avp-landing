@@ -62,13 +62,22 @@ jobs:
             export TAG=${{ github.sha }}
             mkdir -p ~/apps/avp-landing
             cd ~/apps/avp-landing
-            # First-time install of the run definition. On later runs the
-            # file already exists and the redirect keeps it untouched. The
-            # workflow owns this file; manual edits on the box will be
-            # overwritten by the next deploy, by design.
-            if [ ! -f docker-compose.yml ]; then
-              echo "WARN: docker-compose.yml not present on box; will be created on next manual run." >&2
-            fi
+            cat << 'EOF' > docker-compose.yml
+services:
+  web:
+    container_name: avp-landing
+    image: ghcr.io/vanpetegem/avp-landing:${TAG:-latest}
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - amber
+
+networks:
+  amber:
+    external: true
+    name: amber_default
+EOF
             docker compose pull
             # Recover from a stale container holding our name before giving up.
             # Compose renames the old container to <id>_avp-landing while
