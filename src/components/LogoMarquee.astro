@@ -28,6 +28,7 @@ const logos: Logo[] = [
   { src: '/logos/ts-logo-512.svg', alt: 'TypeScript', h: 44, w: 44 },
   { src: '/logos/Svelte_Logo.svg', alt: 'Svelte', h: 48, w: 40 },
   { src: '/logos/tailwind.svg', alt: 'Tailwind CSS', h: 34, w: 56 },
+  { src: '/logos/vitest.svg', alt: 'Vitest', h: 44, w: 44 },
   { src: '/logos/docker-svgrepo-com.svg', alt: 'Docker', h: 44, w: 44 },
   { src: '/logos/cloudflare-icon.svg', alt: 'Cloudflare', h: 30, w: 66 },
   { src: '/logos/hetzner-h.svg', alt: 'Hetzner', h: 44, w: 44 },
@@ -46,8 +47,8 @@ const logos: Logo[] = [
     <div class="logo-track" data-logo-track>
       {/*
         The second set is the animation's wrap-around copy, so it is hidden
-        from assistive tech and shares its URLs with the first set: 26 tags
-        only ever cost 13 requests. They stay lazy for the narrow viewports
+        from assistive tech and shares its URLs with the first set: 28 tags
+        only ever cost 14 requests. They stay lazy for the narrow viewports
         that push the strip down the page; on a laptop it sits right at the
         fold and loads at once, which is why every box states its own size.
       */}
@@ -110,7 +111,7 @@ const logos: Logo[] = [
      * below cancels them and restates the same movement as a Web Animations
      * loop, whose playbackRate the scroll gesture can push around.
      */
-    animation: logo-scroll 31s linear infinite;
+    animation: logo-scroll 33s linear infinite;
   }
 
   .logo-set {
@@ -177,11 +178,11 @@ const logos: Logo[] = [
    * touchmove still report the hand, so the belt answers a push that the page
    * itself cannot absorb.
    */
-  // Time for one full set. The set is 1643px wide, so this holds the idle pace
+  // Time for one full set. The set is 1755px wide, so this holds the idle pace
   // at ~53px/s, a shade under the belt's old speed; widening the gaps length-
   // ened the lap and would otherwise have sped it back up. Keep it in step with
   // the CSS keyframe duration above, which is the no-JS baseline.
-  const SECONDS_PER_SET = 31
+  const SECONDS_PER_SET = 33
   const GAIN = 0.008 // extra playback rate per px/s of gesture
   const MAX_BOOST = 16 // rate ceiling, so a flick cannot smear the logos
   const TARGET_DECAY = 6 // how fast the reading falls off once events stop

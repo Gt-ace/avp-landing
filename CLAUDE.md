@@ -47,7 +47,7 @@ Jellyfin, Amber, and Crux (`crux.avp.software`).
    routes.
 3. **Two-stage Dockerfile.** `builder` (node:20-alpine, `npm ci && npm
    run build`) then `runner` (nginx:alpine serving `dist/`).
-4. **The image is public.** `ghcr.io/gt-ace/avp-landing`, tagged by git
+4. **The image is public.** `ghcr.io/vanpetegem/avp-landing`, tagged by git
    SHA plus `latest`. No secrets in the image, build context, or on the
    box via env_file. CI holds only the SSH key and the auto-provided
    `GITHUB_TOKEN`.

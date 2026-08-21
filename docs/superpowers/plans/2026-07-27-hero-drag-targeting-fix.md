@@ -361,7 +361,7 @@ git add \
   src/components/hero-workflow/workflow-controller.ts \
   src/components/HeroWorkflow.astro \
   tests/hero-workflow/workflow-controller.test.ts
-git commit --author="Gt-ace <arthur.s7@gmx.de>" \
+git commit --author="VanPetegem <arthur.s7@gmx.de>" \
   -m "fix: stabilize untangler drag targets"
 ```
 

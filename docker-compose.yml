@@ -6,7 +6,7 @@
 services:
   web:
     container_name: avp-landing # stable name so Caddy can target it
-    image: ghcr.io/gt-ace/avp-landing:${TAG:-latest}
+    image: ghcr.io/vanpetegem/avp-landing:${TAG:-latest}
     restart: unless-stopped
     expose:
       - "80" # internal only. Caddy reaches it by name over the shared network.

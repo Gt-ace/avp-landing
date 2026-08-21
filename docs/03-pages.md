@@ -564,8 +564,8 @@ const contacts = [
   },
   {
     label: 'GitHub',
-    value: 'Gt-ace',
-    href: 'https://github.com/Gt-ace',
+    value: 'VanPetegem',
+    href: 'https://github.com/VanPetegem',
     external: true,
   },
 ]

@@ -90,7 +90,7 @@ test('the marquee fade is a fixed inset, not a share of a phone width', async ()
       /black \d+%/,
       'a percentage fade eats a fifth of a 390px screen; a px inset does not'
     )
-    assert.match(mask, /black 24px, black calc\(100% - 24px\)/)
+    assert.match(mask, /black var\(--fade\), black calc\(100% - var\(--fade\)\)/)
   }
 })
 

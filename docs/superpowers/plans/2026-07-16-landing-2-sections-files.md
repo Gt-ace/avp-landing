@@ -22,7 +22,7 @@
 - Scripts must survive Astro ViewTransitions: re-arm on `astro:page-load`.
 - The page must never scroll horizontally; wide content is clipped by its own container.
 - No test framework exists. Verification is `npm run build` plus grepping `dist/`; visual checks via `npm run preview`.
-- Every git commit uses `--author="Gt-ace <arthur.s7@gmx.de>"`.
+- Every git commit uses `--author="VanPetegem <arthur.s7@gmx.de>"`.
 
 ---
 
@@ -170,7 +170,7 @@ Expected: 4 or more.
 
 ```bash
 git add src/pages/index.astro
-git commit --author="Gt-ace <arthur.s7@gmx.de>" -m "Add process section to landing page"
+git commit --author="VanPetegem <arthur.s7@gmx.de>" -m "Add process section to landing page"
 ```
 
 ---
@@ -275,7 +275,7 @@ Run: `npm run preview`. Scroll through the band: the top line drifts left, the b
 
 ```bash
 git add src/pages/index.astro
-git commit --author="Gt-ace <arthur.s7@gmx.de>" -m "Add scroll-linked big type band"
+git commit --author="VanPetegem <arthur.s7@gmx.de>" -m "Add scroll-linked big type band"
 ```
 
 ---
@@ -470,7 +470,7 @@ Run: `npm run preview`. Open items with mouse and with keyboard (Tab to a questi
 
 ```bash
 git add src/pages/index.astro
-git commit --author="Gt-ace <arthur.s7@gmx.de>" -m "Add FAQ accordion to landing page"
+git commit --author="VanPetegem <arthur.s7@gmx.de>" -m "Add FAQ accordion to landing page"
 ```
 
 ---
@@ -554,7 +554,7 @@ Expected: first is 1; second is 4.
 
 ```bash
 git add src/pages/index.astro
-git commit --author="Gt-ace <arthur.s7@gmx.de>" -m "Add AI summary strip"
+git commit --author="VanPetegem <arthur.s7@gmx.de>" -m "Add AI summary strip"
 ```
 
 ---
@@ -638,7 +638,7 @@ Expected: the kanban art's first lines, then `# AVP Software`.
 
 ```bash
 git add public/robots.txt public/llms.txt
-git commit --author="Gt-ace <arthur.s7@gmx.de>" -m "Add ASCII kanban robots.txt and llms.txt"
+git commit --author="VanPetegem <arthur.s7@gmx.de>" -m "Add ASCII kanban robots.txt and llms.txt"
 ```
 
 ---
@@ -670,7 +670,7 @@ Expected order: hero, process, selected, bigtype, faq, ai-strip.
 
 ```bash
 git add src/pages/index.astro
-git commit --author="Gt-ace <arthur.s7@gmx.de>" -m "Fix landing page verification findings"
+git commit --author="VanPetegem <arthur.s7@gmx.de>" -m "Fix landing page verification findings"
 ```
 
 Only commit if fixes were needed.

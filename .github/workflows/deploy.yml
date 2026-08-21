@@ -29,7 +29,7 @@ jobs:
       # No Node toolchain needed for the placeholder; the design phase will
       # add actions/setup-node@<sha> with cache: npm when a framework lands.
 
-      # ghcr.io requires the image path to be lowercase. Our owner (Gt-ace)
+      # ghcr.io requires the image path to be lowercase. Our owner (VanPetegem)
       # has uppercase letters, so derive a lowercase image name here.
       - name: Compute lowercase image name
         id: image

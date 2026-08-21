@@ -27,4 +27,4 @@ shared Caddy (`amber-caddy-1`) serves it over HTTPS once DNS resolves.
 
 ## Contributors
 
-- [gt-ace](https://github.com/gt-ace)
+- [vanpetegem](https://github.com/vanpetegem)

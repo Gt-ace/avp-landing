@@ -37,7 +37,7 @@ Use these skills in this order:
 - Without JavaScript, the title, tagline, navigation, Process link, and static resolved workflow remain visible and usable.
 - Animate only transforms, opacity, and SVG line endpoints. Do not perform layout reads inside the animation loop.
 - Preserve unrelated working-tree changes. In particular, do not stage `.gitignore`, `.agents/`, `.claude/`, `.codex/`, or `.superpowers/`.
-- Use commit author `Gt-ace <arthur.s7@gmx.de>` to match the project’s existing plan convention.
+- Use commit author `VanPetegem <arthur.s7@gmx.de>` to match the project’s existing plan convention.
 
 ## File structure
 
@@ -245,7 +245,7 @@ Expected: 5 tests pass.
 git add package.json package-lock.json \
   src/components/hero-workflow/workflow-motion.ts \
   tests/hero-workflow/workflow-motion.test.ts
-git commit --author="Gt-ace <arthur.s7@gmx.de>" \
+git commit --author="VanPetegem <arthur.s7@gmx.de>" \
   -m "test: add hero workflow motion primitives"
 ```
 
@@ -510,7 +510,7 @@ Expected: 4 model tests pass; full suite reports 9 passing tests.
 ```bash
 git add src/components/hero-workflow/workflow-model.ts \
   tests/hero-workflow/workflow-model.test.ts
-git commit --author="Gt-ace <arthur.s7@gmx.de>" \
+git commit --author="VanPetegem <arthur.s7@gmx.de>" \
   -m "feat: define untangler workflow model"
 ```
 
@@ -897,7 +897,7 @@ Expected: 11 tests pass and the Astro build exits 0.
 git add src/components/hero-workflow/workflow-motion.ts \
   src/components/hero-workflow/workflow-controller.ts \
   tests/hero-workflow/workflow-motion.test.ts
-git commit --author="Gt-ace <arthur.s7@gmx.de>" \
+git commit --author="VanPetegem <arthur.s7@gmx.de>" \
   -m "feat: add untangler interaction controller"
 ```
 
@@ -1290,7 +1290,7 @@ Expected: 11 tests pass and Astro builds all pages successfully.
 git add src/components/HeroWorkflow.astro \
   src/components/hero-workflow/workflow-controller.ts \
   src/pages/index.astro src/components/HeroDots.astro
-git commit --author="Gt-ace <arthur.s7@gmx.de>" \
+git commit --author="VanPetegem <arthur.s7@gmx.de>" \
   -m "feat: replace dot grid with untangler hero"
 ```
 
@@ -1438,7 +1438,7 @@ unexpected finding.
 git add DESIGN.md src/components/HeroWorkflow.astro \
   src/components/hero-workflow/workflow-controller.ts \
   src/components/hero-workflow/workflow-model.ts
-git commit --author="Gt-ace <arthur.s7@gmx.de>" \
+git commit --author="VanPetegem <arthur.s7@gmx.de>" \
   -m "polish: validate untangler hero interactions"
 ```
 

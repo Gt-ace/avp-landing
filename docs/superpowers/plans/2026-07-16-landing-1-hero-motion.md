@@ -19,7 +19,7 @@
 - Content must be visible without JavaScript: hide-for-reveal styles are gated on the `html.js` class (already set in `BaseLayout.astro`).
 - Scripts must survive Astro ViewTransitions: re-arm on `astro:page-load`.
 - There is no test framework in this repo. Verification is `npm run build` plus grepping `dist/` output; visual checks run via `npm run preview`.
-- Every git commit uses `--author="Gt-ace <arthur.s7@gmx.de>"`.
+- Every git commit uses `--author="VanPetegem <arthur.s7@gmx.de>"`.
 
 ---
 
@@ -111,7 +111,7 @@ Expected: at least 5.
 
 ```bash
 git add src/styles/global.css src/pages/index.astro
-git commit --author="Gt-ace <arthur.s7@gmx.de>" -m "Add scroll-reveal system, apply to selected work"
+git commit --author="VanPetegem <arthur.s7@gmx.de>" -m "Add scroll-reveal system, apply to selected work"
 ```
 
 ---
@@ -321,7 +321,7 @@ Expected: exits 0 (the component is not mounted yet; this catches syntax and TS 
 
 ```bash
 git add src/components/HeroAscii.astro
-git commit --author="Gt-ace <arthur.s7@gmx.de>" -m "Add HeroAscii interactive glyph field component"
+git commit --author="VanPetegem <arthur.s7@gmx.de>" -m "Add HeroAscii interactive glyph field component"
 ```
 
 ---
@@ -444,5 +444,5 @@ Check: glyph field visible with a faint logo motif, ripple follows the mouse, he
 
 ```bash
 git add src/pages/index.astro public/hero1.webm
-git commit --author="Gt-ace <arthur.s7@gmx.de>" -m "Replace video hero with interactive ASCII field"
+git commit --author="VanPetegem <arthur.s7@gmx.de>" -m "Replace video hero with interactive ASCII field"
 ```
