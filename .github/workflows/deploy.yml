@@ -63,21 +63,21 @@ jobs:
             mkdir -p ~/apps/avp-landing
             cd ~/apps/avp-landing
             cat << 'EOF' > docker-compose.yml
-services:
-  web:
-    container_name: avp-landing
-    image: ghcr.io/vanpetegem/avp-landing:${TAG:-latest}
-    restart: unless-stopped
-    expose:
-      - "80"
-    networks:
-      - amber
+            services:
+              web:
+                container_name: avp-landing
+                image: ghcr.io/vanpetegem/avp-landing:${TAG:-latest}
+                restart: unless-stopped
+                expose:
+                  - "80"
+                networks:
+                  - amber
 
-networks:
-  amber:
-    external: true
-    name: amber_default
-EOF
+            networks:
+              amber:
+                external: true
+                name: amber_default
+            EOF
             docker compose pull
             # Recover from a stale container holding our name before giving up.
             # Compose renames the old container to <id>_avp-landing while
